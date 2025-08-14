@@ -1,0 +1,135 @@
+'use client'
+
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { CreditCard, CardProvider, DEFAULT_CARD_PROVIDERS } from '@/types/cards'
+import { useAuth } from './auth-context'
+
+interface CardsContextType {
+  cards: CreditCard[]
+  providers: CardProvider[]
+  loading: boolean
+  addCard: (card: Omit<CreditCard, 'id' | 'createdAt' | 'userId'>) => Promise<void>
+  updateCard: (id: string, updates: Partial<CreditCard>) => Promise<void>
+  deleteCard: (id: string) => Promise<void>
+  getCardsByProvider: (providerId: string) => CreditCard[]
+  getProviderById: (id: string) => CardProvider | undefined
+}
+
+const CardsContext = createContext<CardsContextType | undefined>(undefined)
+
+export function useCards() {
+  const context = useContext(CardsContext)
+  if (context === undefined) {
+    throw new Error('useCards must be used within a CardsProvider')
+  }
+  return context
+}
+
+interface CardsProviderProps {
+  children: ReactNode
+}
+
+export function CardsProvider({ children }: CardsProviderProps) {
+  const { user } = useAuth()
+  const [cards, setCards] = useState<CreditCard[]>([])
+  const [providers] = useState<CardProvider[]>(DEFAULT_CARD_PROVIDERS)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const loadUserCards = async () => {
+      try {
+        setLoading(true)
+        
+        // Em um app real, carregaria do Supabase
+        // Por agora, usar localStorage
+        const storedCards = localStorage.getItem(`cards_${user?.id}`)
+        if (storedCards) {
+          setCards(JSON.parse(storedCards))
+        } else {
+          // Criar alguns cartões padrão para demonstração
+          const defaultCards: CreditCard[] = [
+            {
+              id: '1',
+              providerId: 'nubank',
+              alias: 'Nubank Crédito',
+              lastFourDigits: '1234',
+              type: 'credit',
+              isActive: true,
+              createdAt: new Date().toISOString(),
+              userId: user?.id
+            },
+            {
+              id: '2',
+              providerId: 'nubank',
+              alias: 'Nubank Débito',
+              lastFourDigits: '5678',
+              type: 'debit',
+              isActive: true,
+              createdAt: new Date().toISOString(),
+              userId: user?.id
+            },
+            {
+              id: '3',
+              providerId: 'mercadopago',
+              alias: 'Mercado Pago Crédito',
+              lastFourDigits: '9012',
+              type: 'credit',
+              isActive: true,
+              createdAt: new Date().toISOString(),
+              userId: user?.id
+            },
+            {
+              id: '4',
+              providerId: 'bb',
+              alias: 'BB Crédito Ourocard',
+              lastFourDigits: '3456',
+              type: 'credit',
+              isActive: true,
+              createdAt: new Date().toISOString(),
+              userId: user?.id
+            },
+            {
+              id: '5',
+              providerId: 'bb',
+              alias: 'BB Débito',
+              lastFourDigits: '7890',
+              type: 'debit',
+              isActive: true,
+              createdAt: new Date().toISOString(),
+              userId: user?.id
+            },
+            {
+              id: '6',
+              providerId: 'caixa',
+              alias: 'Caixa Crédito',
+              lastFourDigits: '2345',
+              type: 'credit',
+              isActive: true,
+              createdAt: new Date().toISOString(),
+              userId: user?.id
+            },
+            {
+              id: '7',
+              providerId: 'caixa',
+              alias: 'Caixa Débito',
+              lastFourDigits: '6789',
+              type: 'debit',
+              isActive: true,
+              createdAt: new Date().toISOString(),
+              userId: user?.id
+            }
+          ]
+          setCards(defaultCards)
+          localStorage.setItem(`cards_${user?.id}`, JSON.stringify(defaultCards))
+        }
+      } catch (error) {
+        console.error('Erro ao carregar cartões:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (user) {
+      loadUserCards()
+    } else {
+      setC
