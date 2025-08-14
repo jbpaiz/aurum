@@ -132,4 +132,66 @@ export function CardsProvider({ children }: CardsProviderProps) {
     if (user) {
       loadUserCards()
     } else {
-      setC
+      setCards([])
+      setLoading(false)
+    }
+  }, [user])
+
+  const addCard = async (cardData: Omit<CreditCard, 'id' | 'createdAt' | 'userId'>) => {
+    if (!user) return
+
+    const newCard: CreditCard = {
+      ...cardData,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+      userId: user.id
+    }
+
+    const updatedCards = [...cards, newCard]
+    setCards(updatedCards)
+    localStorage.setItem(`cards_${user.id}`, JSON.stringify(updatedCards))
+  }
+
+  const updateCard = async (id: string, updates: Partial<CreditCard>) => {
+    if (!user) return
+
+    const updatedCards = cards.map(card => 
+      card.id === id ? { ...card, ...updates } : card
+    )
+    setCards(updatedCards)
+    localStorage.setItem(`cards_${user.id}`, JSON.stringify(updatedCards))
+  }
+
+  const deleteCard = async (id: string) => {
+    if (!user) return
+
+    const updatedCards = cards.filter(card => card.id !== id)
+    setCards(updatedCards)
+    localStorage.setItem(`cards_${user.id}`, JSON.stringify(updatedCards))
+  }
+
+  const getCardsByProvider = (providerId: string) => {
+    return cards.filter(card => card.providerId === providerId && card.isActive)
+  }
+
+  const getProviderById = (id: string) => {
+    return providers.find(provider => provider.id === id)
+  }
+
+  const value: CardsContextType = {
+    cards: cards.filter(card => card.isActive),
+    providers,
+    loading,
+    addCard,
+    updateCard,
+    deleteCard,
+    getCardsByProvider,
+    getProviderById
+  }
+
+  return (
+    <CardsContext.Provider value={value}>
+      {children}
+    </CardsContext.Provider>
+  )
+}

@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { useCards } from '@/contexts/cards-context'
-import { useToast } from '@/hooks/use-toast'
+import { useSimpleToast } from '@/hooks/use-simple-toast'
 import { CardProvider } from '@/types/cards'
 
 interface AddCardModalProps {
@@ -17,7 +17,7 @@ interface AddCardModalProps {
 
 export function AddCardModal({ onClose }: AddCardModalProps) {
   const { providers, addCard } = useCards()
-  const { toast } = useToast()
+  const { showToast } = useSimpleToast()
   
   const [selectedProvider, setSelectedProvider] = useState<CardProvider | null>(null)
   const [formData, setFormData] = useState({
@@ -40,8 +40,8 @@ export function AddCardModal({ onClose }: AddCardModalProps) {
     e.preventDefault()
     
     if (!selectedProvider) {
-      toast({
-        variant: "destructive",
+      showToast({
+        type: "error",
         title: "Erro",
         description: "Selecione uma operadora"
       })
@@ -49,8 +49,8 @@ export function AddCardModal({ onClose }: AddCardModalProps) {
     }
 
     if (!formData.alias.trim()) {
-      toast({
-        variant: "destructive",
+      showToast({
+        type: "error",
         title: "Erro",
         description: "Digite um nome para o cartão"
       })
@@ -58,8 +58,8 @@ export function AddCardModal({ onClose }: AddCardModalProps) {
     }
 
     if (formData.lastFourDigits && formData.lastFourDigits.length !== 4) {
-      toast({
-        variant: "destructive",
+      showToast({
+        type: "error",
         title: "Erro",
         description: "Os últimos 4 dígitos devem ter exatamente 4 números"
       })
@@ -77,16 +77,16 @@ export function AddCardModal({ onClose }: AddCardModalProps) {
         isActive: true
       })
 
-      toast({
-        variant: "success",
+      showToast({
+        type: "success",
         title: "Cartão adicionado!",
         description: `${formData.alias} foi adicionado com sucesso`
       })
 
       onClose()
     } catch (error) {
-      toast({
-        variant: "destructive",
+      showToast({
+        type: "error",
         title: "Erro",
         description: "Erro ao adicionar cartão. Tente novamente."
       })
@@ -186,4 +186,61 @@ export function AddCardModal({ onClose }: AddCardModalProps) {
                     <div className="flex items-center gap-2">
                       <span className="text-lg">🏧</span>
                       <span className="font-medium text-sm">Débito</span>
-               
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Desconto na hora
+                    </p>
+                  </button>
+                </div>
+              </div>
+
+              {/* Nome do Cartão */}
+              <div className="space-y-2">
+                <Label htmlFor="alias">Nome do Cartão</Label>
+                <Input
+                  id="alias"
+                  placeholder="Ex: Nubank Principal, Itaú Pessoal..."
+                  value={formData.alias}
+                  onChange={(e) => setFormData(prev => ({ ...prev, alias: e.target.value }))}
+                  maxLength={50}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Um nome para identificar este cartão facilmente
+                </p>
+              </div>
+
+              {/* Últimos 4 Dígitos (Opcional) */}
+              <div className="space-y-2">
+                <Label htmlFor="lastFourDigits">Últimos 4 dígitos (opcional)</Label>
+                <Input
+                  id="lastFourDigits"
+                  placeholder="1234"
+                  value={formData.lastFourDigits}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 4)
+                    setFormData(prev => ({ ...prev, lastFourDigits: value }))
+                  }}
+                  maxLength={4}
+                  className="font-mono"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Para ajudar na identificação (opcional)
+                </p>
+              </div>
+
+              {/* Botões */}
+              <div className="flex gap-2 pt-4">
+                <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={loading} className="flex-1">
+                  {loading ? 'Adicionando...' : 'Adicionar Cartão'}
+                </Button>
+              </div>
+            </form>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}

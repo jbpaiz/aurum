@@ -22,7 +22,6 @@ interface Transaction {
   amount: number
   category: string
   date: string
-  paymentMethod?: 'credit' | 'debit' | 'pix' | 'cash'
   cardId?: string
   installments?: number
 }

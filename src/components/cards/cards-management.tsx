@@ -152,4 +152,23 @@ export function CardsManagement() {
                       </Badge>
                     </div>
                     {card.lastFourDigits && (
-                      <p className="text-xs
+                      <p className="text-xs text-muted-foreground font-mono">
+                        •••• •••• •••• {showCardNumbers ? card.lastFourDigits : '••••'}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </CardContent>
+
+      {isAddModalOpen && (
+        <AddCardModal
+          onClose={() => setIsAddModalOpen(false)}
+        />
+      )}
+    </Card>
+  )
+}

@@ -19,11 +19,11 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { TransactionModal } from '@/components/modals/transaction-modal'
+// import { TransactionModal } from '@/components/modals/transaction-modal'
 import { TransactionList } from '@/components/transactions/transaction-list'
 import { AuthModal } from '@/components/auth/auth-modal'
 import { UserMenu } from '@/components/auth/user-menu'
-import { CardsManagement } from '@/components/cards/cards-management'
+// import { CardsManagement } from '@/components/cards/cards-management'
 import { useAuth } from '@/contexts/auth-context'
 
 interface Transaction {
@@ -360,13 +360,13 @@ export default function LandingWithAuth() {
             </Card>
 
             {/* Cards Management Section */}
-            <CardsManagement />
+            {/* <CardsManagement /> */}
           </>
         )}
       </main>
 
       {/* Modals */}
-      {isTransactionModalOpen && (
+      {/* {isTransactionModalOpen && (
         <TransactionModal
           transaction={editingTransaction}
           onSave={handleSaveTransaction}
@@ -375,7 +375,7 @@ export default function LandingWithAuth() {
             setEditingTransaction(null)
           }}
         />
-      )}
+      )} */}
 
       {isAuthModalOpen && (
         <AuthModal
