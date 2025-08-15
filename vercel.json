@@ -1,16 +1,10 @@
 {
   "version": 2,
-  "name": "aurum-financial",
-  "alias": "aurum-financial",
   "regions": ["gru1"],
   "build": {
     "env": {
       "NODE_ENV": "production"
     }
-  },
-  "env": {
-    "NEXT_PUBLIC_SUPABASE_URL": "@next_public_supabase_url",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@next_public_supabase_anon_key"
   },
   "functions": {
     "pages/api/**/*.js": {
