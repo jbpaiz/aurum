@@ -18,12 +18,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useDashboardData } from '@/hooks/use-dashboard-data'
-import { TransferModal } from '@/components/transfers/transfer-modal'
+import { UnifiedTransactionModal } from '@/components/modals/unified-transaction-modal'
 
 export function Dashboard() {
   const { data, loading } = useDashboardData()
   const [showBalance, setShowBalance] = useState(true)
-  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false)
+  const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false)
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -75,11 +75,7 @@ export function Dashboard() {
           <p className="text-gray-600">Bem-vindo de volta! Aqui está um resumo das suas finanças.</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setIsTransferModalOpen(true)} className="gap-2 text-blue-600 border-blue-600 hover:bg-blue-50">
-            <ArrowRightLeft className="h-4 w-4" />
-            Transferir
-          </Button>
-          <Button className="gap-2">
+          <Button onClick={() => setIsTransactionModalOpen(true)} className="gap-2">
             <Plus className="h-4 w-4" />
             Nova Transação
           </Button>
@@ -343,15 +339,18 @@ export function Dashboard() {
         </CardContent>
       </Card>
 
-      {/* Transfer Modal */}
-      <TransferModal
-        isOpen={isTransferModalOpen}
-        onClose={() => setIsTransferModalOpen(false)}
-        onSubmit={(transfer) => {
-          console.log('Transfer submitted:', transfer)
-          // Aqui você pode adicionar lógica para salvar a transferência
-        }}
-      />
+      {/* Unified Transaction Modal */}
+      {isTransactionModalOpen && (
+        <UnifiedTransactionModal
+          isOpen={isTransactionModalOpen}
+          onClose={() => setIsTransactionModalOpen(false)}
+          onSave={(transaction) => {
+            console.log('Transaction saved:', transaction)
+            setIsTransactionModalOpen(false)
+            // Aqui você pode adicionar lógica para salvar a transação
+          }}
+        />
+      )}
     </div>
   )
 }
