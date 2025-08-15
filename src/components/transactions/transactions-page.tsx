@@ -125,14 +125,10 @@ export function TransactionsPage() {
         description: transactionData.description,
         amount: transactionData.amount,
         type: transactionData.type,
-        transaction_date: transactionData.date,
-        account_id: defaultAccountId,
+        date: transactionData.date,
         category_id: categoryId,
         payment_method_id: transactionData.paymentMethodId || null,
-        installments: transactionData.installments || 1,
-        current_installment: 1,
-        is_installment: (transactionData.installments || 1) > 1,
-        is_confirmed: true
+        account_id: defaultAccountId
       }
 
       console.log('💾 Dados para inserção:', transactionInsert)
