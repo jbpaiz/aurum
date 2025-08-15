@@ -18,12 +18,98 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { TransactionModal } from '@/components/modals/transaction-modal'
 import { useDashboardData } from '@/hooks/use-dashboard-data'
+import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/auth-context'
+import { useToast } from '@/hooks/use-toast'
 
 export function TransactionsPage() {
+  const { user } = useAuth()
+  const { toast } = useToast()
   const { data, loading } = useDashboardData()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all')
+  const [isSaving, setIsSaving] = useState(false)
+
+  const handleSaveTransaction = async (transactionData: any) => {
+    if (!user) {
+      toast({
+        title: "Erro",
+        description: "Você precisa estar logado para salvar transações",
+        variant: "destructive"
+      })
+      return
+    }
+
+    setIsSaving(true)
+    
+    try {
+      // Buscar categoria pelo nome ou criar uma nova
+      let categoryId = null
+      if (transactionData.category) {
+        const { data: existingCategory } = await supabase
+          .from('categories')
+          .select('id')
+          .eq('name', transactionData.category)
+          .eq('user_id', user.id)
+          .single()
+
+        if (existingCategory) {
+          categoryId = existingCategory.id
+        } else {
+          // Criar nova categoria
+          const { data: newCategory, error: categoryError } = await supabase
+            .from('categories')
+            .insert({
+              name: transactionData.category,
+              user_id: user.id,
+              type: transactionData.type
+            })
+            .select('id')
+            .single()
+
+          if (categoryError) throw categoryError
+          categoryId = newCategory.id
+        }
+      }
+
+      // Salvar transação
+      const { error: transactionError } = await supabase
+        .from('transactions')
+        .insert({
+          user_id: user.id,
+          description: transactionData.description,
+          amount: transactionData.amount,
+          type: transactionData.type,
+          date: transactionData.date,
+          category_id: categoryId,
+          payment_method_id: transactionData.paymentMethodId || null,
+          installments: transactionData.installments || 1
+        })
+
+      if (transactionError) throw transactionError
+
+      toast({
+        title: "Sucesso!",
+        description: "Transação salva com sucesso",
+      })
+
+      setIsModalOpen(false)
+      
+      // Recarregar a página para atualizar os dados
+      window.location.reload()
+      
+    } catch (error) {
+      console.error('Erro ao salvar transação:', error)
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar a transação. Tente novamente.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -251,11 +337,7 @@ export function TransactionsPage() {
       {/* Modal de Transação */}
       {isModalOpen && (
         <TransactionModal
-          onSave={(transaction) => {
-            // TODO: Implementar salvamento de transação
-            console.log('Nova transação:', transaction)
-            setIsModalOpen(false)
-          }}
+          onSave={handleSaveTransaction}
           onClose={() => setIsModalOpen(false)}
         />
       )}

@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { CreditCard, CardProvider, DEFAULT_CARD_PROVIDERS } from '@/types/cards'
 import { useAuth } from './auth-context'
+import { supabase } from '@/lib/supabase'
 
 interface CardsContextType {
   cards: CreditCard[]
@@ -170,16 +171,50 @@ export function CardsProvider({ children }: CardsProviderProps) {
   const addCard = async (cardData: Omit<CreditCard, 'id' | 'createdAt' | 'userId'>) => {
     if (!user) return
 
-    const newCard: CreditCard = {
-      ...cardData,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      userId: user.id
-    }
+    try {
+      // Salvar no Supabase
+      const { data: savedCard, error } = await supabase
+        .from('cards')
+        .insert({
+          user_id: user.id,
+          nickname: cardData.alias,
+          type: cardData.type,
+          provider: cardData.providerId,
+          last_digits: cardData.lastFourDigits,
+          is_active: cardData.isActive
+        })
+        .select()
+        .single()
 
-    const updatedCards = [...cards, newCard]
-    setCards(updatedCards)
-    localStorage.setItem(`cards_${user.id}`, JSON.stringify(updatedCards))
+      if (error) throw error
+
+      // Adicionar ao estado local
+      const newCard: CreditCard = {
+        ...cardData,
+        id: savedCard.id,
+        createdAt: savedCard.created_at,
+        userId: user.id
+      }
+
+      const updatedCards = [...cards, newCard]
+      setCards(updatedCards)
+      
+      // Manter sincronização com localStorage como backup
+      localStorage.setItem(`cards_${user.id}`, JSON.stringify(updatedCards))
+    } catch (error) {
+      console.error('Erro ao salvar cartão:', error)
+      // Fallback para localStorage se Supabase falhar
+      const newCard: CreditCard = {
+        ...cardData,
+        id: Date.now().toString(),
+        createdAt: new Date().toISOString(),
+        userId: user.id
+      }
+
+      const updatedCards = [...cards, newCard]
+      setCards(updatedCards)
+      localStorage.setItem(`cards_${user.id}`, JSON.stringify(updatedCards))
+    }
   }
 
   const updateCard = async (id: string, updates: Partial<CreditCard>) => {
