@@ -16,7 +16,8 @@ import {
   Receipt,
   Target,
   Calendar,
-  Bell
+  Bell,
+  Banknote
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -42,6 +43,12 @@ const menuItems = [
     title: 'Contas',
     icon: Wallet,
     href: '/accounts',
+    active: false
+  },
+  {
+    title: 'Formas de Pagamento',
+    icon: Banknote,
+    href: '/payment-methods',
     active: false
   },
   {

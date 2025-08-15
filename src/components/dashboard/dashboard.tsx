@@ -11,16 +11,19 @@ import {
   Calendar,
   Eye,
   EyeOff,
-  Plus
+  Plus,
+  ArrowRightLeft
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useDashboardData } from '@/hooks/use-dashboard-data'
+import { TransferModal } from '@/components/transfers/transfer-modal'
 
 export function Dashboard() {
   const { data, loading } = useDashboardData()
   const [showBalance, setShowBalance] = useState(true)
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false)
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -71,10 +74,16 @@ export function Dashboard() {
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-600">Bem-vindo de volta! Aqui está um resumo das suas finanças.</p>
         </div>
-        <Button className="gap-2">
-          <Plus className="h-4 w-4" />
-          Nova Transação
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setIsTransferModalOpen(true)} className="gap-2 text-blue-600 border-blue-600 hover:bg-blue-50">
+            <ArrowRightLeft className="h-4 w-4" />
+            Transferir
+          </Button>
+          <Button className="gap-2">
+            <Plus className="h-4 w-4" />
+            Nova Transação
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -333,6 +342,16 @@ export function Dashboard() {
           )}
         </CardContent>
       </Card>
+
+      {/* Transfer Modal */}
+      <TransferModal
+        isOpen={isTransferModalOpen}
+        onClose={() => setIsTransferModalOpen(false)}
+        onSubmit={(transfer) => {
+          console.log('Transfer submitted:', transfer)
+          // Aqui você pode adicionar lógica para salvar a transferência
+        }}
+      />
     </div>
   )
 }

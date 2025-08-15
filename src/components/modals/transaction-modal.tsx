@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useCards } from '@/contexts/cards-context'
 import { useAccounts } from '@/contexts/accounts-context'
+import { AccountSelector } from '@/components/accounts/account-selector'
+import { SimplePaymentMethodSelector } from '@/components/payment-methods/simple-payment-method-selector'
 import { 
   DollarSign, 
   Calendar, 
@@ -18,7 +20,8 @@ import {
   X,
   CreditCard,
   Hash,
-  Wallet
+  Wallet,
+  ArrowLeftRight
 } from 'lucide-react'
 
 interface Transaction {
@@ -28,7 +31,8 @@ interface Transaction {
   amount: number
   category: string
   date: string
-  paymentMethodId?: string // Mudança: usar método de pagamento ao invés de cardId
+  accountId: string // Mudança: usar conta diretamente
+  paymentMethod?: string // Método de pagamento opcional (PIX, dinheiro, etc.)
   installments?: number
 }
 
@@ -64,13 +68,14 @@ const CATEGORIES = {
 
 export function TransactionModal({ transaction, onSave, onClose }: TransactionModalProps) {
   const { cards, getProviderById } = useCards()
-  const { paymentMethods, getAccountById } = useAccounts()
+  const { accounts, updateAccountBalance } = useAccounts()
   const [type, setType] = useState<'income' | 'expense'>(transaction?.type || 'expense')
   const [description, setDescription] = useState(transaction?.description || '')
   const [amount, setAmount] = useState(transaction?.amount?.toString() || '')
   const [category, setCategory] = useState(transaction?.category || '')
   const [date, setDate] = useState(transaction?.date || new Date().toISOString().split('T')[0])
-  const [paymentMethodId, setPaymentMethodId] = useState(transaction?.paymentMethodId || 'none')
+  const [accountId, setAccountId] = useState(transaction?.accountId || '')
+  const [paymentMethod, setPaymentMethod] = useState(transaction?.paymentMethod || '')
   const [installments, setInstallments] = useState(transaction?.installments?.toString() || '1')
 
   const isEditing = !!transaction
@@ -91,7 +96,8 @@ export function TransactionModal({ transaction, onSave, onClose }: TransactionMo
       amount: parseFloat(amount),
       category,
       date,
-      ...(paymentMethodId && paymentMethodId !== 'none' && { paymentMethodId }),
+      accountId,
+      ...(paymentMethod && { paymentMethod }),
       ...(type === 'expense' && parseInt(installments) > 1 && { installments: parseInt(installments) })
     }
 
@@ -116,21 +122,52 @@ export function TransactionModal({ transaction, onSave, onClose }: TransactionMo
     setAmount(formatCurrency(value))
   }
 
+  const getTypeConfig = (transactionType: 'income' | 'expense') => {
+    switch (transactionType) {
+      case 'income':
+        return {
+          icon: TrendingUp,
+          color: 'text-green-600',
+          bgColor: 'bg-green-50',
+          borderColor: 'border-green-200'
+        }
+      case 'expense':
+        return {
+          icon: TrendingDown,
+          color: 'text-red-600',
+          bgColor: 'bg-red-50',
+          borderColor: 'border-red-200'
+        }
+      default:
+        return {
+          icon: DollarSign,
+          color: 'text-primary',
+          bgColor: 'bg-background',
+          borderColor: 'border-border'
+        }
+    }
+  }
+
+  const typeConfig = getTypeConfig(type)
+  const IconComponent = typeConfig.icon
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <CardHeader>
+      <Card className={`w-full max-w-md max-h-[90vh] overflow-y-auto ${typeConfig.borderColor} border-2`}>
+        <CardHeader className={typeConfig.bgColor}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-primary" />
+              <IconComponent className={`h-5 w-5 ${typeConfig.color}`} />
               <div>
-                <CardTitle>
+                <CardTitle className={typeConfig.color}>
                   {isEditing ? 'Editar Transação' : 'Nova Transação'}
                 </CardTitle>
                 <CardDescription>
                   {isEditing 
                     ? 'Atualize os dados da transação'
-                    : 'Adicione uma nova movimentação financeira'
+                    : type === 'income' 
+                      ? 'Adicione uma nova receita'
+                      : 'Adicione uma nova despesa'
                   }
                 </CardDescription>
               </div>
@@ -156,7 +193,10 @@ export function TransactionModal({ transaction, onSave, onClose }: TransactionMo
                   type="button"
                   variant={type === 'income' ? 'default' : 'outline'}
                   onClick={() => setType('income')}
-                  className="gap-2"
+                  className={`gap-2 ${type === 'income' 
+                    ? 'bg-green-600 hover:bg-green-700 text-white' 
+                    : 'text-green-600 border-green-600 hover:bg-green-50'
+                  }`}
                 >
                   <TrendingUp className="h-4 w-4" />
                   Receita
@@ -165,7 +205,10 @@ export function TransactionModal({ transaction, onSave, onClose }: TransactionMo
                   type="button"
                   variant={type === 'expense' ? 'default' : 'outline'}
                   onClick={() => setType('expense')}
-                  className="gap-2"
+                  className={`gap-2 ${type === 'expense' 
+                    ? 'bg-red-600 hover:bg-red-700 text-white' 
+                    : 'text-red-600 border-red-600 hover:bg-red-50'
+                  }`}
                 >
                   <TrendingDown className="h-4 w-4" />
                   Despesa
@@ -243,39 +286,27 @@ export function TransactionModal({ transaction, onSave, onClose }: TransactionMo
               </div>
             </div>
 
+            {/* Conta */}
+            <div className="space-y-2">
+              <Label>Conta</Label>
+              <AccountSelector
+                value={accountId}
+                onChange={setAccountId}
+                placeholder="Selecione a conta"
+              />
+              <p className="text-xs text-muted-foreground">
+                Conta que será movimentada nesta transação
+              </p>
+            </div>
+
             {/* Método de Pagamento */}
             <div className="space-y-2">
               <Label>Forma de Pagamento</Label>
-              <Select value={paymentMethodId} onValueChange={setPaymentMethodId}>
-                <SelectTrigger>
-                  <div className="flex items-center gap-2">
-                    <Wallet className="h-4 w-4 text-muted-foreground" />
-                    <SelectValue placeholder="Selecione a forma de pagamento" />
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Não especificado</SelectItem>
-                  {paymentMethods.map((method) => {
-                    const account = getAccountById(method.accountId)
-                    return (
-                      <SelectItem key={method.id} value={method.id}>
-                        <div className="flex items-center gap-2">
-                          <span>{method.icon}</span>
-                          <span>{method.name}</span>
-                          {account && (
-                            <span className="text-xs text-muted-foreground">
-                              ({account.name})
-                            </span>
-                          )}
-                        </div>
-                      </SelectItem>
-                    )
-                  })}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                A forma de pagamento afetará o saldo da conta correspondente
-              </p>
+              <SimplePaymentMethodSelector
+                value={paymentMethod}
+                onChange={setPaymentMethod}
+                placeholder="Como foi pago?"
+              />
             </div>
 
             {/* Parcelas (apenas para despesas) */}
@@ -312,7 +343,10 @@ export function TransactionModal({ transaction, onSave, onClose }: TransactionMo
               </Button>
               <Button
                 type="submit"
-                className="flex-1"
+                className={`flex-1 ${type === 'income' 
+                  ? 'bg-green-600 hover:bg-green-700' 
+                  : 'bg-red-600 hover:bg-red-700'
+                } text-white`}
               >
                 {isEditing ? 'Atualizar' : 'Adicionar'}
               </Button>

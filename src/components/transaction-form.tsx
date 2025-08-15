@@ -4,6 +4,10 @@ import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { X, Plus } from 'lucide-react'
+import { AccountSelector } from '@/components/accounts/account-selector'
+import { SimplePaymentMethodSelector } from '@/components/payment-methods/simple-payment-method-selector'
+import { BankAccount } from '@/types/accounts'
+import { useAccounts } from '@/contexts/accounts-context'
 
 interface Transaction {
   id: string
@@ -12,6 +16,8 @@ interface Transaction {
   description: string
   category: string
   date: string
+  paymentMethod?: string
+  accountId: string
   created_at: string
 }
 
@@ -41,26 +47,40 @@ const categories = {
 }
 
 export function TransactionForm({ onSubmit, onClose }: TransactionFormProps) {
+  const { updateAccountBalance } = useAccounts()
   const [type, setType] = useState<'income' | 'expense'>('expense')
   const [amount, setAmount] = useState('')
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [selectedAccountId, setSelectedAccountId] = useState('')
+  const [selectedAccount, setSelectedAccount] = useState<BankAccount | null>(null)
+  const [paymentMethod, setPaymentMethod] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!amount || !description || !category || !date) {
-      alert('Por favor, preencha todos os campos')
+    if (!amount || !description || !category || !date || !selectedAccountId) {
+      alert('Por favor, preencha todos os campos obrigatórios')
       return
+    }
+
+    const transactionAmount = parseFloat(amount)
+    
+    // Atualizar saldo da conta baseado no tipo de transação
+    if (selectedAccount) {
+      const operation = type === 'income' ? 'add' : 'subtract'
+      await updateAccountBalance(selectedAccount.id, transactionAmount, operation)
     }
 
     onSubmit({
       type,
-      amount: parseFloat(amount),
+      amount: transactionAmount,
       description,
       category,
-      date
+      date,
+      paymentMethod,
+      accountId: selectedAccountId
     })
 
     // Reset form
@@ -68,6 +88,14 @@ export function TransactionForm({ onSubmit, onClose }: TransactionFormProps) {
     setDescription('')
     setCategory('')
     setDate(new Date().toISOString().split('T')[0])
+    setSelectedAccountId('')
+    setSelectedAccount(null)
+    setPaymentMethod('')
+  }
+
+  const handleAccountChange = (accountId: string, account: BankAccount) => {
+    setSelectedAccountId(accountId)
+    setSelectedAccount(account)
   }
 
   return (
@@ -176,6 +204,30 @@ export function TransactionForm({ onSubmit, onClose }: TransactionFormProps) {
                 onChange={(e) => setDate(e.target.value)}
                 className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 required
+              />
+            </div>
+
+            {/* Account Selection */}
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Conta {type === 'income' ? 'que receberá' : 'que será debitada'}
+              </label>
+              <AccountSelector
+                value={selectedAccountId}
+                onChange={handleAccountChange}
+                placeholder="Selecione a conta"
+              />
+            </div>
+
+            {/* Payment Method */}
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Como foi {type === 'income' ? 'recebido' : 'pago'}? (Opcional)
+              </label>
+              <SimplePaymentMethodSelector
+                value={paymentMethod}
+                onChange={setPaymentMethod}
+                placeholder="PIX, dinheiro, cartão..."
               />
             </div>
 

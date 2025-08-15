@@ -89,8 +89,8 @@ export function TransactionList({
             <div className="flex items-center gap-3">
               <div className={`p-2 rounded-full ${
                 transaction.type === 'income' 
-                  ? 'bg-green-100 text-green-600' 
-                  : 'bg-red-100 text-red-600'
+                  ? 'bg-green-50 text-green-600 border border-green-200' 
+                  : 'bg-red-50 text-red-600 border border-red-200'
               }`}>
                 {transaction.type === 'income' ? (
                   <TrendingUp className="h-4 w-4" />

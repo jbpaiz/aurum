@@ -15,11 +15,21 @@ export interface PaymentMethod {
   id: string
   name: string
   type: 'pix' | 'cash' | 'credit_card' | 'debit_card' | 'bank_transfer' | 'other'
-  accountId: string // Conta associada
-  cardId?: string // Se for cartão, referencia o cartão
   icon: string
   color: string
   isActive: boolean
+  createdAt: string
+  userId?: string
+}
+
+export interface Transfer {
+  id: string
+  fromAccountId: string
+  toAccountId: string
+  amount: number
+  description: string
+  paymentMethod: string // Como foi feita: PIX, TED, saque, etc.
+  date: string
   createdAt: string
   userId?: string
 }
