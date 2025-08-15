@@ -13,7 +13,10 @@
     "supabase:reset": "supabase db reset",
     "supabase:generate-types": "supabase gen types typescript --local > src/lib/database.types.ts",
     "supabase:setup": "node scripts/setup-supabase.js",
-    "supabase:types": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > src/lib/database.types.ts"
+    "supabase:types": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > src/lib/database.types.ts",
+    "db:test": "node scripts/test-supabase.js",
+    "db:setup": "node scripts/setup-manual.js",
+    "db:migrate": "node scripts/migrate-production.js"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.10",
@@ -29,6 +32,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^3.2.0",
+    "dotenv": "^17.2.1",
     "lucide-react": "^0.344.0",
     "next": "14.2.5",
     "react": "18.3.1",

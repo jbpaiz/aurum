@@ -1,5 +1,10 @@
-import LandingWithAuth from '@/components/landing-with-auth'
+import { MainLayout } from '@/components/layout/main-layout'
+import { Dashboard } from '@/components/dashboard/dashboard'
 
 export default function HomePage() {
-  return <LandingWithAuth />
+  return (
+    <MainLayout>
+      <Dashboard />
+    </MainLayout>
+  )
 }

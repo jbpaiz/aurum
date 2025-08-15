@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useCards } from '@/contexts/cards-context'
+import { useAccounts } from '@/contexts/accounts-context'
 import { 
   DollarSign, 
   Calendar, 
@@ -15,7 +17,8 @@ import {
   TrendingDown,
   X,
   CreditCard,
-  Hash
+  Hash,
+  Wallet
 } from 'lucide-react'
 
 interface Transaction {
@@ -25,7 +28,7 @@ interface Transaction {
   amount: number
   category: string
   date: string
-  cardId?: string
+  paymentMethodId?: string // Mudança: usar método de pagamento ao invés de cardId
   installments?: number
 }
 
@@ -60,12 +63,14 @@ const CATEGORIES = {
 }
 
 export function TransactionModal({ transaction, onSave, onClose }: TransactionModalProps) {
+  const { cards, getProviderById } = useCards()
+  const { paymentMethods, getAccountById } = useAccounts()
   const [type, setType] = useState<'income' | 'expense'>(transaction?.type || 'expense')
   const [description, setDescription] = useState(transaction?.description || '')
   const [amount, setAmount] = useState(transaction?.amount?.toString() || '')
   const [category, setCategory] = useState(transaction?.category || '')
   const [date, setDate] = useState(transaction?.date || new Date().toISOString().split('T')[0])
-  const [cardId, setCardId] = useState(transaction?.cardId || 'none')
+  const [paymentMethodId, setPaymentMethodId] = useState(transaction?.paymentMethodId || 'none')
   const [installments, setInstallments] = useState(transaction?.installments?.toString() || '1')
 
   const isEditing = !!transaction
@@ -86,7 +91,7 @@ export function TransactionModal({ transaction, onSave, onClose }: TransactionMo
       amount: parseFloat(amount),
       category,
       date,
-      ...(cardId && cardId !== 'none' && { cardId }),
+      ...(paymentMethodId && paymentMethodId !== 'none' && { paymentMethodId }),
       ...(type === 'expense' && parseInt(installments) > 1 && { installments: parseInt(installments) })
     }
 
@@ -238,23 +243,39 @@ export function TransactionModal({ transaction, onSave, onClose }: TransactionMo
               </div>
             </div>
 
-            {/* Cartão (opcional) */}
+            {/* Método de Pagamento */}
             <div className="space-y-2">
-              <Label>Cartão (opcional)</Label>
-              <Select value={cardId} onValueChange={setCardId}>
+              <Label>Forma de Pagamento</Label>
+              <Select value={paymentMethodId} onValueChange={setPaymentMethodId}>
                 <SelectTrigger>
                   <div className="flex items-center gap-2">
-                    <CreditCard className="h-4 w-4 text-muted-foreground" />
-                    <SelectValue placeholder="Selecione um cartão (opcional)" />
+                    <Wallet className="h-4 w-4 text-muted-foreground" />
+                    <SelectValue placeholder="Selecione a forma de pagamento" />
                   </div>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Nenhum cartão</SelectItem>
-                  {/* Aqui você pode listar os cartões do usuário */}
-                  <SelectItem value="card1">Cartão Principal</SelectItem>
-                  <SelectItem value="card2">Cartão Secundário</SelectItem>
+                  <SelectItem value="none">Não especificado</SelectItem>
+                  {paymentMethods.map((method) => {
+                    const account = getAccountById(method.accountId)
+                    return (
+                      <SelectItem key={method.id} value={method.id}>
+                        <div className="flex items-center gap-2">
+                          <span>{method.icon}</span>
+                          <span>{method.name}</span>
+                          {account && (
+                            <span className="text-xs text-muted-foreground">
+                              ({account.name})
+                            </span>
+                          )}
+                        </div>
+                      </SelectItem>
+                    )
+                  })}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground">
+                A forma de pagamento afetará o saldo da conta correspondente
+              </p>
             </div>
 
             {/* Parcelas (apenas para despesas) */}

@@ -24,6 +24,7 @@ import { TransactionList } from '@/components/transactions/transaction-list'
 import { AuthModal } from '@/components/auth/auth-modal'
 import { UserMenu } from '@/components/auth/user-menu'
 import { CardsManagement } from '@/components/cards/cards-management'
+import { AccountsManagement } from '@/components/accounts/accounts-management'
 import { useAuth } from '@/contexts/auth-context'
 
 interface Transaction {
@@ -33,7 +34,7 @@ interface Transaction {
   amount: number
   category: string
   date: string
-  cardId?: string
+  paymentMethodId?: string
   installments?: number
 }
 
@@ -358,6 +359,9 @@ export default function LandingWithAuth() {
                 />
               </CardContent>
             </Card>
+
+            {/* Accounts Management Section */}
+            <AccountsManagement />
 
             {/* Cards Management Section */}
             <CardsManagement />

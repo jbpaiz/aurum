@@ -41,17 +41,17 @@ export function CardsProvider({ children }: CardsProviderProps) {
         setLoading(true)
         
         // Em um app real, carregaria do Supabase
-        // Por agora, usar localStorage
+        // Por agora, usar localStorage ou criar dados de demonstração
         const storedCards = localStorage.getItem(`cards_${user?.id}`)
         if (storedCards) {
           setCards(JSON.parse(storedCards))
         } else {
-          // Criar alguns cartões padrão para demonstração
-          const defaultCards: CreditCard[] = [
+          // Criar cartões de demonstração completos
+          const demoCards: CreditCard[] = [
             {
               id: '1',
               providerId: 'nubank',
-              alias: 'Nubank Crédito',
+              alias: 'Nubank Roxinho',
               lastFourDigits: '1234',
               type: 'credit',
               isActive: true,
@@ -61,7 +61,7 @@ export function CardsProvider({ children }: CardsProviderProps) {
             {
               id: '2',
               providerId: 'nubank',
-              alias: 'Nubank Débito',
+              alias: 'Nu Débito',
               lastFourDigits: '5678',
               type: 'debit',
               isActive: true,
@@ -71,7 +71,7 @@ export function CardsProvider({ children }: CardsProviderProps) {
             {
               id: '3',
               providerId: 'mercadopago',
-              alias: 'Mercado Pago Crédito',
+              alias: 'Mercado Pago Gold',
               lastFourDigits: '9012',
               type: 'credit',
               isActive: true,
@@ -81,7 +81,7 @@ export function CardsProvider({ children }: CardsProviderProps) {
             {
               id: '4',
               providerId: 'bb',
-              alias: 'BB Crédito Ourocard',
+              alias: 'BB Ourocard Visa',
               lastFourDigits: '3456',
               type: 'credit',
               isActive: true,
@@ -91,7 +91,7 @@ export function CardsProvider({ children }: CardsProviderProps) {
             {
               id: '5',
               providerId: 'bb',
-              alias: 'BB Débito',
+              alias: 'BB Conta Corrente',
               lastFourDigits: '7890',
               type: 'debit',
               isActive: true,
@@ -101,7 +101,7 @@ export function CardsProvider({ children }: CardsProviderProps) {
             {
               id: '6',
               providerId: 'caixa',
-              alias: 'Caixa Crédito',
+              alias: 'Caixa Mastercard',
               lastFourDigits: '2345',
               type: 'credit',
               isActive: true,
@@ -110,17 +110,47 @@ export function CardsProvider({ children }: CardsProviderProps) {
             },
             {
               id: '7',
-              providerId: 'caixa',
-              alias: 'Caixa Débito',
+              providerId: 'itau',
+              alias: 'Itaucard Internacional',
               lastFourDigits: '6789',
-              type: 'debit',
+              type: 'credit',
+              isActive: true,
+              createdAt: new Date().toISOString(),
+              userId: user?.id
+            },
+            {
+              id: '8',
+              providerId: 'picpay',
+              alias: 'PicPay Card',
+              lastFourDigits: '1122',
+              type: 'credit',
+              isActive: true,
+              createdAt: new Date().toISOString(),
+              userId: user?.id
+            },
+            {
+              id: '9',
+              providerId: 'inter',
+              alias: 'Inter Mastercard',
+              lastFourDigits: '3344',
+              type: 'credit',
+              isActive: true,
+              createdAt: new Date().toISOString(),
+              userId: user?.id
+            },
+            {
+              id: '10',
+              providerId: 'c6bank',
+              alias: 'C6 Bank Carbon',
+              lastFourDigits: '5566',
+              type: 'credit',
               isActive: true,
               createdAt: new Date().toISOString(),
               userId: user?.id
             }
           ]
-          setCards(defaultCards)
-          localStorage.setItem(`cards_${user?.id}`, JSON.stringify(defaultCards))
+          setCards(demoCards)
+          localStorage.setItem(`cards_${user?.id}`, JSON.stringify(demoCards))
         }
       } catch (error) {
         console.error('Erro ao carregar cartões:', error)
