@@ -1,29 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { PlusCircle, TrendingUp, TrendingDown, DollarSign, Calendar, Filter } from 'lucide-react'
-import { TransactionForm } from './transaction-form'
-import { TransactionList } from './transaction-list'
-import { SupabaseConfig } from './supabase-config'
-import { supabase } from '@/lib/supabase'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://demo.supabase.co'
-
-interface Transaction {
-  id: string
-  type: 'income' | 'expense'
-  amount: number
-  description: string
-  category: string
-  date: string
-  created_at: string
-}
-
-'use client'
-
-import { useState } from 'react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { 
@@ -33,15 +10,12 @@ import {
   PlusCircle, 
   Eye,
   EyeOff,
-  Edit,
-  Trash2,
   CalendarDays,
   UserPlus,
   LogIn
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { TransactionModal } from '@/components/modals/transaction-modal'
 import { TransactionList } from '@/components/transactions/transaction-list'
 import { AuthModal } from '@/components/auth/auth-modal'
@@ -55,273 +29,351 @@ interface Transaction {
   amount: number
   category: string
   date: string
+  paymentMethod?: 'credit' | 'debit' | 'pix' | 'cash'
+  cardId?: string
+  installments?: number
 }
 
-export default function Landing() {
+interface FinancialSummary {
+  totalIncome: number
+  totalExpenses: number
+  balance: number
+  transactionCount: number
+}
+
+export function Landing() {
+  const { user } = useAuth()
   const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false)
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login')
+  const [isBalanceVisible, setIsBalanceVisible] = useState(true)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [financialSummary, setFinancialSummary] = useState<FinancialSummary>({
+    totalIncome: 0,
+    totalExpenses: 0,
+    balance: 0,
+    transactionCount: 0
+  })
 
   useEffect(() => {
-    loadTransactions()
-  }, [])
+    if (user) {
+      loadTransactions()
+    } else {
+      setLoading(false)
+    }
+  }, [user])
 
   const loadTransactions = async () => {
     try {
-      // Se não há configuração válida do Supabase, use dados mock
-      if (supabaseUrl === 'https://demo.supabase.co') {
-        const mockTransactions: Transaction[] = [
-          {
-            id: '1',
-            type: 'income',
-            amount: 5000,
-            description: 'Salário do mês',
-            category: 'Salário',
-            date: new Date().toISOString().split('T')[0],
-            created_at: new Date().toISOString()
-          },
-          {
-            id: '2',
-            type: 'expense',
-            amount: 800,
-            description: 'Compras no supermercado',
-            category: 'Alimentação',
-            date: new Date(Date.now() - 86400000).toISOString().split('T')[0],
-            created_at: new Date().toISOString()
-          },
-          {
-            id: '3',
-            type: 'expense',
-            amount: 1200,
-            description: 'Aluguel',
-            category: 'Moradia',
-            date: new Date(Date.now() - 172800000).toISOString().split('T')[0],
-            created_at: new Date().toISOString()
-          }
-        ]
-        setTransactions(mockTransactions)
-        setLoading(false)
-        return
-      }
-
-      const { data, error } = await supabase
-        .from('transactions')
-        .select('*')
-        .order('date', { ascending: false })
-
-      if (error) {
-        console.error('Erro ao carregar transações:', error)
-        setError('Erro ao carregar transações. Usando dados de demonstração.')
-        // Use dados mock em caso de erro
-        setTransactions([])
-      } else {
-        setTransactions(data || [])
-      }
+      setLoading(true)
+      // TODO: Replace with actual Supabase query
+      const mockTransactions: Transaction[] = []
+      setTransactions(mockTransactions)
+      calculateSummary(mockTransactions)
     } catch (error) {
-      console.error('Erro ao carregar transações:', error)
-      setError('Erro de conexão. Usando dados de demonstração.')
-      setTransactions([])
+      console.error('Error loading transactions:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  const addTransaction = async (transaction: Omit<Transaction, 'id' | 'created_at'>) => {
-    try {
-      // Se estiver em modo demo, adicione localmente
-      if (supabaseUrl === 'https://demo.supabase.co') {
-        const newTransaction: Transaction = {
-          ...transaction,
-          id: Math.random().toString(36).substr(2, 9),
-          created_at: new Date().toISOString()
-        }
-        setTransactions(prev => [newTransaction, ...prev])
-        setIsFormOpen(false)
-        return
-      }
-
-      const { data, error } = await supabase
-        .from('transactions')
-        .insert([{
-          ...transaction,
-          user_id: '1' // Temporário - em um app real, viria da autenticação
-        }])
-        .select()
-        .single()
-
-      if (error) {
-        console.error('Erro ao adicionar transação:', error)
-        // Em caso de erro, adicione localmente como fallback
-        const newTransaction: Transaction = {
-          ...transaction,
-          id: Math.random().toString(36).substr(2, 9),
-          created_at: new Date().toISOString()
-        }
-        setTransactions(prev => [newTransaction, ...prev])
+  const calculateSummary = (transactions: Transaction[]) => {
+    const summary = transactions.reduce((acc, transaction) => {
+      if (transaction.type === 'income') {
+        acc.totalIncome += transaction.amount
       } else {
-        setTransactions(prev => [data, ...prev])
+        acc.totalExpenses += transaction.amount
       }
-      setIsFormOpen(false)
-    } catch (error) {
-      console.error('Erro ao adicionar transação:', error)
-      // Em caso de erro, adicione localmente como fallback
-      const newTransaction: Transaction = {
-        ...transaction,
-        id: Math.random().toString(36).substr(2, 9),
-        created_at: new Date().toISOString()
-      }
-      setTransactions(prev => [newTransaction, ...prev])
-      setIsFormOpen(false)
-    }
+      return acc
+    }, { totalIncome: 0, totalExpenses: 0 })
+
+    setFinancialSummary({
+      ...summary,
+      balance: summary.totalIncome - summary.totalExpenses,
+      transactionCount: transactions.length
+    })
   }
 
-  const totalIncome = transactions
-    .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + t.amount, 0)
+  const handleTransactionAdded = (transaction: Transaction | Omit<Transaction, 'id'>) => {
+    const newTransaction: Transaction = {
+      ...transaction,
+      id: 'id' in transaction ? transaction.id : `temp-${Date.now()}`
+    }
+    const updatedTransactions = [newTransaction, ...transactions]
+    setTransactions(updatedTransactions)
+    calculateSummary(updatedTransactions)
+  }
 
-  const totalExpenses = transactions
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + t.amount, 0)
+  const handleTransactionUpdated = (transaction: Transaction) => {
+    const updatedTransactions = transactions.map(t => 
+      t.id === transaction.id ? transaction : t
+    )
+    setTransactions(updatedTransactions)
+    calculateSummary(updatedTransactions)
+  }
 
-  const balance = totalIncome - totalExpenses
+  const handleTransactionDeleted = (transactionId: string) => {
+    const updatedTransactions = transactions.filter(t => t.id !== transactionId)
+    setTransactions(updatedTransactions)
+    calculateSummary(updatedTransactions)
+  }
+
+  const openAuthModal = (mode: 'login' | 'register') => {
+    setAuthMode(mode)
+    setIsAuthModalOpen(true)
+  }
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(amount)
+  }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Carregando...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
-      <header className="border-b bg-white/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-8 w-8 text-primary" />
-              <h1 className="text-2xl font-bold text-primary">Aurum</h1>
-              {supabaseUrl === 'https://demo.supabase.co' && (
-                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
-                  Modo Demo
-                </span>
+      <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <DollarSign className="h-8 w-8 text-blue-600 mr-2" />
+              <h1 className="text-xl font-bold text-gray-900">Aurum Finance</h1>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              {user ? (
+                <UserMenu />
+              ) : (
+                <div className="flex space-x-2">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => openAuthModal('login')}
+                    className="flex items-center space-x-2"
+                  >
+                    <LogIn className="h-4 w-4" />
+                    <span>Entrar</span>
+                  </Button>
+                  <Button 
+                    size="sm"
+                    onClick={() => openAuthModal('register')}
+                    className="flex items-center space-x-2"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    <span>Cadastrar</span>
+                  </Button>
+                </div>
               )}
             </div>
-            <Button onClick={() => setIsFormOpen(true)}>
-              <PlusCircle className="h-4 w-4 mr-2" />
-              Nova Transação
-            </Button>
           </div>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary/10 to-secondary/10 py-12">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-8">
-            <h2 className="text-4xl font-bold mb-4">Controle Financeiro Inteligente</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Gerencie suas receitas e despesas de forma simples e eficiente. 
-              Tenha controle total sobre suas finanças.
-            </p>
-            {supabaseUrl === 'https://demo.supabase.co' && (
-              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg max-w-2xl mx-auto">
-                <p className="text-sm text-blue-700">
-                  <strong>Modo Demonstração:</strong> Para usar com dados reais, configure as credenciais do Supabase no arquivo .env.local
-                </p>
-              </div>
-            )}
-          </div>
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {user ? (
+          <div className="space-y-8">
+            {/* Welcome Section */}
+            <div className="text-center">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                Bem-vindo de volta!
+              </h2>
+              <p className="text-gray-600">
+                Aqui está o resumo das suas finanças
+              </p>
+            </div>
 
-          {/* Supabase Configuration Card */}
-          <div className="max-w-2xl mx-auto mb-8">
-            <SupabaseConfig isConfigured={supabaseUrl !== 'https://demo.supabase.co'} />
-          </div>
+            {/* Financial Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Receitas</CardTitle>
+                  <TrendingUp className="h-4 w-4" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {formatCurrency(financialSummary.totalIncome)}
+                  </div>
+                </CardContent>
+              </Card>
 
-          {/* Dashboard Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <Card className="bg-gradient-to-r from-red-500 to-red-600 text-white">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Despesas</CardTitle>
+                  <TrendingDown className="h-4 w-4" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {formatCurrency(financialSummary.totalExpenses)}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className={`${financialSummary.balance >= 0 ? 'bg-gradient-to-r from-blue-500 to-blue-600' : 'bg-gradient-to-r from-orange-500 to-orange-600'} text-white`}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Saldo</CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsBalanceVisible(!isBalanceVisible)}
+                    className="h-6 w-6 p-0 text-white hover:bg-white/20"
+                  >
+                    {isBalanceVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {isBalanceVisible ? formatCurrency(financialSummary.balance) : '••••••'}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Transações</CardTitle>
+                  <CalendarDays className="h-4 w-4" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {financialSummary.transactionCount}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="flex justify-center">
+              <Button
+                onClick={() => setIsTransactionModalOpen(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg"
+              >
+                <PlusCircle className="h-5 w-5 mr-2" />
+                Nova Transação
+              </Button>
+            </div>
+
+            {/* Recent Transactions */}
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Saldo Total</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <CardHeader>
+                <CardTitle>Transações Recentes</CardTitle>
+                <CardDescription>
+                  Suas últimas movimentações financeiras
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className={`text-2xl font-bold ${balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  R$ {balance.toFixed(2).replace('.', ',')}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {balance >= 0 ? 'Saldo positivo' : 'Saldo negativo'}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Receitas</CardTitle>
-                <TrendingUp className="h-4 w-4 text-green-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">
-                  R$ {totalIncome.toFixed(2).replace('.', ',')}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {transactions.filter(t => t.type === 'income').length} transações
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Despesas</CardTitle>
-                <TrendingDown className="h-4 w-4 text-red-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-red-600">
-                  R$ {totalExpenses.toFixed(2).replace('.', ',')}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {transactions.filter(t => t.type === 'expense').length} transações
-                </p>
+                <TransactionList
+                  transactions={transactions}
+                  onEdit={handleTransactionUpdated}
+                  onDelete={handleTransactionDeleted}
+                />
               </CardContent>
             </Card>
           </div>
-        </div>
-      </section>
-
-      {/* Transactions Section */}
-      <section className="py-12">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-6">
+        ) : (
+          /* Landing Page for Non-Authenticated Users */
+          <div className="text-center space-y-12">
             <div>
-              <h3 className="text-2xl font-bold">Transações Recentes</h3>
-              <p className="text-muted-foreground">Acompanhe suas últimas movimentações</p>
+              <h1 className="text-5xl font-bold text-gray-900 mb-6">
+                Controle suas finanças com
+                <span className="text-blue-600 block">Aurum Finance</span>
+              </h1>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                A maneira mais simples e inteligente de gerenciar seu dinheiro. 
+                Acompanhe receitas, despesas e alcance seus objetivos financeiros.
+              </p>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filtrar
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+              <Card className="text-center p-6">
+                <CardHeader>
+                  <div className="mx-auto bg-blue-100 rounded-full p-3 w-16 h-16 flex items-center justify-center mb-4">
+                    <TrendingUp className="h-8 w-8 text-blue-600" />
+                  </div>
+                  <CardTitle>Controle Total</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600">
+                    Tenha visibilidade completa de suas receitas e despesas em tempo real.
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="text-center p-6">
+                <CardHeader>
+                  <div className="mx-auto bg-green-100 rounded-full p-3 w-16 h-16 flex items-center justify-center mb-4">
+                    <DollarSign className="h-8 w-8 text-green-600" />
+                  </div>
+                  <CardTitle>Fácil de Usar</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600">
+                    Interface intuitiva que torna o controle financeiro simples e rápido.
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="text-center p-6">
+                <CardHeader>
+                  <div className="mx-auto bg-purple-100 rounded-full p-3 w-16 h-16 flex items-center justify-center mb-4">
+                    <CalendarDays className="h-8 w-8 text-purple-600" />
+                  </div>
+                  <CardTitle>Sempre Atualizado</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600">
+                    Seus dados sempre seguros e acessíveis de qualquer dispositivo.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="space-y-4">
+              <Button
+                size="lg"
+                onClick={() => openAuthModal('register')}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg"
+              >
+                <UserPlus className="h-5 w-5 mr-2" />
+                Comece Agora Gratuitamente
               </Button>
-              <Button variant="outline" size="sm">
-                <Calendar className="h-4 w-4 mr-2" />
-                Período
-              </Button>
+              <div>
+                <Button
+                  variant="link"
+                  onClick={() => openAuthModal('login')}
+                  className="text-blue-600"
+                >
+                  Já tem uma conta? Faça login
+                </Button>
+              </div>
             </div>
           </div>
+        )}
+      </main>
 
-          <TransactionList transactions={transactions} />
-        </div>
-      </section>
+      {/* Modals */}
+      {isTransactionModalOpen && (
+        <TransactionModal
+          onSave={handleTransactionAdded}
+          onClose={() => setIsTransactionModalOpen(false)}
+        />
+      )}
 
-      {/* Transaction Form Modal */}
-      {isFormOpen && (
-        <TransactionForm
-          onSubmit={addTransaction}
-          onClose={() => setIsFormOpen(false)}
+      {isAuthModalOpen && (
+        <AuthModal
+          onClose={() => setIsAuthModalOpen(false)}
         />
       )}
     </div>
