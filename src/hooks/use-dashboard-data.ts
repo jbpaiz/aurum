@@ -9,9 +9,12 @@ interface DashboardData {
   monthlyIncome: number
   monthlyExpenses: number
   accounts: Array<{
+    id: string
     name: string
     balance: number
     color: string
+    type: string
+    bank: string
   }>
   recentTransactions: Array<{
     id: string
@@ -68,9 +71,12 @@ export function useDashboardData() {
 
         // Preparar dados das contas
         const accountsData = accounts?.map(acc => ({
+          id: acc.id,
           name: acc.name,
           balance: Number(acc.balance),
-          color: acc.color || '#6B7280'
+          color: acc.color || '#6B7280',
+          type: acc.type,
+          bank: acc.bank
         })) || []
 
         // Preparar transações recentes
