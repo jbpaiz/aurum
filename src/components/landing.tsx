@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { 
@@ -29,7 +29,8 @@ interface Transaction {
   amount: number
   category: string
   date: string
-  paymentMethod?: 'credit' | 'debit' | 'pix' | 'cash'
+  paymentMethod?: string
+  accountId?: string
   cardId?: string
   installments?: number
 }
@@ -56,15 +57,7 @@ export function Landing() {
     transactionCount: 0
   })
 
-  useEffect(() => {
-    if (user) {
-      loadTransactions()
-    } else {
-      setLoading(false)
-    }
-  }, [user])
-
-  const loadTransactions = async () => {
+  const loadTransactions = useCallback(async () => {
     try {
       setLoading(true)
       // TODO: Replace with actual Supabase query
@@ -76,7 +69,15 @@ export function Landing() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (user) {
+      loadTransactions()
+    } else {
+      setLoading(false)
+    }
+  }, [user, loadTransactions])
 
   const calculateSummary = (transactions: Transaction[]) => {
     const summary = transactions.reduce((acc, transaction) => {

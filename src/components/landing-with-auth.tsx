@@ -34,7 +34,8 @@ interface Transaction {
   amount: number
   category: string
   date: string
-  paymentMethodId?: string
+  accountId?: string
+  paymentMethod?: string
   installments?: number
 }
 

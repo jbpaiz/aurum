@@ -31,7 +31,7 @@ interface Transaction {
   amount: number
   category: string
   date: string
-  accountId: string // Mudança: usar conta diretamente
+  accountId?: string // Mudança: usar conta diretamente (opcional para compatibilidade)
   paymentMethod?: string // Método de pagamento opcional (PIX, dinheiro, etc.)
   installments?: number
 }

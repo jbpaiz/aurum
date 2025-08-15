@@ -18,7 +18,7 @@ import { useAccounts } from '@/contexts/accounts-context'
 import { ACCOUNT_TYPES } from '@/types/accounts'
 
 export function AccountsManagement() {
-  const { accounts, paymentMethods, getPaymentMethodsByAccount, loading } = useAccounts()
+  const { accounts, loading } = useAccounts()
   const [showBalances, setShowBalances] = useState(true)
 
   const formatCurrency = (amount: number) => {
@@ -119,7 +119,6 @@ export function AccountsManagement() {
         ) : (
           <div className="space-y-4">
             {accounts.map((account) => {
-              const accountPaymentMethods = getPaymentMethodsByAccount(account.id)
               const accountType = ACCOUNT_TYPES[account.type]
               
               return (
@@ -168,7 +167,7 @@ export function AccountsManagement() {
                           {showBalances ? formatCurrency(account.balance) : '••••••'}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {accountPaymentMethods.length} método{accountPaymentMethods.length !== 1 ? 's' : ''}
+                          Saldo atual
                         </p>
                       </div>
                       <div className="flex gap-1">
@@ -185,29 +184,6 @@ export function AccountsManagement() {
                       </div>
                     </div>
                   </div>
-
-                  {/* Métodos de Pagamento */}
-                  {accountPaymentMethods.length > 0 && (
-                    <div className="border-t pt-3 mt-3">
-                      <p className="text-xs text-muted-foreground mb-2">Métodos de Pagamento:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {accountPaymentMethods.map((method) => (
-                          <Badge
-                            key={method.id}
-                            variant="outline"
-                            className="text-xs"
-                            style={{ 
-                              borderColor: method.color + '40',
-                              backgroundColor: method.color + '10',
-                              color: method.color
-                            }}
-                          >
-                            {method.icon} {method.name}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               )
             })}
