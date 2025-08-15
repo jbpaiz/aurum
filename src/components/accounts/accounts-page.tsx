@@ -12,16 +12,51 @@ import {
   EyeOff,
   Edit,
   Trash2,
-  MoreVertical
+  MoreVertical,
+  PiggyBank,
+  Banknote,
+  Target,
+  Store,
+  Home,
+  Car,
+  Briefcase,
+  Smartphone,
+  Coffee,
+  ShoppingCart
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { useDashboardData } from '@/hooks/use-dashboard-data'
+import { useAccounts } from '@/contexts/accounts-context'
+import { AccountModal } from './account-modal'
+import { DeleteAccountModal } from './delete-account-modal'
+import { BankAccount, ACCOUNT_TYPES } from '@/types/accounts'
+
+// Map dos ícones disponíveis
+const ICON_MAP: { [key: string]: React.ComponentType<any> } = {
+  Building2,
+  CreditCard,
+  Wallet,
+  PiggyBank,
+  TrendingUp,
+  Banknote,
+  Target,
+  Store,
+  Home,
+  Car,
+  Briefcase,
+  Smartphone,
+  Coffee,
+  ShoppingCart
+}
 
 export function AccountsPage() {
-  const { data, loading } = useDashboardData()
+  const { accounts, loading } = useAccounts()
   const [showBalances, setShowBalances] = useState(true)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [selectedAccount, setSelectedAccount] = useState<BankAccount | null>(null)
+  const [modalMode, setModalMode] = useState<'add' | 'edit'>('add')
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -30,43 +65,49 @@ export function AccountsPage() {
     }).format(amount)
   }
 
-  const getAccountIcon = (type: string) => {
-    switch (type) {
-      case 'checking':
-        return <Building2 className="h-6 w-6" />
-      case 'savings':
-        return <Wallet className="h-6 w-6" />
-      case 'investment':
-        return <TrendingUp className="h-6 w-6" />
-      default:
-        return <CreditCard className="h-6 w-6" />
-    }
-  }
-
-  const getAccountTypeName = (type: string) => {
-    const types: { [key: string]: string } = {
-      'checking': 'Conta Corrente',
-      'savings': 'Poupança',
-      'investment': 'Investimento',
-      'credit': 'Cartão de Crédito'
-    }
-    return types[type] || type
+  const renderAccountIcon = (iconName: string) => {
+    const IconComponent = ICON_MAP[iconName] || Building2
+    return <IconComponent className="h-5 w-5" />
   }
 
   const getTotalBalance = () => {
-    if (!data?.accounts) return 0
-    return data.accounts.reduce((total, account) => total + account.balance, 0)
+    return accounts.reduce((total, account) => total + account.balance, 0)
   }
 
   const getPositiveBalanceAccounts = () => {
-    if (!data?.accounts) return 0
-    return data.accounts.filter(account => account.balance > 0).length
+    return accounts.filter(account => account.balance > 0).length
   }
 
   const getAccountsWithActivity = () => {
     // Simulando contas com atividade recente
-    if (!data?.accounts) return 0
-    return Math.min(data.accounts.length - 1, data.accounts.length)
+    return Math.min(accounts.length - 1, accounts.length)
+  }
+
+  const handleAddAccount = () => {
+    setSelectedAccount(null)
+    setModalMode('add')
+    setIsModalOpen(true)
+  }
+
+  const handleEditAccount = (account: BankAccount) => {
+    setSelectedAccount(account)
+    setModalMode('edit')
+    setIsModalOpen(true)
+  }
+
+  const handleDeleteAccount = (account: BankAccount) => {
+    setSelectedAccount(account)
+    setIsDeleteModalOpen(true)
+  }
+
+  const closeModal = () => {
+    setIsModalOpen(false)
+    setSelectedAccount(null)
+  }
+
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false)
+    setSelectedAccount(null)
   }
 
   if (loading) {
@@ -88,7 +129,7 @@ export function AccountsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Contas</h1>
-          <p className="text-gray-600">Gerencie suas contas bancárias e cartões</p>
+          <p className="text-gray-600">Gerencie suas contas bancárias e carteiras</p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -99,7 +140,7 @@ export function AccountsPage() {
             {showBalances ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             {showBalances ? 'Ocultar Saldos' : 'Mostrar Saldos'}
           </Button>
-          <Button className="gap-2">
+          <Button onClick={handleAddAccount} className="gap-2">
             <Plus className="h-4 w-4" />
             Nova Conta
           </Button>
@@ -130,7 +171,7 @@ export function AccountsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {data?.accounts?.length || 0}
+              {accounts.length}
             </div>
             <p className="text-xs text-gray-600 mt-1">
               Contas ativas
@@ -174,27 +215,32 @@ export function AccountsPage() {
         <CardHeader>
           <CardTitle>Suas Contas</CardTitle>
           <CardDescription>
-            Visualize e gerencie todas as suas contas bancárias e cartões
+            Visualize e gerencie todas as suas contas bancárias e carteiras
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {data?.accounts && data.accounts.length > 0 ? (
+          {accounts.length > 0 ? (
             <div className="space-y-4">
-              {data.accounts.map((account) => (
+              {accounts.map((account) => (
                 <div key={account.id} className="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-lg hover:border-gray-200 transition-colors">
                   <div className="flex items-center gap-4">
-                    <div className="p-3 bg-blue-100 text-blue-600 rounded-full">
-                      {getAccountIcon(account.type)}
+                    <div 
+                      className="p-3 rounded-full text-white flex items-center justify-center"
+                      style={{ backgroundColor: account.color }}
+                    >
+                      {renderAccountIcon(account.icon)}
                     </div>
                     <div>
                       <h3 className="font-semibold text-gray-900 text-lg">{account.name}</h3>
                       <div className="flex items-center gap-3 mt-1">
                         <Badge variant="secondary" className="text-xs">
-                          {getAccountTypeName(account.type)}
+                          {ACCOUNT_TYPES[account.type]?.label || account.type}
                         </Badge>
-                        <span className="text-sm text-gray-500">
-                          {account.bank}
-                        </span>
+                        {account.bank && (
+                          <span className="text-sm text-gray-500">
+                            {account.bank}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -212,14 +258,21 @@ export function AccountsPage() {
                     </div>
                     
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 p-0"
+                        onClick={() => handleEditAccount(account)}
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <MoreVertical className="h-4 w-4" />
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => handleDeleteAccount(account)}
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
@@ -233,9 +286,9 @@ export function AccountsPage() {
                 Nenhuma conta cadastrada
               </h3>
               <p className="text-gray-500 mb-4">
-                Comece adicionando sua primeira conta bancária ou cartão
+                Comece adicionando sua primeira conta bancária ou carteira
               </p>
-              <Button className="gap-2">
+              <Button onClick={handleAddAccount} className="gap-2">
                 <Plus className="h-4 w-4" />
                 Adicionar Primeira Conta
               </Button>
@@ -243,6 +296,20 @@ export function AccountsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Modals */}
+      <AccountModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        account={selectedAccount}
+        mode={modalMode}
+      />
+
+      <DeleteAccountModal
+        isOpen={isDeleteModalOpen}
+        onClose={closeDeleteModal}
+        account={selectedAccount}
+      />
     </div>
   )
 }

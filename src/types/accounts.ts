@@ -44,17 +44,17 @@ export const PAYMENT_METHOD_TYPES = {
 }
 
 export const DEFAULT_BANKS = [
-  { id: 'nubank', name: 'Nubank', icon: '💜', color: '#8A05BE' },
-  { id: 'bb', name: 'Banco do Brasil', icon: '🟡', color: '#FFED00' },
-  { id: 'caixa', name: 'Caixa Econômica', icon: '🔵', color: '#0072CE' },
-  { id: 'itau', name: 'Itaú', icon: '🔶', color: '#EC7000' },
-  { id: 'bradesco', name: 'Bradesco', icon: '🔴', color: '#CC092F' },
-  { id: 'santander', name: 'Santander', icon: '🔺', color: '#EC0000' },
-  { id: 'inter', name: 'Banco Inter', icon: '🧡', color: '#FF7A00' },
-  { id: 'c6bank', name: 'C6 Bank', icon: '💛', color: '#FFEF00' },
-  { id: 'picpay', name: 'PicPay', icon: '💚', color: '#21C25E' },
-  { id: 'mercadopago', name: 'Mercado Pago', icon: '💙', color: '#009EE3' },
-  { id: 'xp', name: 'XP Investimentos', icon: '⚫', color: '#000000' },
-  { id: 'btg', name: 'BTG Pactual', icon: '⚪', color: '#1B1B1B' },
-  { id: 'other', name: 'Outro Banco', icon: '🏛️', color: '#6B7280' }
+  { id: 'nubank', name: 'Nubank', icon: '💜', iconName: 'CreditCard', color: '#8A05BE' },
+  { id: 'bb', name: 'Banco do Brasil', icon: '🟡', iconName: 'Building2', color: '#FFED00' },
+  { id: 'caixa', name: 'Caixa Econômica', icon: '🔵', iconName: 'Building2', color: '#0072CE' },
+  { id: 'itau', name: 'Itaú', icon: '🔶', iconName: 'Building2', color: '#EC7000' },
+  { id: 'bradesco', name: 'Bradesco', icon: '🔴', iconName: 'Building2', color: '#CC092F' },
+  { id: 'santander', name: 'Santander', icon: '🔺', iconName: 'Building2', color: '#EC0000' },
+  { id: 'inter', name: 'Banco Inter', icon: '🧡', iconName: 'TrendingUp', color: '#FF7A00' },
+  { id: 'c6bank', name: 'C6 Bank', icon: '💛', iconName: 'CreditCard', color: '#FFEF00' },
+  { id: 'picpay', name: 'PicPay', icon: '💚', iconName: 'Smartphone', color: '#21C25E' },
+  { id: 'mercadopago', name: 'Mercado Pago', icon: '💙', iconName: 'Smartphone', color: '#009EE3' },
+  { id: 'xp', name: 'XP Investimentos', icon: '⚫', iconName: 'TrendingUp', color: '#000000' },
+  { id: 'btg', name: 'BTG Pactual', icon: '⚪', iconName: 'TrendingUp', color: '#1B1B1B' },
+  { id: 'other', name: 'Outro Banco', icon: '🏛️', iconName: 'Building2', color: '#6B7280' }
 ]
