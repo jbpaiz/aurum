@@ -25,28 +25,41 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# local env files
+# CRITICAL - Environment files with secrets (MUST BE IGNORED)
 .env*.local
-.env
-.env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
-# vercel
+# Allow configuration files but ignore sensitive ones
+# .env                    # Commenting out - allow .env template
+# .env.local              # Ignored above - contains secrets
+# .env.example            # Allow - template file
+# package.json            # Allow - project configuration
+# package-lock.json       # Allow - dependency lock
+# tsconfig.json           # Allow - TypeScript configuration
+# tailwind.config.js      # Allow - Tailwind configuration
+# next.config.js          # Allow - Next.js configuration
+# postcss.config.js       # Allow - PostCSS configuration
+# vercel.json             # Allow - Vercel deployment configuration
+# netlify.toml            # Allow - Netlify deployment configuration
+
+# vercel deployment cache
 .vercel
 
-# typescript
+# typescript build cache
 *.tsbuildinfo
 next-env.d.ts
 
-# IDE
-.vscode/
-.idea/
+# IDE settings (optional - remove if you want to share IDE config)
+.vscode/settings.json
+.vscode/launch.json
+.idea/workspace.xml
+.idea/tasks.xml
 *.swp
 *.swo
 
-# OS
+# OS generated files
 Thumbs.db
 .DS_Store
 
@@ -60,86 +73,52 @@ pids
 *.seed
 *.pid.lock
 
-# Coverage directory used by tools like istanbul
+# Coverage directory
 coverage/
-
-# nyc test coverage
 .nyc_output
-
-# Grunt intermediate storage (https://gruntjs.com/creating-plugins#storing-task-files)
-.grunt
-
-# Bower dependency directory (https://bower.io/)
-bower_components
-
-# node-waf configuration
-.lock-wscript
-
-# Compiled binary addons (https://nodejs.org/api/addons.html)
-build/Release
 
 # Dependency directories
 node_modules/
 jspm_packages/
 
-# TypeScript v1 declaration files
-typings/
-
-# TypeScript cache
-*.tsbuildinfo
-
-# Optional npm cache directory
+# Optional caches
 .npm
-
-# Optional eslint cache
 .eslintcache
-
-# Optional REPL history
 .node_repl_history
-
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# dotenv environment variables file
-.env
-.env.test
-
-# parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
 
-# next.js build output
+# Build outputs
+build/Release
 .next
-
-# nuxt.js build output
 .nuxt
-
-# vuepress build output
 .vuepress/dist
 
-# Serverless directories
+# Serverless
 .serverless/
 
-# FuseBox cache
+# Tool caches
 .fusebox/
-
-# DynamoDB Local files
-.dynamodb/
-
-# TernJS port file
 .tern-port
 
-# Supabase
-.supabase
-
-# Database
+# Database files (keep schema but ignore data)
 *.db
 *.sqlite
 *.sqlite3
+# Allow SQL schema files
+!*.sql
+!supabase/migrations/*.sql
+
+# Supabase local development
+.supabase
 
 # Temporary files
 tmp/
 temp/
+
+# Allow important config files to be tracked
+!.env.example
+!.env.template
+!DEPLOY.md
+!README.md
+!SUPABASE_SETUP.md
