@@ -32,7 +32,11 @@ export function TransactionsPage() {
   const [isSaving, setIsSaving] = useState(false)
 
   const handleSaveTransaction = async (transactionData: any) => {
+    console.log('🔍 Iniciando salvamento de transação:', transactionData)
+    console.log('👤 Usuário atual:', user)
+    
     if (!user) {
+      console.error('❌ Usuário não está logado')
       toast({
         title: "Erro",
         description: "Você precisa estar logado para salvar transações",
@@ -44,51 +48,107 @@ export function TransactionsPage() {
     setIsSaving(true)
     
     try {
+      console.log('📋 Buscando contas do usuário...')
+      
+      // Buscar a primeira conta ativa do usuário como padrão
+      const { data: userAccounts, error: accountsError } = await supabase
+        .from('bank_accounts')
+        .select('id, name')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .limit(1)
+
+      console.log('🏦 Contas encontradas:', userAccounts)
+      console.log('⚠️ Erro nas contas:', accountsError)
+
+      if (accountsError) {
+        throw new Error(`Erro ao buscar contas: ${accountsError.message}`)
+      }
+
+      if (!userAccounts || userAccounts.length === 0) {
+        console.error('❌ Nenhuma conta ativa encontrada')
+        toast({
+          title: "Erro",
+          description: "Você precisa ter pelo menos uma conta cadastrada para criar transações",
+          variant: "destructive"
+        })
+        setIsSaving(false)
+        return
+      }
+
+      const defaultAccountId = userAccounts[0].id
+      console.log('🎯 Conta padrão selecionada:', defaultAccountId)
+
       // Buscar categoria pelo nome ou criar uma nova
       let categoryId = null
       if (transactionData.category) {
-        const { data: existingCategory } = await supabase
+        console.log('🏷️ Buscando categoria:', transactionData.category)
+        
+        const { data: existingCategory, error: categorySearchError } = await supabase
           .from('categories')
           .select('id')
           .eq('name', transactionData.category)
           .eq('user_id', user.id)
           .single()
 
+        console.log('📂 Categoria existente:', existingCategory)
+        console.log('⚠️ Erro na busca da categoria:', categorySearchError)
+
         if (existingCategory) {
           categoryId = existingCategory.id
+          console.log('✅ Categoria encontrada:', categoryId)
         } else {
+          console.log('🆕 Criando nova categoria...')
           // Criar nova categoria
           const { data: newCategory, error: categoryError } = await supabase
             .from('categories')
             .insert({
               name: transactionData.category,
               user_id: user.id,
-              type: transactionData.type
+              type: transactionData.type === 'income' ? 'income' : 'expense'
             })
             .select('id')
             .single()
 
-          if (categoryError) throw categoryError
+          console.log('📝 Nova categoria criada:', newCategory)
+          console.log('⚠️ Erro na criação da categoria:', categoryError)
+
+          if (categoryError) throw new Error(`Erro ao criar categoria: ${categoryError.message}`)
           categoryId = newCategory.id
+          console.log('✅ Nova categoria ID:', categoryId)
         }
       }
 
+      // Preparar dados da transação
+      const transactionInsert = {
+        user_id: user.id,
+        description: transactionData.description,
+        amount: transactionData.amount,
+        type: transactionData.type,
+        transaction_date: transactionData.date,
+        account_id: defaultAccountId,
+        category_id: categoryId,
+        payment_method_id: transactionData.paymentMethodId || null,
+        installments: transactionData.installments || 1,
+        current_installment: 1,
+        is_installment: (transactionData.installments || 1) > 1,
+        is_confirmed: true
+      }
+
+      console.log('💾 Dados para inserção:', transactionInsert)
+
       // Salvar transação
-      const { error: transactionError } = await supabase
+      const { data: savedTransaction, error: transactionError } = await supabase
         .from('transactions')
-        .insert({
-          user_id: user.id,
-          description: transactionData.description,
-          amount: transactionData.amount,
-          type: transactionData.type,
-          date: transactionData.date,
-          category_id: categoryId,
-          payment_method_id: transactionData.paymentMethodId || null,
-          installments: transactionData.installments || 1
-        })
+        .insert(transactionInsert)
+        .select()
 
-      if (transactionError) throw transactionError
+      console.log('💰 Transação salva:', savedTransaction)
+      console.log('⚠️ Erro na transação:', transactionError)
 
+      if (transactionError) throw new Error(`Erro ao salvar transação: ${transactionError.message}`)
+
+      console.log('🎉 Transação salva com sucesso!')
       toast({
         title: "Sucesso!",
         description: "Transação salva com sucesso",
@@ -100,10 +160,11 @@ export function TransactionsPage() {
       window.location.reload()
       
     } catch (error) {
-      console.error('Erro ao salvar transação:', error)
+      console.error('💥 Erro completo:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
       toast({
         title: "Erro",
-        description: "Não foi possível salvar a transação. Tente novamente.",
+        description: `Não foi possível salvar a transação: ${errorMessage}`,
         variant: "destructive"
       })
     } finally {
