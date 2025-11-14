@@ -58,6 +58,7 @@ Este comando irá:
 - ✅ Inserir categorias padrão
 - ✅ Adicionar dados de exemplo
 - ✅ Configurar índices para performance
+- ✅ Criar as tabelas `financial_reports` e `financial_report_lines` usadas na tela de Relatórios
 
 ### 5. Verificar Configuração
 
@@ -91,6 +92,26 @@ Este comando irá:
 - `type` (TEXT) - 'income' ou 'expense'
 - `color` (TEXT) - Cor da categoria
 - `created_at` (TIMESTAMPTZ) - Data de criação
+
+#### `financial_reports`
+- `id` (UUID) - Chave primária
+- `user_id` (UUID) - Dono do relatório
+- `title` (TEXT) - Título salvo
+- `period_start` / `period_end` (DATE) - Intervalo
+- `total_income` / `total_expense` / `net_total` (DECIMAL)
+- `filters` (JSONB) - Metadados dos filtros aplicados
+- `created_at` / `updated_at`
+
+#### `financial_report_lines`
+- `id` (UUID) - Chave primária
+- `report_id` (UUID) - Referência ao relatório
+- `user_id` (UUID)
+- `transaction_id` (UUID)
+- `type` (TEXT) - income ou expense
+- `amount` (DECIMAL)
+- `category` / `description` (TEXT)
+- `transaction_date` (DATE)
+- `created_at`
 
 ## 🔧 Scripts Disponíveis
 

@@ -17,7 +17,8 @@ Um sistema completo de controle financeiro desenvolvido com React, Next.js, Type
 - 💰 Cadastro de receitas e despesas
 - 📝 Categorização automática de transações
 - 📈 Cálculo automático de saldo, receitas e despesas totais
-- 📱 Interface responsiva e moderna
+- � Relatório de receitas x despesas com exportação CSV e salvamento no Supabase
+- �📱 Interface responsiva e moderna
 - 🎨 Design system consistente com shadcn/ui
 - 🔗 Sincronização em tempo real com Supabase para contas, cartões e transações
 
@@ -101,6 +102,7 @@ src/
 │   │   ├── button.tsx
 │   │   └── card.tsx
 │   ├── dashboard/           # Dashboard autenticado
+│   ├── reports/             # Relatórios e análises financeiras
 │   ├── landing-with-auth.tsx# Landing page com demo + auth
 │   ├── modals/              # Modais reutilizáveis (transactions, auth, etc.)
 │   └── transactions/        # Lista e página dedicada de transações
@@ -127,6 +129,26 @@ src/
 - `date` (DATE) - Data da transação
 - `created_at` (TIMESTAMPTZ) - Data de criação
 - `updated_at` (TIMESTAMPTZ) - Data de atualização
+
+### Tabela `financial_reports`
+- `id` (UUID) - Chave primária
+- `user_id` (UUID) - Dono do relatório
+- `title` (TEXT) - Nome amigável do relatório
+- `period_start` / `period_end` (DATE) - Período coberto
+- `total_income` / `total_expense` / `net_total` (DECIMAL) - Resumo numérico
+- `filters` (JSONB) - Filtros aplicados na geração
+- `created_at` / `updated_at` (TIMESTAMPTZ)
+
+### Tabela `financial_report_lines`
+- `id` (UUID) - Chave primária
+- `report_id` (UUID) - Referência ao relatório salvo
+- `user_id` (UUID) - Dono da linha
+- `transaction_id` (UUID) - Transação original
+- `type` (TEXT) - income ou expense
+- `amount` (DECIMAL) - Valor
+- `category` / `description` (TEXT)
+- `transaction_date` (DATE)
+- `created_at` (TIMESTAMPTZ)
 
 ### Tabela `categories`
 - `id` (UUID) - Chave primária

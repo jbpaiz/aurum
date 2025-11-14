@@ -390,6 +390,100 @@ export interface Database {
           }
         ]
       }
+      financial_reports: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          period_start: string
+          period_end: string
+          total_income: number
+          total_expense: number
+          net_total: number
+          filters: Json | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          period_start: string
+          period_end: string
+          total_income?: number
+          total_expense?: number
+          net_total?: number
+          filters?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          period_start?: string
+          period_end?: string
+          total_income?: number
+          total_expense?: number
+          net_total?: number
+          filters?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      financial_report_lines: {
+        Row: {
+          id: string
+          report_id: string
+          user_id: string
+          transaction_id: string
+          type: 'income' | 'expense'
+          amount: number
+          category: string | null
+          description: string | null
+          transaction_date: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          report_id: string
+          user_id: string
+          transaction_id: string
+          type: 'income' | 'expense'
+          amount: number
+          category?: string | null
+          description?: string | null
+          transaction_date: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          report_id?: string
+          user_id?: string
+          transaction_id?: string
+          type?: 'income' | 'expense'
+          amount?: number
+          category?: string | null
+          description?: string | null
+          transaction_date?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_report_lines_report_id_fkey"
+            columns: ["report_id"]
+            referencedRelation: "financial_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_report_lines_transaction_id_fkey"
+            columns: ["transaction_id"]
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
