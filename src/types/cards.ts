@@ -10,6 +10,7 @@ export interface CardProvider {
 export interface CreditCard {
   id: string
   providerId: string
+  accountId?: string
   alias: string // Nome personalizado para o cartão
   lastFourDigits?: string
   type: 'credit' | 'debit' // Tipo do cartão

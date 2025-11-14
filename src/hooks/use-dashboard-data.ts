@@ -61,8 +61,8 @@ export function useDashboardData() {
             categories (name)
           `)
           .eq('user_id', user.id)
-          .gte('date', currentMonth)
-          .order('date', { ascending: false })
+          .gte('transaction_date', currentMonth)
+          .order('transaction_date', { ascending: false })
 
         // Calcular totais
         const totalBalance = accounts?.reduce((sum, acc) => sum + Number(acc.balance), 0) || 0
@@ -76,7 +76,7 @@ export function useDashboardData() {
           balance: Number(acc.balance),
           color: acc.color || '#6B7280',
           type: acc.type,
-          bank: acc.bank
+          bank: acc.bank || 'Conta'
         })) || []
 
         // Preparar transações recentes
@@ -84,8 +84,8 @@ export function useDashboardData() {
           id: t.id,
           description: t.description,
           amount: Number(t.amount),
-          type: t.type as 'income' | 'expense',
-          date: t.date,
+          type: (t.type === 'income' ? 'income' : 'expense') as 'income' | 'expense',
+          date: t.transaction_date,
           category: (t as any).categories?.name || 'Sem categoria'
         })) || []
 

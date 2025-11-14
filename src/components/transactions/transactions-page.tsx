@@ -1,11 +1,10 @@
 'use client'
 
-import { useState } from 'react'
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  TrendingUp, 
+import { useMemo, useState } from 'react'
+import {
+  Plus,
+  Search,
+  TrendingUp,
   TrendingDown,
   Calendar,
   DollarSign,
@@ -16,172 +15,146 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { TransactionModal } from '@/components/modals/transaction-modal'
-import { useDashboardData } from '@/hooks/use-dashboard-data'
-import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/contexts/auth-context'
+import { TransactionModal, TransactionFormValues } from '@/components/modals/transaction-modal'
+import { useTransactions, TransactionRecord, type TransactionFormData } from '@/hooks/use-transactions'
 import { useToast } from '@/hooks/use-toast'
 
 export function TransactionsPage() {
-  const { user } = useAuth()
   const { toast } = useToast()
-  const { data, loading } = useDashboardData()
+  const {
+    transactions,
+    loading,
+    addTransaction,
+    updateTransaction,
+    deleteTransaction,
+    isSaving
+  } = useTransactions()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all')
-  const [isSaving, setIsSaving] = useState(false)
+  const [editingTransaction, setEditingTransaction] = useState<TransactionFormValues | null>(null)
 
-  const handleSaveTransaction = async (transactionData: any) => {
-    console.log('🔍 Iniciando salvamento de transação:', transactionData)
-    console.log('👤 Usuário atual:', user)
-    
-    if (!user) {
-      console.error('❌ Usuário não está logado')
+  const currentMonthKey = new Date().toISOString().slice(0, 7)
+
+  const monthlyTransactions = useMemo(
+    () =>
+      transactions.filter(
+        (transaction) =>
+          transaction.type !== 'transfer' && transaction.date.slice(0, 7) === currentMonthKey
+      ),
+    [transactions, currentMonthKey]
+  )
+
+  const totalIncome = useMemo(
+    () => monthlyTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0),
+    [monthlyTransactions]
+  )
+
+  const totalExpenses = useMemo(
+    () => monthlyTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0),
+    [monthlyTransactions]
+  )
+
+  const filteredTransactions = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase()
+    return transactions.filter(transaction => {
+      if (transaction.type === 'transfer') {
+        return false
+      }
+      const matchesSearch = normalizedSearch === ''
+        || transaction.description.toLowerCase().includes(normalizedSearch)
+        || transaction.category.toLowerCase().includes(normalizedSearch)
+      const matchesType = filterType === 'all' || transaction.type === filterType
+      return matchesSearch && matchesType
+    })
+  }, [filterType, searchTerm, transactions])
+
+  const handleSaveTransaction = async (transactionData: TransactionFormValues | Omit<TransactionFormValues, 'id'>) => {
+    try {
+      if (!transactionData.accountId) {
+        toast({
+          title: 'Selecione uma conta',
+          description: 'Escolha uma conta antes de salvar a transação.',
+          variant: 'destructive'
+        })
+        return
+      }
+
+      const payload: TransactionFormData = {
+        type: transactionData.type,
+        description: transactionData.description,
+        amount: transactionData.amount,
+        category: transactionData.category,
+        date: transactionData.date,
+        accountId: transactionData.accountId,
+        paymentMethod: transactionData.paymentMethod,
+        installments: transactionData.installments
+      }
+
+      if ('id' in transactionData && transactionData.id) {
+        await updateTransaction(transactionData.id, payload)
+        toast({ title: 'Transação atualizada' })
+      } else {
+        await addTransaction(payload)
+        toast({ title: 'Transação registrada!' })
+      }
+
+      setIsModalOpen(false)
+      setEditingTransaction(null)
+    } catch (error) {
+      const description = error instanceof Error ? error.message : 'Não foi possível salvar a transação'
+      toast({ title: 'Erro', description, variant: 'destructive' })
+    }
+  }
+
+  const handleDeleteTransaction = async (id: string) => {
+    try {
+      await deleteTransaction(id)
+      toast({ title: 'Transação removida' })
+    } catch (error) {
+      const description = error instanceof Error ? error.message : 'Não foi possível remover a transação'
+      toast({ title: 'Erro', description, variant: 'destructive' })
+    }
+  }
+
+  const handleEditTransaction = (transaction: TransactionRecord) => {
+    if (transaction.type === 'transfer') {
       toast({
-        title: "Erro",
-        description: "Você precisa estar logado para salvar transações",
-        variant: "destructive"
+        title: 'Não suportado',
+        description: 'Use o modal unificado para editar transferências.',
+        variant: 'destructive'
       })
       return
     }
 
-    setIsSaving(true)
-    
-    try {
-      console.log('📋 Buscando contas do usuário...')
-      
-      // Buscar a primeira conta ativa do usuário como padrão
-      const { data: userAccounts, error: accountsError } = await supabase
-        .from('bank_accounts')
-        .select('id, name')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .limit(1)
-
-      console.log('🏦 Contas encontradas:', userAccounts)
-      console.log('⚠️ Erro nas contas:', accountsError)
-
-      if (accountsError) {
-        throw new Error(`Erro ao buscar contas: ${accountsError.message}`)
-      }
-
-      if (!userAccounts || userAccounts.length === 0) {
-        console.error('❌ Nenhuma conta ativa encontrada')
-        toast({
-          title: "Erro",
-          description: "Você precisa ter pelo menos uma conta cadastrada para criar transações",
-          variant: "destructive"
-        })
-        setIsSaving(false)
-        return
-      }
-
-      const defaultAccountId = userAccounts[0].id
-      console.log('🎯 Conta padrão selecionada:', defaultAccountId)
-
-      // Buscar categoria pelo nome ou criar uma nova
-      let categoryId = null
-      if (transactionData.category) {
-        console.log('🏷️ Buscando categoria:', transactionData.category)
-        
-        const { data: existingCategory, error: categorySearchError } = await supabase
-          .from('categories')
-          .select('id')
-          .eq('name', transactionData.category)
-          .eq('user_id', user.id)
-          .single()
-
-        console.log('📂 Categoria existente:', existingCategory)
-        console.log('⚠️ Erro na busca da categoria:', categorySearchError)
-
-        if (existingCategory) {
-          categoryId = existingCategory.id
-          console.log('✅ Categoria encontrada:', categoryId)
-        } else {
-          console.log('🆕 Criando nova categoria...')
-          // Criar nova categoria
-          const { data: newCategory, error: categoryError } = await supabase
-            .from('categories')
-            .insert({
-              name: transactionData.category,
-              user_id: user.id,
-              type: transactionData.type === 'income' ? 'income' : 'expense'
-            })
-            .select('id')
-            .single()
-
-          console.log('📝 Nova categoria criada:', newCategory)
-          console.log('⚠️ Erro na criação da categoria:', categoryError)
-
-          if (categoryError) throw new Error(`Erro ao criar categoria: ${categoryError.message}`)
-          categoryId = newCategory.id
-          console.log('✅ Nova categoria ID:', categoryId)
-        }
-      }
-
-      // Preparar dados da transação
-      const transactionInsert = {
-        user_id: user.id,
-        description: transactionData.description,
-        amount: transactionData.amount,
-        type: transactionData.type,
-        date: transactionData.date,
-        category_id: categoryId,
-        payment_method_id: transactionData.paymentMethodId || null,
-        account_id: defaultAccountId
-      }
-
-      console.log('💾 Dados para inserção:', transactionInsert)
-
-      // Salvar transação
-      const { data: savedTransaction, error: transactionError } = await supabase
-        .from('transactions')
-        .insert(transactionInsert)
-        .select()
-
-      console.log('💰 Transação salva:', savedTransaction)
-      console.log('⚠️ Erro na transação:', transactionError)
-
-      if (transactionError) throw new Error(`Erro ao salvar transação: ${transactionError.message}`)
-
-      console.log('🎉 Transação salva com sucesso!')
-      toast({
-        title: "Sucesso!",
-        description: "Transação salva com sucesso",
-      })
-
-      setIsModalOpen(false)
-      
-      // Recarregar a página para atualizar os dados
-      window.location.reload()
-      
-    } catch (error) {
-      console.error('💥 Erro completo:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
-      toast({
-        title: "Erro",
-        description: `Não foi possível salvar a transação: ${errorMessage}`,
-        variant: "destructive"
-      })
-    } finally {
-      setIsSaving(false)
+    const modalData: TransactionFormValues = {
+      id: transaction.id,
+      type: transaction.type,
+      description: transaction.description,
+      amount: transaction.amount,
+      category: transaction.category,
+      date: transaction.date,
+      accountId: transaction.accountId || '',
+      paymentMethod: transaction.paymentMethod,
+      installments: transaction.installments
     }
+
+    setEditingTransaction(modalData)
+    setIsModalOpen(true)
   }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('pt-BR', {
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL'
     }).format(Math.abs(amount))
-  }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString('pt-BR', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
     })
-  }
 
   if (loading) {
     return (
@@ -196,17 +169,6 @@ export function TransactionsPage() {
     )
   }
 
-  // Filtrar transações baseado na busca e filtro
-  const filteredTransactions = data?.recentTransactions?.filter(transaction => {
-    const matchesSearch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         transaction.category.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesType = filterType === 'all' || transaction.type === filterType
-    return matchesSearch && matchesType
-  }) || []
-
-  const totalIncome = data?.monthlyIncome || 0
-  const totalExpenses = data?.monthlyExpenses || 0
-
   return (
     <div className="flex-1 p-6 space-y-6 bg-gray-50">
       {/* Header */}
@@ -215,7 +177,13 @@ export function TransactionsPage() {
           <h1 className="text-3xl font-bold text-gray-900">Transações</h1>
           <p className="text-gray-600">Gerencie todas as suas movimentações financeiras</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="gap-2">
+        <Button
+          onClick={() => {
+            setEditingTransaction(null)
+            setIsModalOpen(true)
+          }}
+          className="gap-2"
+        >
           <Plus className="h-4 w-4" />
           Nova Transação
         </Button>
@@ -357,10 +325,20 @@ export function TransactionsPage() {
                       </p>
                     </div>
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => handleEditTransaction(transaction)}
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-600 hover:text-red-700">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                        onClick={() => handleDeleteTransaction(transaction.id)}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -394,8 +372,13 @@ export function TransactionsPage() {
       {/* Modal de Transação */}
       {isModalOpen && (
         <TransactionModal
+          transaction={editingTransaction}
+          isSaving={isSaving}
           onSave={handleSaveTransaction}
-          onClose={() => setIsModalOpen(false)}
+          onClose={() => {
+            setEditingTransaction(null)
+            setIsModalOpen(false)
+          }}
         />
       )}
     </div>

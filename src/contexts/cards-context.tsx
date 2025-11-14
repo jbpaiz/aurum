@@ -1,9 +1,10 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { CreditCard, CardProvider, DEFAULT_CARD_PROVIDERS } from '@/types/cards'
-import { useAuth } from './auth-context'
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
+import type { Database } from '@/lib/database.types'
+import { CreditCard, CardProvider, DEFAULT_CARD_PROVIDERS } from '@/types/cards'
+import { useAuth } from '@/contexts/auth-context'
 
 interface CardsContextType {
   cards: CreditCard[]
@@ -36,204 +37,144 @@ export function CardsProvider({ children }: CardsProviderProps) {
   const [providers] = useState<CardProvider[]>(DEFAULT_CARD_PROVIDERS)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    const loadUserCards = async () => {
-      try {
-        setLoading(true)
-        
-        // Em um app real, carregaria do Supabase
-        // Por agora, usar localStorage ou criar dados de demonstração
-        const storedCards = localStorage.getItem(`cards_${user?.id}`)
-        if (storedCards) {
-          setCards(JSON.parse(storedCards))
-        } else {
-          // Criar cartões de demonstração completos
-          const demoCards: CreditCard[] = [
-            {
-              id: '1',
-              providerId: 'nubank',
-              alias: 'Nubank Roxinho',
-              lastFourDigits: '1234',
-              type: 'credit',
-              isActive: true,
-              createdAt: new Date().toISOString(),
-              userId: user?.id
-            },
-            {
-              id: '2',
-              providerId: 'nubank',
-              alias: 'Nu Débito',
-              lastFourDigits: '5678',
-              type: 'debit',
-              isActive: true,
-              createdAt: new Date().toISOString(),
-              userId: user?.id
-            },
-            {
-              id: '3',
-              providerId: 'mercadopago',
-              alias: 'Mercado Pago Gold',
-              lastFourDigits: '9012',
-              type: 'credit',
-              isActive: true,
-              createdAt: new Date().toISOString(),
-              userId: user?.id
-            },
-            {
-              id: '4',
-              providerId: 'bb',
-              alias: 'BB Ourocard Visa',
-              lastFourDigits: '3456',
-              type: 'credit',
-              isActive: true,
-              createdAt: new Date().toISOString(),
-              userId: user?.id
-            },
-            {
-              id: '5',
-              providerId: 'bb',
-              alias: 'BB Conta Corrente',
-              lastFourDigits: '7890',
-              type: 'debit',
-              isActive: true,
-              createdAt: new Date().toISOString(),
-              userId: user?.id
-            },
-            {
-              id: '6',
-              providerId: 'caixa',
-              alias: 'Caixa Mastercard',
-              lastFourDigits: '2345',
-              type: 'credit',
-              isActive: true,
-              createdAt: new Date().toISOString(),
-              userId: user?.id
-            },
-            {
-              id: '7',
-              providerId: 'itau',
-              alias: 'Itaucard Internacional',
-              lastFourDigits: '6789',
-              type: 'credit',
-              isActive: true,
-              createdAt: new Date().toISOString(),
-              userId: user?.id
-            },
-            {
-              id: '8',
-              providerId: 'picpay',
-              alias: 'PicPay Card',
-              lastFourDigits: '1122',
-              type: 'credit',
-              isActive: true,
-              createdAt: new Date().toISOString(),
-              userId: user?.id
-            },
-            {
-              id: '9',
-              providerId: 'inter',
-              alias: 'Inter Mastercard',
-              lastFourDigits: '3344',
-              type: 'credit',
-              isActive: true,
-              createdAt: new Date().toISOString(),
-              userId: user?.id
-            },
-            {
-              id: '10',
-              providerId: 'c6bank',
-              alias: 'C6 Bank Carbon',
-              lastFourDigits: '5566',
-              type: 'credit',
-              isActive: true,
-              createdAt: new Date().toISOString(),
-              userId: user?.id
-            }
-          ]
-          setCards(demoCards)
-          localStorage.setItem(`cards_${user?.id}`, JSON.stringify(demoCards))
-        }
-      } catch (error) {
-        console.error('Erro ao carregar cartões:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
+  const toCreditCard = useCallback((card: Database['public']['Tables']['cards']['Row']): CreditCard => ({
+    id: card.id,
+    providerId: card.provider_id,
+    accountId: card.account_id,
+    alias: card.alias,
+    lastFourDigits: card.last_four_digits ?? undefined,
+    type: card.type,
+    isActive: card.is_active,
+    createdAt: card.created_at,
+    userId: card.user_id
+  }), [])
 
-    if (user) {
-      loadUserCards()
-    } else {
+  const fetchCards = useCallback(async () => {
+    if (!user) {
       setCards([])
       setLoading(false)
+      return
     }
+
+    setLoading(true)
+    const { data, error } = await supabase
+      .from('cards')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      console.error('Erro ao carregar cartões:', error.message)
+    }
+
+    setCards((data ?? []).map(toCreditCard))
+    setLoading(false)
+  }, [toCreditCard, user])
+
+  useEffect(() => {
+    fetchCards()
+  }, [fetchCards])
+
+  const getDefaultAccountId = useCallback(async () => {
+    if (!user) return null
+
+    const { data } = await supabase
+      .from('bank_accounts')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('is_active', true)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .single()
+
+    return data?.id ?? null
   }, [user])
 
-  const addCard = async (cardData: Omit<CreditCard, 'id' | 'createdAt' | 'userId'>) => {
+  const addCard = useCallback(async (cardData: Omit<CreditCard, 'id' | 'createdAt' | 'userId'>) => {
     if (!user) return
 
     try {
-      // Salvar no Supabase
-      const { data: savedCard, error } = await supabase
+      const accountId = cardData.accountId ?? await getDefaultAccountId()
+
+      if (!accountId) {
+        throw new Error('Nenhuma conta ativa disponível para vincular o cartão')
+      }
+
+      const payload: Database['public']['Tables']['cards']['Insert'] = {
+        user_id: user.id,
+        provider_id: cardData.providerId,
+        account_id: accountId,
+        alias: cardData.alias,
+        last_four_digits: cardData.lastFourDigits ?? null,
+        type: cardData.type,
+        is_active: cardData.isActive
+      }
+
+      const { data, error } = await supabase
         .from('cards')
-        .insert({
-          user_id: user.id,
-          nickname: cardData.alias,
-          type: cardData.type,
-          provider: cardData.providerId,
-          last_digits: cardData.lastFourDigits,
-          is_active: cardData.isActive
-        })
+        .insert(payload)
         .select()
         .single()
 
-      if (error) throw error
-
-      // Adicionar ao estado local
-      const newCard: CreditCard = {
-        ...cardData,
-        id: savedCard.id,
-        createdAt: savedCard.created_at,
-        userId: user.id
+      if (error) {
+        throw error
       }
 
-      const updatedCards = [...cards, newCard]
-      setCards(updatedCards)
-      
-      // Manter sincronização com localStorage como backup
-      localStorage.setItem(`cards_${user.id}`, JSON.stringify(updatedCards))
+      setCards(prev => [...prev, toCreditCard(data)])
     } catch (error) {
-      console.error('Erro ao salvar cartão:', error)
-      // Fallback para localStorage se Supabase falhar
-      const newCard: CreditCard = {
-        ...cardData,
-        id: Date.now().toString(),
-        createdAt: new Date().toISOString(),
-        userId: user.id
+      console.error('Erro ao salvar cartão no Supabase:', error)
+    }
+  }, [getDefaultAccountId, toCreditCard, user])
+
+  const updateCard = useCallback(async (id: string, updates: Partial<CreditCard>) => {
+    if (!user) return
+
+    try {
+      const dbUpdates: Partial<Database['public']['Tables']['cards']['Update']> = {}
+      if (updates.providerId !== undefined) dbUpdates.provider_id = updates.providerId
+      if (updates.accountId !== undefined) dbUpdates.account_id = updates.accountId
+      if (updates.alias !== undefined) dbUpdates.alias = updates.alias
+      if (updates.lastFourDigits !== undefined) dbUpdates.last_four_digits = updates.lastFourDigits ?? null
+      if (updates.type !== undefined) dbUpdates.type = updates.type
+      if (updates.isActive !== undefined) dbUpdates.is_active = updates.isActive
+
+      const { data, error } = await supabase
+        .from('cards')
+        .update(dbUpdates)
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .select()
+        .single()
+
+      if (error) {
+        throw error
       }
 
-      const updatedCards = [...cards, newCard]
-      setCards(updatedCards)
-      localStorage.setItem(`cards_${user.id}`, JSON.stringify(updatedCards))
+      setCards(prev => prev.map(card => card.id === id ? toCreditCard(data) : card))
+    } catch (error) {
+      console.error('Erro ao atualizar cartão no Supabase:', error)
     }
-  }
+  }, [toCreditCard, user])
 
-  const updateCard = async (id: string, updates: Partial<CreditCard>) => {
+  const deleteCard = useCallback(async (id: string) => {
     if (!user) return
 
-    const updatedCards = cards.map(card => 
-      card.id === id ? { ...card, ...updates } : card
-    )
-    setCards(updatedCards)
-    localStorage.setItem(`cards_${user.id}`, JSON.stringify(updatedCards))
-  }
+    try {
+      const { error } = await supabase
+        .from('cards')
+        .update({ is_active: false })
+        .eq('id', id)
+        .eq('user_id', user.id)
 
-  const deleteCard = async (id: string) => {
-    if (!user) return
+      if (error) {
+        throw error
+      }
 
-    const updatedCards = cards.filter(card => card.id !== id)
-    setCards(updatedCards)
-    localStorage.setItem(`cards_${user.id}`, JSON.stringify(updatedCards))
-  }
+      setCards(prev => prev.filter(card => card.id !== id))
+    } catch (error) {
+      console.error('Erro ao remover cartão no Supabase:', error)
+    }
+  }, [user])
 
   const getCardsByProvider = (providerId: string) => {
     return cards.filter(card => card.providerId === providerId && card.isActive)

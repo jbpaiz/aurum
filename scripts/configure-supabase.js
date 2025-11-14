@@ -25,6 +25,9 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=sua_chave_publica_aqui
 # Cole sua chave de serviço (service_role key) aqui (apenas para desenvolvimento):
 SUPABASE_SERVICE_ROLE_KEY=sua_chave_de_servico_aqui
 
+# Opcional: informe apenas a senha principal do banco para montarmos a URL completa
+SUPABASE_DB_PASSWORD=sua_senha_do_banco_aqui
+
 # URL do banco para operações diretas:
 DATABASE_URL=postgresql://postgres:[SENHA]@db.[SEU-PROJETO].supabase.co:5432/postgres
 

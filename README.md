@@ -19,6 +19,7 @@ Um sistema completo de controle financeiro desenvolvido com React, Next.js, Type
 - 📈 Cálculo automático de saldo, receitas e despesas totais
 - 📱 Interface responsiva e moderna
 - 🎨 Design system consistente com shadcn/ui
+- 🔗 Sincronização em tempo real com Supabase para contas, cartões e transações
 
 ### 🔄 Em Desenvolvimento
 - 📊 Gráficos e relatórios detalhados
@@ -52,12 +53,28 @@ npm install
 node scripts/configure-supabase.js
 ```
 
+Depois de atualizar o `.env.local` com as credenciais reais, rode:
+
+```bash
+npm run supabase:setup
+```
+
+Esse comando agora conecta automaticamente ao banco do Supabase e aplica as migrations em `supabase/migrations`.
+Ele precisa encontrar no `.env.local`:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- **E** uma das opções abaixo
+    - `DATABASE_URL` completo do Postgres, **ou**
+    - `SUPABASE_DB_PASSWORD` (o script monta a URL usando o `project-ref` da URL pública)
+
 **Método Manual:**
 1. **Crie um projeto no [Supabase](https://supabase.com)**
 2. **Configure o banco**:
    - Vá para Settings > API e copie suas credenciais
-   - Edite `.env.local` com suas credenciais reais
-   - Execute: `npm run supabase:setup`
+    - Edite `.env.local` com suas credenciais reais (inclusive `DATABASE_URL` ou `SUPABASE_DB_PASSWORD`)
+    - Execute: `npm run supabase:setup`
 
 3. **Documentação detalhada**: [SUPABASE_SETUP.md](./SUPABASE_SETUP.md)
 
@@ -83,9 +100,16 @@ src/
 │   ├── ui/                  # Componentes shadcn/ui
 │   │   ├── button.tsx
 │   │   └── card.tsx
-│   ├── landing.tsx          # Componente principal do dashboard
-│   ├── transaction-form.tsx # Formulário de transações
-│   └── transaction-list.tsx # Lista de transações
+│   ├── dashboard/           # Dashboard autenticado
+│   ├── landing-with-auth.tsx# Landing page com demo + auth
+│   ├── modals/              # Modais reutilizáveis (transactions, auth, etc.)
+│   └── transactions/        # Lista e página dedicada de transações
+├── hooks/
+│   ├── use-dashboard-data.ts# Consolida contas + transações para cards
+│   └── use-transactions.ts  # CRUD tipado com Supabase para transações
+├── contexts/
+│   ├── accounts-context.tsx # Contas bancárias carregadas do Supabase
+│   └── cards-context.tsx    # Cartões sincronizados com Supabase
 └── lib/
     ├── supabase.ts          # Configuração do Supabase
     └── utils.ts             # Utilitários (cn function)
@@ -151,6 +175,12 @@ O projeto utiliza o shadcn/ui como base para o sistema de design, proporcionando
 - Exibição formatada das transações
 - Ícones diferenciados para receitas/despesas
 - Formatação de data em português
+
+## 🧠 Hooks e Contextos Principais
+
+- `useTransactions`: encapsula toda a comunicação com a tabela `transactions`, incluindo criação de categorias sob demanda e parsing de notas (forma de pagamento).
+- `useDashboardData`: agrega contas, transações e categorias para montar o overview do dashboard.
+- `AccountsProvider` / `CardsProvider`: sincronizam contas e cartões do Supabase e expõem helpers para criação, edição e exclusão soft-delete.
 
 ## 🚀 Próximos Passos
 

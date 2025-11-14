@@ -38,7 +38,11 @@ Este guia explica como conectar seu projeto Aurum a um banco de dados Supabase r
 NEXT_PUBLIC_SUPABASE_URL=https://seuprojetoid.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_DB_PASSWORD=sua-senha-principal-do-banco
+DATABASE_URL=postgresql://postgres:[SENHA]@db.[SEU-PROJETO].supabase.co:5432/postgres
 ```
+
+> 💡 Caso não queira compartilhar a URL completa, basta informar `SUPABASE_DB_PASSWORD`. O script monta automaticamente o valor de `DATABASE_URL` usando o `project-ref` da URL pública. Se preferir colar a URL completa, pode deixar `SUPABASE_DB_PASSWORD` em branco.
 
 ### 4. Configurar o Banco de Dados
 
@@ -49,6 +53,7 @@ npm run supabase:setup
 ```
 
 Este comando irá:
+- ✅ Validar se as credenciais Supabase estão corretas
 - ✅ Criar as tabelas necessárias
 - ✅ Inserir categorias padrão
 - ✅ Adicionar dados de exemplo

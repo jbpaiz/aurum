@@ -26,7 +26,7 @@ import { useAccounts } from '@/contexts/accounts-context'
 
 interface AccountSelectorProps {
   value?: string // ID da conta selecionada
-  onChange: (accountId: string, account: BankAccount) => void
+  onChange: (accountId: string, account?: BankAccount) => void
   disabled?: boolean
   placeholder?: string
   className?: string

@@ -6,8 +6,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { useCards } from '@/contexts/cards-context'
-import { useAccounts } from '@/contexts/accounts-context'
 import { AccountSelector } from '@/components/accounts/account-selector'
 import { SimplePaymentMethodSelector } from '@/components/payment-methods/simple-payment-method-selector'
 import { 
@@ -24,22 +22,23 @@ import {
   ArrowLeftRight
 } from 'lucide-react'
 
-interface Transaction {
+export interface TransactionFormValues {
   id: string
   type: 'income' | 'expense'
   description: string
   amount: number
   category: string
   date: string
-  accountId?: string // Mudança: usar conta diretamente (opcional para compatibilidade)
+  accountId?: string
   paymentMethod?: string // Método de pagamento opcional (PIX, dinheiro, etc.)
   installments?: number
 }
 
 interface TransactionModalProps {
-  transaction?: Transaction | null
-  onSave: (transaction: Transaction | Omit<Transaction, 'id'>) => void
+  transaction?: TransactionFormValues | null
+  onSave: (transaction: TransactionFormValues | Omit<TransactionFormValues, 'id'>) => Promise<void> | void
   onClose: () => void
+  isSaving?: boolean
 }
 
 const CATEGORIES = {
@@ -66,9 +65,7 @@ const CATEGORIES = {
   ]
 }
 
-export function TransactionModal({ transaction, onSave, onClose }: TransactionModalProps) {
-  const { cards, getProviderById } = useCards()
-  const { accounts, updateAccountBalance } = useAccounts()
+export function TransactionModal({ transaction, onSave, onClose, isSaving = false }: TransactionModalProps) {
   const [type, setType] = useState<'income' | 'expense'>(transaction?.type || 'expense')
   const [description, setDescription] = useState(transaction?.description || '')
   const [amount, setAmount] = useState(transaction?.amount?.toString() || '')
@@ -77,6 +74,8 @@ export function TransactionModal({ transaction, onSave, onClose }: TransactionMo
   const [accountId, setAccountId] = useState(transaction?.accountId || '')
   const [paymentMethod, setPaymentMethod] = useState(transaction?.paymentMethod || '')
   const [installments, setInstallments] = useState(transaction?.installments?.toString() || '1')
+  const [amountError, setAmountError] = useState<string | null>(null)
+  const [accountError, setAccountError] = useState<string | null>(null)
 
   const isEditing = !!transaction
 
@@ -87,27 +86,51 @@ export function TransactionModal({ transaction, onSave, onClose }: TransactionMo
     }
   }, [type, isEditing])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const parseCurrencyToNumber = (value: string) => {
+    if (!value) return NaN
+    const normalized = value
+      .replace(/[R$]/gi, '')
+      .replace(/\s/g, '')
+      .replace(/\./g, '')
+      .replace(',', '.')
+    return parseFloat(normalized)
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+    setAmountError(null)
+    setAccountError(null)
+
+    const numericAmount = parseCurrencyToNumber(amount)
+
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+      setAmountError('Informe um valor válido maior que zero')
+      return
+    }
+
+    if (!accountId) {
+      setAccountError('Selecione a conta relacionada à transação')
+      return
+    }
+
+    const trimmedDescription = description.trim()
+    const installmentsNumber = type === 'expense' ? parseInt(installments) || 1 : 1
+
     const transactionData = {
       type,
-      description: description.trim(),
-      amount: parseFloat(amount),
+      description: trimmedDescription,
+      amount: Number(numericAmount.toFixed(2)),
       category,
       date,
       accountId,
       ...(paymentMethod && { paymentMethod }),
-      ...(type === 'expense' && parseInt(installments) > 1 && { installments: parseInt(installments) })
+      ...(type === 'expense' && installmentsNumber > 1 && { installments: installmentsNumber })
     }
 
-    if (isEditing) {
-      onSave({
-        ...transactionData,
-        id: transaction.id
-      })
+    if (isEditing && transaction) {
+      await Promise.resolve(onSave({ ...transactionData, id: transaction.id }))
     } else {
-      onSave(transactionData)
+      await Promise.resolve(onSave(transactionData))
     }
   }
 
@@ -120,6 +143,16 @@ export function TransactionModal({ transaction, onSave, onClose }: TransactionMo
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
     setAmount(formatCurrency(value))
+    if (amountError) {
+      setAmountError(null)
+    }
+  }
+
+  const handleAccountChange = (selectedAccountId: string) => {
+    setAccountId(selectedAccountId)
+    if (accountError) {
+      setAccountError(null)
+    }
   }
 
   const getTypeConfig = (transactionType: 'income' | 'expense') => {
@@ -248,6 +281,9 @@ export function TransactionModal({ transaction, onSave, onClose }: TransactionMo
                   required
                 />
               </div>
+              {amountError && (
+                <p className="text-xs text-red-500">{amountError}</p>
+              )}
             </div>
 
             {/* Categoria */}
@@ -291,12 +327,16 @@ export function TransactionModal({ transaction, onSave, onClose }: TransactionMo
               <Label>Conta</Label>
               <AccountSelector
                 value={accountId}
-                onChange={setAccountId}
+                onChange={(id) => handleAccountChange(id)}
+                disabled={isSaving}
                 placeholder="Selecione a conta"
               />
               <p className="text-xs text-muted-foreground">
                 Conta que será movimentada nesta transação
               </p>
+              {accountError && (
+                <p className="text-xs text-red-500">{accountError}</p>
+              )}
             </div>
 
             {/* Método de Pagamento */}
@@ -306,6 +346,7 @@ export function TransactionModal({ transaction, onSave, onClose }: TransactionMo
                 value={paymentMethod}
                 onChange={setPaymentMethod}
                 placeholder="Como foi pago?"
+                disabled={isSaving}
               />
             </div>
 
@@ -347,8 +388,9 @@ export function TransactionModal({ transaction, onSave, onClose }: TransactionMo
                   ? 'bg-green-600 hover:bg-green-700' 
                   : 'bg-red-600 hover:bg-red-700'
                 } text-white`}
+                disabled={isSaving}
               >
-                {isEditing ? 'Atualizar' : 'Adicionar'}
+                {isSaving ? 'Salvando...' : isEditing ? 'Atualizar' : 'Adicionar'}
               </Button>
             </div>
           </form>

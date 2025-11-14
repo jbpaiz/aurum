@@ -55,7 +55,7 @@ export function AccountsProvider({ children }: AccountsProviderProps) {
             id: account.id,
             name: account.name,
             type: account.type,
-            bank: account.bank,
+            bank: account.bank ?? undefined,
             icon: account.icon,
             color: account.color,
             balance: account.balance,
