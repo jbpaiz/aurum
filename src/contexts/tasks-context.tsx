@@ -46,6 +46,7 @@ interface TasksContextValue {
   setActiveBoardId: (boardId: string) => void
   createTask: (input: CreateTaskInput) => Promise<void>
   updateTask: (taskId: string, updates: Partial<CreateTaskInput>) => Promise<void>
+  deleteTask: (taskId: string) => Promise<void>
   moveTask: (payload: MoveTaskPayload) => Promise<void>
   createColumn: (name: string, category?: TaskColumnCategory, color?: string) => Promise<void>
   createBoard: (name: string, description?: string) => Promise<void>
@@ -606,6 +607,19 @@ export function TasksProvider({ children }: TasksProviderProps) {
     [activeProject, fetchWorkspace]
   )
 
+  const deleteTask = useCallback(
+    async (taskId: string) => {
+      if (!user) return
+      const { error } = await supabase.from('tasks').delete().eq('id', taskId)
+      if (error) {
+        console.error('Erro ao excluir tarefa:', error.message)
+      } else {
+        await fetchWorkspace()
+      }
+    },
+    [user, fetchWorkspace]
+  )
+
   const value: TasksContextValue = {
     loading,
     projects,
@@ -615,6 +629,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
     setActiveBoardId: (boardId: string) => setActiveBoardId(boardId),
     createTask,
     updateTask,
+    deleteTask,
     moveTask,
     createColumn,
     createBoard,

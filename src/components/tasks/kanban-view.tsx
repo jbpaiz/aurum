@@ -22,6 +22,7 @@ export function KanbanView() {
     setActiveBoardId,
     createTask,
     updateTask,
+    deleteTask,
     moveTask,
     createColumn,
     createBoard
@@ -236,6 +237,7 @@ export function KanbanView() {
         defaultColumnId={columnIdForModal}
         task={editingTask}
         onSave={handleSaveTask}
+        onDeleteTask={deleteTask}
       />
     </div>
   )

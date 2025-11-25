@@ -24,6 +24,7 @@ interface TaskModalProps {
   defaultColumnId?: string
   task?: TaskCard | null
   onSave: (payload: CreateTaskInput & { id?: string }) => Promise<void>
+  onDeleteTask?: (taskId: string) => Promise<void>
 }
 
 const TASK_TYPES: { value: TaskType; label: string }[] = [
@@ -33,7 +34,7 @@ const TASK_TYPES: { value: TaskType; label: string }[] = [
   { value: 'epic', label: 'Épico' }
 ]
 
-export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSave }: TaskModalProps) {
+export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSave, onDeleteTask }: TaskModalProps) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [columnId, setColumnId] = useState<string>('')
@@ -47,6 +48,8 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
   const [attachmentUrl, setAttachmentUrl] = useState('')
   const [checklistItem, setChecklistItem] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
 
   const isEditing = Boolean(task)
 
@@ -64,6 +67,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
     setAttachmentName('')
     setAttachmentUrl('')
     setChecklistItem('')
+    setFormError(null)
   }, [open, task, columns, defaultColumnId])
 
   const labels = useMemo(
@@ -123,7 +127,15 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
-    if (!title.trim() || !columnId) return
+    if (!title.trim()) {
+      setFormError('Informe um título para a tarefa.')
+      return
+    }
+    if (!columnId) {
+      setFormError('Selecione a coluna antes de salvar.')
+      return
+    }
+    setFormError(null)
 
     setIsSaving(true)
     await onSave({
@@ -142,6 +154,19 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
     onClose()
   }
 
+  const handleDeleteTask = async () => {
+    if (!task?.id || !onDeleteTask) return
+    const confirmed = window.confirm('Deseja realmente excluir esta tarefa? Esta ação não pode ser desfeita.')
+    if (!confirmed) return
+    try {
+      setIsDeleting(true)
+      await onDeleteTask(task.id)
+      onClose()
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   if (!open) return null
 
   return (
@@ -158,6 +183,11 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {formError && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600" role="alert">
+              {formError}
+            </div>
+          )}
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label>Título</Label>
@@ -296,13 +326,20 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
             </div>
           </div>
 
-          <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isSaving}>
-              {isSaving ? 'Salvando...' : isEditing ? 'Atualizar' : 'Criar tarefa'}
-            </Button>
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            {isEditing && onDeleteTask ? (
+              <Button type="button" variant="destructive" onClick={handleDeleteTask} disabled={isDeleting}>
+                {isDeleting ? 'Excluindo...' : 'Excluir tarefa'}
+              </Button>
+            ) : <span />}
+            <div className="flex justify-end gap-3">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isSaving}>
+                {isSaving ? 'Salvando...' : isEditing ? 'Atualizar' : 'Criar tarefa'}
+              </Button>
+            </div>
           </div>
         </form>
       </div>
