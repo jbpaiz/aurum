@@ -16,7 +16,8 @@ import type {
   TaskAttachmentMeta,
   TaskChecklistItem,
   TaskColumnCategory,
-  TaskPriority
+  TaskPriority,
+  TaskType
 } from '@/types/tasks'
 
 type ProjectRow = Database['public']['Tables']['task_projects']['Row']
@@ -60,6 +61,50 @@ const randomId = () => {
     return crypto.randomUUID()
   }
   return Math.random().toString(36).substring(2, 12)
+}
+
+const PRIORITY_VALUES: TaskPriority[] = ['lowest', 'low', 'medium', 'high', 'highest']
+const PRIORITY_ALIASES: Record<string, TaskPriority> = {
+  urgente: 'highest',
+  urgent: 'highest',
+  critical: 'highest',
+  critica: 'highest',
+  alta: 'high',
+  alto: 'high',
+  media: 'medium',
+  médio: 'medium',
+  medio: 'medium',
+  baixa: 'low',
+  baixo: 'low',
+  baixissima: 'lowest',
+  'muito baixa': 'lowest'
+}
+
+const normalizePriority = (value?: string | null): TaskPriority => {
+  if (!value) return 'medium'
+  const normalized = value.toLowerCase().trim()
+  if (PRIORITY_VALUES.includes(normalized as TaskPriority)) {
+    return normalized as TaskPriority
+  }
+  return PRIORITY_ALIASES[normalized] ?? 'medium'
+}
+
+const TYPE_VALUES: TaskType[] = ['task', 'bug', 'story', 'epic']
+const TYPE_ALIASES: Record<string, TaskType> = {
+  tarefa: 'task',
+  historia: 'story',
+  história: 'story',
+  epico: 'epic',
+  épico: 'epic'
+}
+
+const normalizeType = (value?: string | null): TaskType => {
+  if (!value) return 'task'
+  const normalized = value.toLowerCase().trim()
+  if (TYPE_VALUES.includes(normalized as TaskType)) {
+    return normalized as TaskType
+  }
+  return TYPE_ALIASES[normalized] ?? 'task'
 }
 
 const toAttachmentArray = (value: Json | undefined | null): TaskAttachmentMeta[] => {
@@ -115,8 +160,8 @@ const mapTask = (row: TaskRow & { task_comments?: CommentRow[] | null }): TaskCa
   userId: row.user_id,
   title: row.title,
   description: row.description,
-  type: row.type,
-  priority: row.priority,
+  type: normalizeType(row.type),
+  priority: normalizePriority(row.priority),
   reporterId: row.reporter_id,
   assigneeId: row.assignee_id,
   dueDate: row.due_date,

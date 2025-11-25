@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { Kanban, Columns2, Search, Filter, List as ListIcon } from 'lucide-react'
+import { Kanban, Columns2, Search, Filter, List as ListIcon, BarChart3 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -11,10 +11,15 @@ import { useTasks } from '@/contexts/tasks-context'
 import { KanbanBoard } from '@/components/tasks/kanban-board'
 import { TaskModal } from '@/components/tasks/task-modal'
 import { TaskListView } from '@/components/tasks/task-list-view'
+import { KanbanMetrics } from '@/components/tasks/kanban-metrics'
 import type { CreateTaskInput, TaskCard, TaskColumn, TaskPriority } from '@/types/tasks'
 import { TASK_PRIORITY_COLORS, TASK_PRIORITY_LABELS } from '@/types/tasks'
 
-export function KanbanView() {
+interface KanbanViewProps {
+  initialView?: 'kanban' | 'list' | 'metrics'
+}
+
+export function KanbanView({ initialView = 'kanban' }: KanbanViewProps) {
   const {
     loading,
     activeProject,
@@ -34,10 +39,13 @@ export function KanbanView() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<TaskCard | null>(null)
   const [columnIdForModal, setColumnIdForModal] = useState<string | undefined>()
-  const [viewMode, setViewMode] = useState<'kanban' | 'list'>(() => {
+  const [viewMode, setViewMode] = useState<'kanban' | 'list' | 'metrics'>(() => {
     if (typeof window === 'undefined') return 'kanban'
-    const stored = window.localStorage.getItem('aurum.tasks.viewMode') as 'kanban' | 'list' | null
-    return stored === 'list' ? 'list' : 'kanban'
+    const stored = window.localStorage.getItem('aurum.tasks.viewMode') as 'kanban' | 'list' | 'metrics' | null
+    if (stored === 'list' || stored === 'metrics' || stored === 'kanban') {
+      return stored
+    }
+    return initialView
   })
 
   useEffect(() => {
@@ -108,7 +116,6 @@ export function KanbanView() {
               <Kanban className="h-6 w-6 text-blue-500" />
               {activeBoard?.name ?? 'Kanban'}
             </div>
-            <p className="text-sm text-gray-500">Organize seu fluxo com colunas e cartões no estilo Jira</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" className="gap-2" onClick={handleCreateBoard}>
@@ -201,6 +208,15 @@ export function KanbanView() {
               <ListIcon className="mr-2 h-4 w-4" />
               Lista
             </Button>
+            <Button
+              variant={viewMode === 'metrics' ? 'default' : 'ghost'}
+              size="sm"
+              className={viewMode === 'metrics' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'}
+              onClick={() => setViewMode('metrics')}
+            >
+              <BarChart3 className="mr-2 h-4 w-4" />
+              Métricas
+            </Button>
           </div>
         </div>
       </div>
@@ -215,16 +231,20 @@ export function KanbanView() {
           <Button onClick={() => openCreateTaskModal()}>Adicionar tarefa</Button>
         </div>
       ) : viewMode === 'kanban' ? (
-        <div className="flex-1 overflow-hidden rounded-2xl border border-gray-200 bg-white p-4">
-          <KanbanBoard
-            columns={filteredColumns}
-            onSelectTask={openEditTaskModal}
-            onCreateTask={openCreateTaskModal}
-            moveTask={moveTask}
-          />
+        <div className="flex-1 rounded-2xl border border-gray-200 bg-white">
+          <div className="h-full overflow-auto p-4">
+            <KanbanBoard
+              columns={filteredColumns}
+              onSelectTask={openEditTaskModal}
+              onCreateTask={openCreateTaskModal}
+              moveTask={moveTask}
+            />
+          </div>
         </div>
-      ) : (
+      ) : viewMode === 'list' ? (
         <TaskListView columns={filteredColumns} onSelectTask={openEditTaskModal} onCreateTask={() => openCreateTaskModal()} />
+      ) : (
+        <KanbanMetrics columns={filteredColumns} />
       )}
 
       <TaskModal

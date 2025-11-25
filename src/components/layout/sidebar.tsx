@@ -22,7 +22,8 @@ import {
   Banknote,
   Kanban,
   DollarSign,
-  ChevronDown
+  ChevronDown,
+  BarChart3
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -79,6 +80,11 @@ const tasksMenuItems = [
     title: 'Quadro Kanban',
     icon: Kanban,
     href: '/tasks'
+  },
+  {
+    title: 'Métricas',
+    icon: BarChart3,
+    href: '/tasks/metrics'
   }
 ]
 

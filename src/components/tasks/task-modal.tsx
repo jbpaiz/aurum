@@ -61,7 +61,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
     setPriority(task?.priority ?? 'medium')
     setType(task?.type ?? 'task')
     setDueDate(task?.dueDate ?? '')
-    setLabelsInput(task?.labels.join(', ') ?? '')
+    setLabelsInput(task?.labels?.join(', ') ?? '')
     setAttachments(task?.attachments ?? [])
     setChecklist(task?.checklist ?? [])
     setAttachmentName('')
@@ -131,7 +131,8 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
       setFormError('Informe um título para a tarefa.')
       return
     }
-    if (!columnId) {
+    const resolvedColumnId = columnId || task?.columnId || defaultColumnId || columns[0]?.id || ''
+    if (!resolvedColumnId) {
       setFormError('Selecione a coluna antes de salvar.')
       return
     }
@@ -142,7 +143,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
       id: task?.id,
       title: title.trim(),
       description,
-      columnId,
+      columnId: resolvedColumnId,
       priority,
       type,
       dueDate: dueDate || null,
@@ -195,7 +196,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
             </div>
             <div className="space-y-2">
               <Label>Coluna</Label>
-              <Select value={columnId} onValueChange={setColumnId}>
+              <Select value={columnId || task?.columnId || defaultColumnId || columns[0]?.id || ''} onValueChange={setColumnId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione a coluna" />
                 </SelectTrigger>
