@@ -490,7 +490,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
         sort_order: (index + 1) * 1000
       }))
       if (!updates.length) return
-      await supabase.from('tasks').upsert(updates)
+      await supabase.from('tasks').upsert(updates as unknown as Database['public']['Tables']['tasks']['Insert'][])
     },
     []
   )
