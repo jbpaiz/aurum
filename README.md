@@ -21,6 +21,7 @@ Um sistema completo de controle financeiro desenvolvido com React, Next.js, Type
 - �📱 Interface responsiva e moderna
 - 🎨 Design system consistente com shadcn/ui
 - 🔗 Sincronização em tempo real com Supabase para contas, cartões e transações
+- 🗂️ Kanban de tarefas estilo Jira com quadros, colunas configuráveis e drag-and-drop
 
 ### 🔄 Em Desenvolvimento
 - 📊 Gráficos e relatórios detalhados
@@ -44,6 +45,8 @@ Um sistema completo de controle financeiro desenvolvido com React, Next.js, Type
 # As dependências já estão instaladas no projeto atual
 npm install
 ```
+
+> ℹ️ **Kanban**: versões anteriores do Aurum não tinham `@dnd-kit/*`. Rode `npm install` para baixar as novas libs e `npm run db:deploy` para aplicar a migration `009_kanban_schema.sql` no Supabase.
 
 ### 2. Configuração AUTOMÁTICA do Supabase 🚀
 
@@ -102,6 +105,7 @@ src/
 │   │   ├── button.tsx
 │   │   └── card.tsx
 │   ├── dashboard/           # Dashboard autenticado
+│   ├── tasks/               # Kanban (board, coluna, cartão e modal)
 │   ├── reports/             # Relatórios e análises financeiras
 │   ├── landing-with-auth.tsx# Landing page com demo + auth
 │   ├── modals/              # Modais reutilizáveis (transactions, auth, etc.)
@@ -111,7 +115,8 @@ src/
 │   └── use-transactions.ts  # CRUD tipado com Supabase para transações
 ├── contexts/
 │   ├── accounts-context.tsx # Contas bancárias carregadas do Supabase
-│   └── cards-context.tsx    # Cartões sincronizados com Supabase
+│   ├── cards-context.tsx    # Cartões sincronizados com Supabase
+│   └── tasks-context.tsx    # Projetos, quadros e tarefas (board Jira-like)
 └── lib/
     ├── supabase.ts          # Configuração do Supabase
     └── utils.ts             # Utilitários (cn function)
@@ -198,6 +203,13 @@ O projeto utiliza o shadcn/ui como base para o sistema de design, proporcionando
 - Ícones diferenciados para receitas/despesas
 - Formatação de data em português
 
+### Módulo de Tarefas (`/tasks`)
+- **Kanban completo** com múltiplos projetos/quadros, colunas configuráveis e ordenação por `sort_order`
+- **Drag-and-drop** com `@dnd-kit/*` para mover cartões entre colunas, semelhante ao Jira
+- **Modal avançado de tarefas** com prioridade, tipo, etiquetas, checklist e anexos
+- **Contexto dedicado** com Supabase (tabelas `task_projects`, `task_boards`, `task_columns`, `tasks`, `task_comments` e `task_sprints`)
+- **Criação automática** de projeto/board padrão para novos usuários e políticas RLS alinhadas
+
 ## 🧠 Hooks e Contextos Principais
 
 - `useTransactions`: encapsula toda a comunicação com a tabela `transactions`, incluindo criação de categorias sob demanda e parsing de notas (forma de pagamento).
@@ -219,7 +231,16 @@ npm run dev          # Inicia o servidor de desenvolvimento
 npm run build        # Gera build de produção
 npm run start        # Inicia servidor de produção
 npm run lint         # Executa linter
+npm run db:deploy    # Aplica as migrações no banco Supabase definido em .env.prod
 ```
+
+## 🚢 Deploy Automatizado do Banco
+
+1. Copie `.env.prod.example` para `.env.prod` e preencha `SUPABASE_REMOTE_DB_URL` com a string de conexão do projeto Supabase (ex.: `postgresql://postgres:senha@db.<project-ref>.supabase.co:5432/postgres?sslmode=require`).
+2. Execute `npm run db:deploy` para aplicar localmente as migrações em `supabase/migrations` diretamente no banco remoto.
+3. Para CI/CD, configure o secret `SUPABASE_REMOTE_DB_URL` no GitHub e habilite o workflow `deploy-db.yml`. Ele roda automaticamente em pushes para `main` (ou manualmente via *workflow_dispatch*) e executa o mesmo comando de deploy.
+
+> O arquivo `.env.prod` está listado no `.gitignore` para evitar vazamento de credenciais. Compartilhe apenas o `.env.prod.example`.
 
 ## 🤝 Contribuindo
 

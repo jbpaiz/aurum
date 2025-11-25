@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { 
   LayoutDashboard, 
   Wallet, 
@@ -17,7 +19,8 @@ import {
   Target,
   Calendar,
   Bell,
-  Banknote
+  Banknote,
+  Kanban
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -30,50 +33,47 @@ const menuItems = [
   {
     title: 'Dashboard',
     icon: LayoutDashboard,
-    href: '/dashboard',
-    active: true
+    href: '/'
   },
   {
     title: 'Transações',
     icon: ArrowUpDown,
-    href: '/transactions',
-    active: false
+    href: '/transactions'
   },
   {
     title: 'Contas',
     icon: Wallet,
-    href: '/accounts',
-    active: false
+    href: '/accounts'
   },
   {
     title: 'Formas de Pagamento',
     icon: Banknote,
-    href: '/payment-methods',
-    active: false
+    href: '/payment-methods'
   },
   {
     title: 'Cartões',
     icon: CreditCard,
-    href: '/cards',
-    active: false
+    href: '/cards'
   },
   {
     title: 'Relatórios',
     icon: PieChart,
-    href: '/reports',
-    active: false
+    href: '/reports'
   },
   {
     title: 'Metas',
     icon: Target,
-    href: '/goals',
-    active: false
+    href: '/goals'
   },
   {
     title: 'Planejamento',
     icon: Calendar,
-    href: '/planning',
-    active: false
+    href: '/planning'
+  },
+  {
+    title: 'Tarefas',
+    icon: Kanban,
+    href: '/tasks'
   }
 ]
 
@@ -81,25 +81,30 @@ const bottomMenuItems = [
   {
     title: 'Notificações',
     icon: Bell,
-    href: '/notifications',
-    active: false
+    href: '/notifications'
   },
   {
     title: 'Configurações',
     icon: Settings,
-    href: '/settings',
-    active: false
+    href: '/settings'
   },
   {
     title: 'Perfil',
     icon: User,
-    href: '/profile',
-    active: false
+    href: '/profile'
   }
 ]
 
 export function Sidebar({ children }: SidebarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const pathname = usePathname()
+
+  const isActive = (href: string) => {
+    if (href === '/') {
+      return pathname === '/'
+    }
+    return pathname.startsWith(href)
+  }
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -124,23 +129,24 @@ export function Sidebar({ children }: SidebarProps) {
             <nav className="space-y-1">
               {menuItems.map((item) => {
                 const Icon = item.icon
+                const active = isActive(item.href)
                 return (
-                  <a
+                  <Link
                     key={item.title}
                     href={item.href}
                     className={cn(
                       'group flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200',
-                      item.active
+                      active
                         ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 border-r-2 border-blue-600'
                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     )}
                   >
                     <Icon className={cn(
                       'h-5 w-5 transition-colors',
-                      item.active ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'
+                      active ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'
                     )} />
                     {item.title}
-                  </a>
+                  </Link>
                 )
               })}
             </nav>
@@ -148,23 +154,24 @@ export function Sidebar({ children }: SidebarProps) {
             <nav className="space-y-1 pb-4">
               {bottomMenuItems.map((item) => {
                 const Icon = item.icon
+                const active = isActive(item.href)
                 return (
-                  <a
+                  <Link
                     key={item.title}
                     href={item.href}
                     className={cn(
                       'group flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200',
-                      item.active
+                      active
                         ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 border-r-2 border-blue-600'
                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     )}
                   >
                     <Icon className={cn(
                       'h-5 w-5 transition-colors',
-                      item.active ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'
+                      active ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'
                     )} />
                     {item.title}
-                  </a>
+                  </Link>
                 )
               })}
             </nav>
@@ -209,24 +216,25 @@ export function Sidebar({ children }: SidebarProps) {
               <nav className="space-y-1">
                 {menuItems.map((item) => {
                   const Icon = item.icon
+                  const active = isActive(item.href)
                   return (
-                    <a
+                    <Link
                       key={item.title}
                       href={item.href}
                       onClick={() => setIsMobileMenuOpen(false)}
                       className={cn(
                         'group flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200',
-                        item.active
+                        active
                           ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 border-r-2 border-blue-600'
                           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                       )}
                     >
                       <Icon className={cn(
                         'h-5 w-5 transition-colors',
-                        item.active ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'
+                        active ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'
                       )} />
                       {item.title}
-                    </a>
+                    </Link>
                   )
                 })}
               </nav>
@@ -234,24 +242,25 @@ export function Sidebar({ children }: SidebarProps) {
               <nav className="space-y-1 pb-4">
                 {bottomMenuItems.map((item) => {
                   const Icon = item.icon
+                  const active = isActive(item.href)
                   return (
-                    <a
+                    <Link
                       key={item.title}
                       href={item.href}
                       onClick={() => setIsMobileMenuOpen(false)}
                       className={cn(
                         'group flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200',
-                        item.active
+                        active
                           ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 border-r-2 border-blue-600'
                           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                       )}
                     >
                       <Icon className={cn(
                         'h-5 w-5 transition-colors',
-                        item.active ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'
+                        active ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'
                       )} />
                       {item.title}
-                    </a>
+                    </Link>
                   )
                 })}
               </nav>

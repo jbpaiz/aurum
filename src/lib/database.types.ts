@@ -484,6 +484,344 @@ export interface Database {
           }
         ]
       }
+      task_projects: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          code: string
+          description: string | null
+          color: string
+          icon: string
+          issue_counter: number
+          sort_order: number
+          is_favorite: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          code: string
+          description?: string | null
+          color?: string
+          icon?: string
+          issue_counter?: number
+          sort_order?: number
+          is_favorite?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          code?: string
+          description?: string | null
+          color?: string
+          icon?: string
+          issue_counter?: number
+          sort_order?: number
+          is_favorite?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      task_boards: {
+        Row: {
+          id: string
+          project_id: string
+          name: string
+          description: string | null
+          view_mode: string
+          swimlane_mode: string
+          filter: Json
+          is_default: boolean
+          sort_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          name: string
+          description?: string | null
+          view_mode?: string
+          swimlane_mode?: string
+          filter?: Json
+          is_default?: boolean
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          name?: string
+          description?: string | null
+          view_mode?: string
+          swimlane_mode?: string
+          filter?: Json
+          is_default?: boolean
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_boards_project_id_fkey"
+            columns: ["project_id"]
+            referencedRelation: "task_projects"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      task_sprints: {
+        Row: {
+          id: string
+          project_id: string
+          board_id: string
+          name: string
+          goal: string | null
+          status: Database['public']['Enums']['task_sprint_status']
+          start_date: string | null
+          end_date: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id?: string
+          board_id: string
+          name: string
+          goal?: string | null
+          status?: Database['public']['Enums']['task_sprint_status']
+          start_date?: string | null
+          end_date?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          board_id?: string
+          name?: string
+          goal?: string | null
+          status?: Database['public']['Enums']['task_sprint_status']
+          start_date?: string | null
+          end_date?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_sprints_board_id_fkey"
+            columns: ["board_id"]
+            referencedRelation: "task_boards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_sprints_project_id_fkey"
+            columns: ["project_id"]
+            referencedRelation: "task_projects"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      task_columns: {
+        Row: {
+          id: string
+          board_id: string
+          name: string
+          slug: string
+          category: Database['public']['Enums']['task_column_category']
+          color: string
+          wip_limit: number | null
+          position: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          board_id: string
+          name: string
+          slug: string
+          category?: Database['public']['Enums']['task_column_category']
+          color?: string
+          wip_limit?: number | null
+          position?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          board_id?: string
+          name?: string
+          slug?: string
+          category?: Database['public']['Enums']['task_column_category']
+          color?: string
+          wip_limit?: number | null
+          position?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_columns_board_id_fkey"
+            columns: ["board_id"]
+            referencedRelation: "task_boards"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      tasks: {
+        Row: {
+          id: string
+          project_id: string
+          board_id: string
+          column_id: string
+          sprint_id: string | null
+          user_id: string
+          key: string
+          title: string
+          description: string | null
+          type: Database['public']['Enums']['task_type']
+          priority: Database['public']['Enums']['task_priority']
+          reporter_id: string | null
+          assignee_id: string | null
+          due_date: string | null
+          start_date: string | null
+          labels: string[]
+          attachments: Json
+          checklist: Json
+          is_blocked: boolean
+          blocked_reason: string | null
+          story_points: number | null
+          estimate_hours: number | null
+          sort_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id?: string
+          board_id: string
+          column_id: string
+          sprint_id?: string | null
+          user_id?: string
+          key?: string
+          title: string
+          description?: string | null
+          type?: Database['public']['Enums']['task_type']
+          priority?: Database['public']['Enums']['task_priority']
+          reporter_id?: string | null
+          assignee_id?: string | null
+          due_date?: string | null
+          start_date?: string | null
+          labels?: string[]
+          attachments?: Json
+          checklist?: Json
+          is_blocked?: boolean
+          blocked_reason?: string | null
+          story_points?: number | null
+          estimate_hours?: number | null
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          board_id?: string
+          column_id?: string
+          sprint_id?: string | null
+          user_id?: string
+          key?: string
+          title?: string
+          description?: string | null
+          type?: Database['public']['Enums']['task_type']
+          priority?: Database['public']['Enums']['task_priority']
+          reporter_id?: string | null
+          assignee_id?: string | null
+          due_date?: string | null
+          start_date?: string | null
+          labels?: string[]
+          attachments?: Json
+          checklist?: Json
+          is_blocked?: boolean
+          blocked_reason?: string | null
+          story_points?: number | null
+          estimate_hours?: number | null
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_board_id_fkey"
+            columns: ["board_id"]
+            referencedRelation: "task_boards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_column_id_fkey"
+            columns: ["column_id"]
+            referencedRelation: "task_columns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_project_id_fkey"
+            columns: ["project_id"]
+            referencedRelation: "task_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_sprint_id_fkey"
+            columns: ["sprint_id"]
+            referencedRelation: "task_sprints"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      task_comments: {
+        Row: {
+          id: string
+          task_id: string
+          user_id: string
+          body: string
+          attachments: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          task_id: string
+          user_id: string
+          body: string
+          attachments?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          task_id?: string
+          user_id?: string
+          body?: string
+          attachments?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_comments_task_id_fkey"
+            columns: ["task_id"]
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -520,7 +858,10 @@ export interface Database {
       }
     }
     Enums: {
-      [_ in never]: never
+      task_priority: 'lowest' | 'low' | 'medium' | 'high' | 'highest'
+      task_type: 'task' | 'bug' | 'story' | 'epic'
+      task_sprint_status: 'planned' | 'active' | 'completed'
+      task_column_category: 'backlog' | 'todo' | 'in_progress' | 'waiting' | 'review' | 'done'
     }
     CompositeTypes: {
       [_ in never]: never
