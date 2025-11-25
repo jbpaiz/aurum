@@ -6,7 +6,7 @@ export default function TasksPage() {
   return (
     <MainLayout>
       <TasksProvider>
-        <KanbanView initialView="kanban" />
+        <KanbanView />
       </TasksProvider>
     </MainLayout>
   )

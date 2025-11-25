@@ -15,11 +15,7 @@ import { KanbanMetrics } from '@/components/tasks/kanban-metrics'
 import type { CreateTaskInput, TaskCard, TaskColumn, TaskPriority } from '@/types/tasks'
 import { TASK_PRIORITY_COLORS, TASK_PRIORITY_LABELS } from '@/types/tasks'
 
-interface KanbanViewProps {
-  initialView?: 'kanban' | 'list' | 'metrics'
-}
-
-export function KanbanView({ initialView = 'kanban' }: KanbanViewProps) {
+export function KanbanView() {
   const {
     loading,
     activeProject,
@@ -42,10 +38,7 @@ export function KanbanView({ initialView = 'kanban' }: KanbanViewProps) {
   const [viewMode, setViewMode] = useState<'kanban' | 'list' | 'metrics'>(() => {
     if (typeof window === 'undefined') return 'kanban'
     const stored = window.localStorage.getItem('aurum.tasks.viewMode') as 'kanban' | 'list' | 'metrics' | null
-    if (stored === 'list' || stored === 'metrics' || stored === 'kanban') {
-      return stored
-    }
-    return initialView
+    return stored === 'list' || stored === 'metrics' ? stored : 'kanban'
   })
 
   useEffect(() => {
