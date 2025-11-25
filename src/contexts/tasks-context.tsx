@@ -164,8 +164,8 @@ const mapTask = (row: TaskRow & { task_comments?: CommentRow[] | null }): TaskCa
   priority: normalizePriority(row.priority),
   reporterId: row.reporter_id,
   assigneeId: row.assignee_id,
-  dueDate: row.due_date,
   startDate: row.start_date,
+  endDate: row.due_date,
   labels: row.labels ?? [],
   attachments: toAttachmentArray(row.attachments),
   checklist: toChecklistArray(row.checklist),
@@ -441,7 +441,8 @@ export function TasksProvider({ children }: TasksProviderProps) {
     if (input.description !== undefined) payload.description = input.description
     if (input.priority) payload.priority = input.priority
     if (input.type) payload.type = input.type
-    if (input.dueDate !== undefined) payload.due_date = input.dueDate
+    if (input.startDate !== undefined) payload.start_date = input.startDate
+    if (input.endDate !== undefined) payload.due_date = input.endDate
     if (input.labels !== undefined) payload.labels = input.labels
     if (input.attachments !== undefined) payload.attachments = input.attachments as unknown as Json
     if (input.checklist !== undefined) payload.checklist = input.checklist as unknown as Json
@@ -463,6 +464,8 @@ export function TasksProvider({ children }: TasksProviderProps) {
         console.error('Nenhuma coluna disponível para criar a tarefa')
         return
       }
+      const fallbackColumn = activeBoard.columns.find((column) => column.id === fallbackColumnId)
+      const nowDate = new Date().toISOString().split('T')[0]
 
       const attachments: TaskAttachmentMeta[] = (input.attachments ?? []).map((attachment) => ({
         ...attachment,
@@ -481,7 +484,10 @@ export function TasksProvider({ children }: TasksProviderProps) {
         description: input.description ?? null,
         type: input.type ?? 'task',
         priority: input.priority ?? 'medium',
-        due_date: input.dueDate ?? null,
+        start_date:
+          input.startDate ?? (fallbackColumn?.category === 'in_progress' ? nowDate : null),
+        due_date:
+          input.endDate ?? (fallbackColumn?.category === 'done' ? nowDate : null),
         labels: input.labels ?? [],
         attachments: attachments as unknown as Json,
         checklist: checklist as unknown as Json,
@@ -514,6 +520,21 @@ export function TasksProvider({ children }: TasksProviderProps) {
       if (updates.columnId) payload.column_id = updates.columnId
       if (updates.boardId) payload.board_id = updates.boardId
 
+      if (activeBoard) {
+        const taskSnapshot = activeBoard.columns.flatMap((column) => column.tasks).find((task) => task.id === taskId)
+        const targetColumnId = updates.columnId ?? taskSnapshot?.columnId
+        const destinationColumn = activeBoard.columns.find((column) => column.id === targetColumnId)
+        const nowDate = new Date().toISOString().split('T')[0]
+
+        if (destinationColumn?.category === 'in_progress' && !updates.startDate && !taskSnapshot?.startDate) {
+          payload.start_date = nowDate
+        }
+
+        if (destinationColumn?.category === 'done' && !updates.endDate && !taskSnapshot?.endDate) {
+          payload.due_date = nowDate
+        }
+      }
+
       const { error } = await supabase
         .from('tasks')
         .update(payload)
@@ -525,7 +546,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
         await fetchWorkspace()
       }
     },
-    [user, fetchWorkspace]
+    [user, fetchWorkspace, activeBoard]
   )
 
   const normalizeColumnOrders = useCallback(
@@ -581,13 +602,25 @@ export function TasksProvider({ children }: TasksProviderProps) {
         newSortOrder = previousTask.sortOrder + 100
       }
 
+      const taskSnapshot = activeBoard.columns.flatMap((column) => column.tasks).find((task) => task.id === taskId)
+      const nowDate = new Date().toISOString().split('T')[0]
+      const updatePayload: Database['public']['Tables']['tasks']['Update'] = {
+        board_id: activeBoard.id,
+        column_id: targetColumnId,
+        sort_order: newSortOrder
+      }
+
+      if (destinationColumn.category === 'in_progress' && !taskSnapshot?.startDate) {
+        updatePayload.start_date = nowDate
+      }
+
+      if (destinationColumn.category === 'done' && !taskSnapshot?.endDate) {
+        updatePayload.due_date = nowDate
+      }
+
       const { error } = await supabase
         .from('tasks')
-        .update({
-          board_id: activeBoard.id,
-          column_id: targetColumnId,
-          sort_order: newSortOrder
-        })
+        .update(updatePayload)
         .eq('id', taskId)
 
       if (error) {

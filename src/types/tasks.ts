@@ -40,8 +40,8 @@ export interface TaskCard {
   priority: TaskPriority
   reporterId?: string | null
   assigneeId?: string | null
-  dueDate?: string | null
   startDate?: string | null
+  endDate?: string | null
   labels: string[]
   attachments: TaskAttachmentMeta[]
   checklist: TaskChecklistItem[]
@@ -121,7 +121,8 @@ export interface CreateTaskInput {
   boardId?: string
   priority?: TaskPriority
   type?: TaskType
-  dueDate?: string | null
+  startDate?: string | null
+  endDate?: string | null
   labels?: string[]
   attachments?: TaskAttachmentMeta[]
   checklist?: TaskChecklistItem[]

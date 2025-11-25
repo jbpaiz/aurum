@@ -40,7 +40,8 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
   const [columnId, setColumnId] = useState<string>('')
   const [priority, setPriority] = useState<TaskPriority>('medium')
   const [type, setType] = useState<TaskType>('task')
-  const [dueDate, setDueDate] = useState('')
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
   const [labelsInput, setLabelsInput] = useState('')
   const [attachments, setAttachments] = useState<TaskAttachmentMeta[]>([])
   const [checklist, setChecklist] = useState<TaskChecklistItem[]>([])
@@ -60,7 +61,8 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
     setColumnId(task?.columnId ?? defaultColumnId ?? columns[0]?.id ?? '')
     setPriority(task?.priority ?? 'medium')
     setType(task?.type ?? 'task')
-    setDueDate(task?.dueDate ?? '')
+    setStartDate(task?.startDate ?? '')
+    setEndDate(task?.endDate ?? '')
     setLabelsInput(task?.labels?.join(', ') ?? '')
     setAttachments(task?.attachments ?? [])
     setChecklist(task?.checklist ?? [])
@@ -146,7 +148,8 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
       columnId: resolvedColumnId,
       priority,
       type,
-      dueDate: dueDate || null,
+      startDate: startDate || null,
+      endDate: endDate || null,
       labels,
       attachments,
       checklist
@@ -249,10 +252,19 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Data limite</Label>
-              <Input type="date" value={dueDate || ''} onChange={(event) => setDueDate(event.target.value)} />
+              <Label>Início da tarefa</Label>
+              <Input type="date" value={startDate || ''} onChange={(event) => setStartDate(event.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Fim da tarefa</Label>
+              <Input type="date" value={endDate || ''} onChange={(event) => setEndDate(event.target.value)} />
             </div>
           </div>
+
+          <p className="text-xs text-gray-500">
+            Se deixar os campos em branco, o Aurum preenche automaticamente ao mover a tarefa para &quot;Fazendo&quot; (início) e
+            &quot;Concluído&quot; (fim). Você pode ajustar manualmente quando precisar.
+          </p>
 
           <div className="space-y-2">
             <Label>Etiquetas (separe por vírgula)</Label>

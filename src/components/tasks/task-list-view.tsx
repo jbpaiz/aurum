@@ -33,7 +33,7 @@ export function TaskListView({ columns, onSelectTask, onCreateTask }: TaskListVi
     )
   }
 
-  const renderDueDate = (date?: string | null) => {
+  const renderDate = (date?: string | null) => {
     if (!date) return <span className="text-gray-400">Sem data</span>
     try {
       return format(new Date(date), "dd 'de' MMM", { locale: ptBR })
@@ -53,7 +53,8 @@ export function TaskListView({ columns, onSelectTask, onCreateTask }: TaskListVi
               <th className="px-6 py-3">Coluna</th>
               <th className="px-6 py-3">Prioridade</th>
               <th className="px-6 py-3">Etiquetas</th>
-              <th className="px-6 py-3">Prazo</th>
+              <th className="px-6 py-3">Início</th>
+              <th className="px-6 py-3">Fim</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 bg-white text-sm">
@@ -92,7 +93,8 @@ export function TaskListView({ columns, onSelectTask, onCreateTask }: TaskListVi
                     )}
                   </div>
                 </td>
-                <td className="px-6 py-4 text-gray-600">{renderDueDate(task.dueDate)}</td>
+                <td className="px-6 py-4 text-gray-600">{renderDate(task.startDate)}</td>
+                <td className="px-6 py-4 text-gray-600">{renderDate(task.endDate)}</td>
               </tr>
             ))}
           </tbody>

@@ -2,7 +2,7 @@
 
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Calendar, CheckSquare, Paperclip, AlertCircle } from 'lucide-react'
+import { CheckSquare, Paperclip, AlertCircle, Flag, Play } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import type { TaskCard } from '@/types/tasks'
@@ -34,6 +34,17 @@ export function KanbanCard({ task, onSelect }: KanbanCardProps) {
   const checklistLabel = checklistTotal > 0 ? `${checklistDone}/${checklistTotal}` : undefined
 
   const hasAttachments = task.attachments.length > 0
+  const formatShortDate = (value?: string | null) => {
+    if (!value) return null
+    const parsed = new Date(value)
+    if (Number.isNaN(parsed.getTime())) return null
+    return parsed.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: 'short'
+    })
+  }
+  const startLabel = formatShortDate(task.startDate)
+  const endLabel = formatShortDate(task.endDate)
 
   return (
     <div
@@ -76,13 +87,17 @@ export function KanbanCard({ task, onSelect }: KanbanCardProps) {
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-gray-500">
-        {task.dueDate && (
-          <span className="inline-flex items-center gap-1">
-            <Calendar className="h-3.5 w-3.5" />
-            {new Date(task.dueDate).toLocaleDateString('pt-BR', {
-              day: '2-digit',
-              month: 'short'
-            })}
+        {startLabel && (
+          <span className="inline-flex items-center gap-1 text-emerald-700">
+            <Play className="h-3.5 w-3.5" />
+            Início {startLabel}
+          </span>
+        )}
+
+        {endLabel && (
+          <span className="inline-flex items-center gap-1 text-blue-700">
+            <Flag className="h-3.5 w-3.5" />
+            Fim {endLabel}
           </span>
         )}
 

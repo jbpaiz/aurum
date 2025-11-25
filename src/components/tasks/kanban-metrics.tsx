@@ -1,10 +1,9 @@
 'use client'
 
 import { useMemo } from 'react'
-import { differenceInCalendarDays, addDays } from 'date-fns'
+import { differenceInCalendarDays } from 'date-fns'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import type { TaskColumn, TaskPriority } from '@/types/tasks'
+import type { TaskCard, TaskColumn, TaskPriority } from '@/types/tasks'
 import { TASK_PRIORITY_LABELS } from '@/types/tasks'
 
 interface KanbanMetricsProps {
@@ -24,6 +23,15 @@ export function KanbanMetrics({ columns }: KanbanMetricsProps) {
   const metrics = useMemo(() => {
     const now = new Date()
     const tasks = columns.flatMap((column) => column.tasks)
+    const columnMap = new Map(columns.map((column) => [column.id, column]))
+
+    const annotateTask = (task: TaskCard) => ({
+      id: task.id,
+      title: task.title,
+      columnName: columnMap.get(task.columnId)?.name ?? 'Coluna',
+      startDate: task.startDate,
+      endDate: task.endDate
+    })
 
     const totalTasks = tasks.length
     const completedTasks = columns
@@ -58,30 +66,49 @@ export function KanbanMetrics({ columns }: KanbanMetricsProps) {
     }))
     const maxPriorityCount = priorityDistribution.reduce((max, item) => Math.max(max, item.count), 0)
 
-    const overdueTasks = tasks.filter((task) => task.dueDate && safeDate(task.dueDate) < now)
-    const dueSoonLimit = addDays(now, 7)
-    const dueSoonTasks = tasks.filter((task) => {
-      if (!task.dueDate) return false
-      const dueDate = safeDate(task.dueDate)
-      return dueDate >= now && dueDate <= dueSoonLimit
-    })
+    const startedLast7Count = tasks.filter(
+      (task) => task.startDate && differenceInCalendarDays(now, safeDate(task.startDate, now)) <= 7
+    ).length
 
-    const upcomingMilestones = tasks
-      .filter((task) => task.dueDate)
-      .sort((a, b) => safeDate(a.dueDate).getTime() - safeDate(b.dueDate).getTime())
-      .slice(0, 3)
-      .map((task) => ({
-        id: task.id,
-        title: task.title,
-        columnName: columns.find((column) => column.id === task.columnId)?.name ?? 'Coluna',
-        dueDate: task.dueDate
-          ? safeDate(task.dueDate).toLocaleDateString('pt-BR', {
-              weekday: 'short',
-              day: '2-digit',
-              month: 'short'
-            })
-          : 'Sem prazo'
-      }))
+    const completedLast7Count = tasks.filter(
+      (task) => task.endDate && differenceInCalendarDays(now, safeDate(task.endDate, now)) <= 7
+    ).length
+
+    const inProgressNoStart = tasks
+      .filter((task) => {
+        const column = columnMap.get(task.columnId)
+        return column?.category === 'in_progress' && !task.startDate
+      })
+      .map(annotateTask)
+
+    const doneWithoutEnd = tasks
+      .filter((task) => {
+        const column = columnMap.get(task.columnId)
+        return column?.category === 'done' && !task.endDate
+      })
+      .map(annotateTask)
+
+    const timeline = tasks
+      .filter((task) => task.startDate || task.endDate)
+      .sort(
+        (a, b) =>
+          safeDate(b.endDate ?? b.startDate, now).getTime() - safeDate(a.endDate ?? a.startDate, now).getTime()
+      )
+      .slice(0, 4)
+      .map((task) => {
+        const annotated = annotateTask(task)
+        const startLabel = annotated.startDate
+          ? safeDate(annotated.startDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+          : '—'
+        const endLabel = annotated.endDate
+          ? safeDate(annotated.endDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+          : '—'
+        return {
+          ...annotated,
+          startLabel,
+          endLabel
+        }
+      })
 
     return {
       totalTasks,
@@ -91,9 +118,11 @@ export function KanbanMetrics({ columns }: KanbanMetricsProps) {
       maxColumnAverage,
       priorityDistribution,
       maxPriorityCount,
-      overdueTasks,
-      dueSoonTasks,
-      upcomingMilestones
+      startedLast7Count,
+      completedLast7Count,
+      inProgressNoStart,
+      doneWithoutEnd,
+      timeline
     }
   }, [columns])
 
@@ -128,20 +157,20 @@ export function KanbanMetrics({ columns }: KanbanMetricsProps) {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Prazos críticos</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500">Iniciadas (7 dias)</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-semibold text-gray-900">{metrics.overdueTasks.length}</p>
-            <p className="text-xs text-gray-500">atrasadas • {metrics.dueSoonTasks.length} vencem em 7 dias</p>
+            <p className="text-3xl font-semibold text-gray-900">{metrics.startedLast7Count}</p>
+            <p className="text-xs text-gray-500">datas de início recentes</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Colunas monitoradas</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500">Concluídas (7 dias)</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-semibold text-gray-900">{columns.length}</p>
-            <p className="text-xs text-gray-500">{metrics.columnThroughput.filter((column) => column.count > 0).length} com fluxo ativo</p>
+            <p className="text-3xl font-semibold text-gray-900">{metrics.completedLast7Count}</p>
+            <p className="text-xs text-gray-500">datas de fim registradas</p>
           </CardContent>
         </Card>
       </div>
@@ -195,49 +224,61 @@ export function KanbanMetrics({ columns }: KanbanMetricsProps) {
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base font-semibold text-gray-900">Alertas de prazo</CardTitle>
+            <CardTitle className="text-base font-semibold text-gray-900">Datas pendentes</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {metrics.overdueTasks.length === 0 && metrics.dueSoonTasks.length === 0 ? (
-              <p className="text-sm text-gray-500">Sem alertas no momento.</p>
-            ) : (
-              <>
-                {metrics.overdueTasks.slice(0, 4).map((task) => (
-                  <div key={task.id} className="rounded-lg border border-red-100 bg-red-50/60 p-3 text-sm text-red-700">
-                    <p className="font-medium">{task.title}</p>
-                    <p className="text-xs text-red-500">Venceu em {task.dueDate ? safeDate(task.dueDate).toLocaleDateString('pt-BR') : 'data não definida'}</p>
-                  </div>
-                ))}
-                {metrics.dueSoonTasks.slice(0, 4).map((task) => (
-                  <div key={task.id} className="rounded-lg border border-amber-100 bg-amber-50/70 p-3 text-sm text-amber-700">
-                    <p className="font-medium">{task.title}</p>
-                    <p className="text-xs text-amber-500">
-                      Vence em {task.dueDate ? safeDate(task.dueDate).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' }) : 'sem data'}
-                    </p>
-                  </div>
-                ))}
-              </>
-            )}
+          <CardContent className="space-y-5">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Início em aberto</p>
+              {metrics.inProgressNoStart.length === 0 ? (
+                <p className="text-sm text-gray-500 mt-2">Todas as tarefas em andamento possuem data inicial.</p>
+              ) : (
+                <div className="mt-3 space-y-2">
+                  {metrics.inProgressNoStart.slice(0, 4).map((task) => (
+                    <div key={`start-${task.id}`} className="rounded-lg border border-amber-100 bg-amber-50/60 p-3 text-sm text-amber-700">
+                      <p className="font-medium">{task.title}</p>
+                      <p className="text-xs text-amber-600">{task.columnName}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Fim em aberto</p>
+              {metrics.doneWithoutEnd.length === 0 ? (
+                <p className="text-sm text-gray-500 mt-2">Nenhuma tarefa concluída está sem data final.</p>
+              ) : (
+                <div className="mt-3 space-y-2">
+                  {metrics.doneWithoutEnd.slice(0, 4).map((task) => (
+                    <div key={`end-${task.id}`} className="rounded-lg border border-blue-100 bg-blue-50/70 p-3 text-sm text-blue-700">
+                      <p className="font-medium">{task.title}</p>
+                      <p className="text-xs text-blue-600">{task.columnName}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base font-semibold text-gray-900">Próximos marcos</CardTitle>
+            <CardTitle className="text-base font-semibold text-gray-900">Linha do tempo recente</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {metrics.upcomingMilestones.length === 0 ? (
-              <p className="text-sm text-gray-500">Adicione datas limite para acompanhar marcos.</p>
+            {metrics.timeline.length === 0 ? (
+              <p className="text-sm text-gray-500">Sem registros de início ou fim ainda.</p>
             ) : (
-              metrics.upcomingMilestones.map((item) => (
+              metrics.timeline.map((item) => (
                 <div key={item.id} className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 p-3">
                   <div>
                     <p className="text-sm font-semibold text-gray-900">{item.title}</p>
                     <p className="text-xs text-gray-500">{item.columnName}</p>
                   </div>
-                  <Badge variant="secondary" className="bg-white text-gray-700">
-                    {item.dueDate}
-                  </Badge>
+                  <div className="text-right text-xs text-gray-500">
+                    <p>Início {item.startLabel}</p>
+                    <p>Fim {item.endLabel}</p>
+                  </div>
                 </div>
               ))
             )}
