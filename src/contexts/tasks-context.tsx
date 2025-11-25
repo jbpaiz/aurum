@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { Database, Json } from '@/lib/database.types'
 import { useAuth } from '@/contexts/auth-context'
@@ -233,52 +233,64 @@ export function TasksProvider({ children }: TasksProviderProps) {
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null)
   const [activeBoardId, setActiveBoardId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [creatingDefault, setCreatingDefault] = useState(false)
+  const creatingDefaultRef = useRef(false)
 
   const createDefaultWorkspace = useCallback(async () => {
-    if (!user) return
+    if (!user || creatingDefaultRef.current) return false
+    creatingDefaultRef.current = true
 
     const baseCode = 'AUR'
     let code = baseCode
 
-    for (let attempt = 0; attempt < 5; attempt += 1) {
-      if (attempt > 0) {
-        code = `${baseCode}${Math.floor(Math.random() * 900 + 100)}`
-      }
-
-      const { data: project, error: projectError } = await supabase
-        .from('task_projects')
-        .insert({
-          user_id: user.id,
-          name: 'Projeto Pessoal',
-          code: code.toUpperCase(),
-          description: 'Projeto padrão para o módulo de tarefas',
-          color: '#2563EB',
-          icon: '📋',
-          is_favorite: true
-        })
-        .select()
-        .single()
-
-      if (projectError) {
-        if (projectError.code === '23505') {
-          continue
+    try {
+      for (let attempt = 0; attempt < 5; attempt += 1) {
+        if (attempt > 0) {
+          code = `${baseCode}${Math.floor(Math.random() * 900 + 100)}`
         }
-        console.error('Erro ao criar projeto padrão:', projectError.message)
-        return
+
+        const { data: project, error: projectError } = await supabase
+          .from('task_projects')
+          .insert({
+            user_id: user.id,
+            name: 'Projeto Pessoal',
+            code: code.toUpperCase(),
+            description: 'Projeto padrão para o módulo de tarefas',
+            color: '#2563EB',
+            icon: '📋',
+            is_favorite: true
+          })
+          .select()
+          .single()
+
+        if (projectError) {
+          if (projectError.code === '23505') {
+            continue
+          }
+          console.error('Erro ao criar projeto padrão:', projectError.message)
+          return false
+        }
+
+        const { error: boardError } = await supabase
+          .from('task_boards')
+          .insert({
+            project_id: project.id,
+            name: 'Kanban Principal',
+            description: 'Fluxo padrão (A Fazer → Fazendo → Aguardando → Concluído)',
+            is_default: true
+          })
+
+        if (boardError) {
+          console.error('Erro ao criar quadro padrão:', boardError.message)
+          return false
+        }
+
+        return true
       }
-
-      await supabase
-        .from('task_boards')
-        .insert({
-          project_id: project.id,
-          name: 'Kanban Principal',
-          description: 'Fluxo padrão (A Fazer → Fazendo → Aguardando → Concluído)',
-          is_default: true
-        })
-
-      return
+    } finally {
+      creatingDefaultRef.current = false
     }
+
+    return false
   }, [user])
 
   const fetchWorkspace = useCallback(async () => {
@@ -286,71 +298,79 @@ export function TasksProvider({ children }: TasksProviderProps) {
       setProjects([])
       setActiveProjectId(null)
       setActiveBoardId(null)
-      return
-    }
-
-    setLoading(true)
-    const { data, error } = await supabase
-      .from('task_projects')
-      .select(`
-        *,
-        task_boards (
-          *,
-          task_sprints (*),
-          task_columns (
-            *,
-            tasks (
-              *,
-              task_comments (*)
-            )
-          )
-        )
-      `)
-      .eq('user_id', user.id)
-      .order('sort_order', { ascending: true })
-      .order('sort_order', { ascending: true, referencedTable: 'task_boards' })
-      .order('position', { ascending: true, referencedTable: 'task_boards.task_columns' })
-      .order('sort_order', { ascending: true, referencedTable: 'task_boards.task_columns.tasks' })
-
-    if (error) {
-      console.error('Erro ao carregar quadros de tarefas:', error.message)
       setLoading(false)
       return
     }
 
-    if (!data || data.length === 0) {
-      if (!creatingDefault) {
-        setCreatingDefault(true)
-        await createDefaultWorkspace()
-        setCreatingDefault(false)
-        await fetchWorkspace()
-      } else {
-        setLoading(false)
+    setLoading(true)
+
+    try {
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        const { data, error } = await supabase
+          .from('task_projects')
+          .select(`
+            *,
+            task_boards (
+              *,
+              task_sprints (*),
+              task_columns (
+                *,
+                tasks (
+                  *,
+                  task_comments (*)
+                )
+              )
+            )
+          `)
+          .eq('user_id', user.id)
+          .order('sort_order', { ascending: true })
+          .order('sort_order', { ascending: true, referencedTable: 'task_boards' })
+          .order('position', { ascending: true, referencedTable: 'task_boards.task_columns' })
+          .order('sort_order', { ascending: true, referencedTable: 'task_boards.task_columns.tasks' })
+
+        if (error) {
+          console.error('Erro ao carregar quadros de tarefas:', error.message)
+          return
+        }
+
+        if (!data || data.length === 0) {
+          if (attempt === 0) {
+            const created = await createDefaultWorkspace()
+            if (created) {
+              continue
+            }
+          }
+          setProjects([])
+          setActiveProjectId(null)
+          setActiveBoardId(null)
+          return
+        }
+
+        const projectList = data.map(mapProject)
+        setProjects(projectList)
+
+        const nextProjectId = projectList.some((project) => project.id === activeProjectId)
+          ? activeProjectId
+          : projectList[0]?.id ?? null
+        setActiveProjectId(nextProjectId)
+
+        const currentProject = projectList.find((project) => project.id === nextProjectId)
+
+        if (currentProject) {
+          const nextBoardId = currentProject.boards.some((board) => board.id === activeBoardId)
+            ? activeBoardId
+            : currentProject.boards[0]?.id ?? null
+          setActiveBoardId(nextBoardId ?? null)
+        } else {
+          setActiveBoardId(null)
+        }
+
+        return
       }
-      return
+    } finally {
+      setLoading(false)
     }
-
-    const projectList = data.map(mapProject)
-    setProjects(projectList)
-
-    if (!activeProjectId || !projectList.some((project) => project.id === activeProjectId)) {
-      setActiveProjectId(projectList[0]?.id ?? null)
-    }
-
-    const currentProject = projectList.find((project) => project.id === (activeProjectId ?? projectList[0]?.id))
-
-    if (currentProject) {
-      const availableBoards = currentProject.boards
-      const fallbackBoardId = availableBoards[0]?.id ?? null
-      if (!activeBoardId || !availableBoards.some((board) => board.id === activeBoardId)) {
-        setActiveBoardId(fallbackBoardId)
-      }
-    } else {
-      setActiveBoardId(null)
-    }
-
-    setLoading(false)
-  }, [user, activeProjectId, activeBoardId, creatingDefault, createDefaultWorkspace])
+  }, [user, activeProjectId, activeBoardId, createDefaultWorkspace])
 
   useEffect(() => {
     fetchWorkspace()
