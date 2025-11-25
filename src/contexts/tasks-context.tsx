@@ -397,8 +397,8 @@ export function TasksProvider({ children }: TasksProviderProps) {
     if (input.type) payload.type = input.type
     if (input.dueDate !== undefined) payload.due_date = input.dueDate
     if (input.labels !== undefined) payload.labels = input.labels
-    if (input.attachments !== undefined) payload.attachments = input.attachments as Json
-    if (input.checklist !== undefined) payload.checklist = input.checklist as Json
+    if (input.attachments !== undefined) payload.attachments = input.attachments as unknown as Json
+    if (input.checklist !== undefined) payload.checklist = input.checklist as unknown as Json
     if (input.sprintId !== undefined) payload.sprint_id = input.sprintId
     if (input.assigneeId !== undefined) payload.assignee_id = input.assigneeId
     if (input.storyPoints !== undefined) payload.story_points = input.storyPoints
