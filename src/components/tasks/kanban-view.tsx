@@ -1,8 +1,8 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { Kanban, Columns2, Search, Filter } from 'lucide-react'
+import { Kanban, Columns2, Search, Filter, List as ListIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { useTasks } from '@/contexts/tasks-context'
 import { KanbanBoard } from '@/components/tasks/kanban-board'
 import { TaskModal } from '@/components/tasks/task-modal'
+import { TaskListView } from '@/components/tasks/task-list-view'
 import type { CreateTaskInput, TaskCard, TaskColumn, TaskPriority } from '@/types/tasks'
 import { TASK_PRIORITY_COLORS } from '@/types/tasks'
 
@@ -32,6 +33,16 @@ export function KanbanView() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<TaskCard | null>(null)
   const [columnIdForModal, setColumnIdForModal] = useState<string | undefined>()
+  const [viewMode, setViewMode] = useState<'kanban' | 'list'>(() => {
+    if (typeof window === 'undefined') return 'kanban'
+    const stored = window.localStorage.getItem('aurum.tasks.viewMode') as 'kanban' | 'list' | null
+    return stored === 'list' ? 'list' : 'kanban'
+  })
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    window.localStorage.setItem('aurum.tasks.viewMode', viewMode)
+  }, [viewMode])
 
   const filteredColumns: TaskColumn[] = useMemo(() => {
     if (!activeBoard) return []
@@ -156,18 +167,40 @@ export function KanbanView() {
           </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-gray-500">
-          <Filter className="h-4 w-4" />
-          <span>Etiquetas:</span>
-          <Input
-            className="h-8 w-auto min-w-[180px]"
-            placeholder="Ex: backend"
-            value={labelFilter}
-            onChange={(event) => setLabelFilter(event.target.value)}
-          />
-          <Badge variant="outline" className="bg-gray-50 text-gray-600">
-            {activeBoard?.columns.reduce((total, column) => total + column.tasks.length, 0) ?? 0} tarefas ativas
-          </Badge>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
+            <Filter className="h-4 w-4" />
+            <span>Etiquetas:</span>
+            <Input
+              className="h-8 w-auto min-w-[180px]"
+              placeholder="Ex: backend"
+              value={labelFilter}
+              onChange={(event) => setLabelFilter(event.target.value)}
+            />
+            <Badge variant="outline" className="bg-gray-50 text-gray-600">
+              {activeBoard?.columns.reduce((total, column) => total + column.tasks.length, 0) ?? 0} tarefas ativas
+            </Badge>
+          </div>
+          <div className="flex items-center gap-2 rounded-full bg-gray-100 p-1 text-sm font-medium">
+            <Button
+              variant={viewMode === 'kanban' ? 'default' : 'ghost'}
+              size="sm"
+              className={viewMode === 'kanban' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'}
+              onClick={() => setViewMode('kanban')}
+            >
+              <Kanban className="mr-2 h-4 w-4" />
+              Quadro
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              className={viewMode === 'list' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'}
+              onClick={() => setViewMode('list')}
+            >
+              <ListIcon className="mr-2 h-4 w-4" />
+              Lista
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -180,7 +213,7 @@ export function KanbanView() {
           <p className="text-lg font-semibold text-gray-600">Crie sua primeira tarefa</p>
           <Button onClick={() => openCreateTaskModal()}>Adicionar tarefa</Button>
         </div>
-      ) : (
+      ) : viewMode === 'kanban' ? (
         <div className="flex-1 overflow-hidden rounded-2xl border border-gray-200 bg-white p-4">
           <KanbanBoard
             columns={filteredColumns}
@@ -189,6 +222,8 @@ export function KanbanView() {
             moveTask={moveTask}
           />
         </div>
+      ) : (
+        <TaskListView columns={filteredColumns} onSelectTask={openEditTaskModal} onCreateTask={() => openCreateTaskModal()} />
       )}
 
       <TaskModal
