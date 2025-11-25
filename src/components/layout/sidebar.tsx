@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { 
@@ -21,7 +21,8 @@ import {
   Bell,
   Banknote,
   Kanban,
-  DollarSign
+  DollarSign,
+  ChevronDown
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -126,11 +127,13 @@ const bottomMenuItems = [
 
 export function Sidebar({ children }: SidebarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isHubSwitcherOpen, setIsHubSwitcherOpen] = useState(false)
   const pathname = usePathname()
   const currentHub: HubId = pathname.startsWith('/tasks') ? 'tasks' : 'finance'
   const activeHub = hubConfigs[currentHub]
   const hubEntries = Object.values(hubConfigs)
   const currentMenuItems = activeHub.menu
+  const HubIcon = activeHub.icon
 
   const isActive = (href: string) => {
     if (href === '/') {
@@ -139,56 +142,71 @@ export function Sidebar({ children }: SidebarProps) {
     return pathname.startsWith(href)
   }
 
+  useEffect(() => {
+    setIsHubSwitcherOpen(false)
+  }, [pathname])
+
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Desktop Sidebar */}
       <div className="hidden md:flex md:w-64 md:flex-col">
         <div className="flex flex-col flex-grow pt-5 bg-white shadow-sm">
-          {/* Logo */}
-          <div className="flex items-center gap-3 px-6 pb-4">
-            <div className="p-2 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg">
-              <Home className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Aurum
-              </h1>
-              <p className="text-xs text-gray-500">{activeHub.tagline}</p>
-            </div>
-          </div>
+          {/* Brand + Hub selector */}
+          <div className="relative px-4 pb-4">
+            <button
+              type="button"
+              onClick={() => setIsHubSwitcherOpen((prev) => !prev)}
+              className="flex w-full items-center justify-between rounded-2xl border border-gray-200 bg-white px-4 py-3 text-left shadow-sm transition hover:border-gray-300"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 text-white">
+                  <HubIcon className="h-5 w-5" />
+                </div>
+                <div className="leading-tight">
+                  <p className="text-[11px] uppercase tracking-[0.35em] text-gray-400">Hub ativo</p>
+                  <p className="text-base font-semibold text-gray-900">{activeHub.name}</p>
+                </div>
+              </div>
+              <ChevronDown className={cn('h-4 w-4 text-gray-500 transition', isHubSwitcherOpen ? 'rotate-180' : '')} />
+            </button>
 
-          {/* Hub selector */}
-          <div className="px-4 pb-4 space-y-2">
-            <div className="text-xs font-semibold uppercase text-gray-400">Hubs Aurum</div>
-            <div className="space-y-2">
-              {hubEntries.map((hub) => {
-                const Icon = hub.icon
-                const isCurrent = hub.id === currentHub
-                return (
-                  <Link
-                    key={hub.id}
-                    href={hub.entryHref}
-                    className={cn(
-                      'flex items-center gap-3 rounded-xl border p-3 transition-all duration-200',
-                      isCurrent
-                        ? 'border-transparent bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-pink-500/10 ring-2 ring-blue-500/30'
-                        : 'border-gray-200 hover:border-gray-300'
-                    )}
-                  >
-                    <div className={cn(
-                      'rounded-lg p-2 text-white',
-                      `bg-gradient-to-br ${hub.accent}`
-                    )}>
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-900">{hub.name}</span>
-                      <span className="text-xs text-gray-500">{hub.description}</span>
-                    </div>
-                  </Link>
-                )
-              })}
-            </div>
+            {isHubSwitcherOpen && (
+              <div className="absolute inset-x-4 top-full z-20 mt-3 rounded-2xl border border-slate-200 bg-white shadow-2xl">
+                <div className="px-4 pt-4 pb-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
+                  Hubs Aurum
+                </div>
+                <div className="pb-3">
+                  {hubEntries.map((hub) => {
+                    const Icon = hub.icon
+                    const isCurrent = hub.id === currentHub
+                    return (
+                      <Link
+                        key={hub.id}
+                        href={hub.entryHref}
+                        onClick={() => setIsHubSwitcherOpen(false)}
+                        className={cn(
+                          'flex items-center gap-3 px-4 py-3 text-sm transition hover:bg-slate-50',
+                          isCurrent ? 'bg-blue-50 text-blue-900' : 'text-slate-700'
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            'flex h-10 w-10 items-center justify-center rounded-xl',
+                            isCurrent ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'
+                          )}
+                        >
+                          <Icon className="h-5 w-5" />
+                        </span>
+                        <div className="flex flex-col">
+                          <span className="font-semibold">{hub.name}</span>
+                          <span className="text-xs text-slate-500">{hub.description}</span>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Navigation */}
@@ -284,34 +302,38 @@ export function Sidebar({ children }: SidebarProps) {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <div className="text-xs font-semibold uppercase text-gray-400">Hubs Aurum</div>
-                  {hubEntries.map((hub) => {
-                    const Icon = hub.icon
-                    const isCurrent = hub.id === currentHub
-                    return (
-                      <Link
-                        key={hub.id}
-                        href={hub.entryHref}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        className={cn(
-                          'flex items-center gap-3 rounded-xl border p-3 transition-all duration-200',
-                          isCurrent
-                            ? 'border-transparent bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-pink-500/10 ring-2 ring-blue-500/30'
-                            : 'border-gray-200 hover:border-gray-300'
-                        )}
-                      >
-                        <div className={cn(
-                          'rounded-lg p-2 text-white',
-                          `bg-gradient-to-br ${hub.accent}`
-                        )}>
-                          <Icon className="h-5 w-5" />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-semibold text-gray-900">{hub.name}</span>
-                          <span className="text-xs text-gray-500">{hub.description}</span>
-                        </div>
-                      </Link>
-                    )
-                  })}
+                  <div className="rounded-2xl border border-gray-200 bg-white">
+                    {hubEntries.map((hub) => {
+                      const Icon = hub.icon
+                      const isCurrent = hub.id === currentHub
+                      return (
+                        <Link
+                          key={hub.id}
+                          href={hub.entryHref}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className={cn(
+                            'flex items-center gap-3 px-4 py-3 text-sm font-medium transition',
+                            isCurrent
+                              ? 'bg-blue-50 text-blue-900'
+                              : 'text-gray-700 hover:bg-gray-50'
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              'flex h-10 w-10 items-center justify-center rounded-xl',
+                              isCurrent ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'
+                            )}
+                          >
+                            <Icon className="h-5 w-5" />
+                          </span>
+                          <div className="flex flex-col">
+                            <span>{hub.name}</span>
+                            <span className="text-xs text-gray-500">{hub.description}</span>
+                          </div>
+                        </Link>
+                      )
+                    })}
+                  </div>
                 </div>
 
                 <nav className="space-y-1">

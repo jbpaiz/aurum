@@ -12,7 +12,7 @@ import { KanbanBoard } from '@/components/tasks/kanban-board'
 import { TaskModal } from '@/components/tasks/task-modal'
 import { TaskListView } from '@/components/tasks/task-list-view'
 import type { CreateTaskInput, TaskCard, TaskColumn, TaskPriority } from '@/types/tasks'
-import { TASK_PRIORITY_COLORS } from '@/types/tasks'
+import { TASK_PRIORITY_COLORS, TASK_PRIORITY_LABELS } from '@/types/tasks'
 
 export function KanbanView() {
   const {
@@ -159,7 +159,7 @@ export function KanbanView() {
                   <SelectItem key={value} value={value}>
                     <span className="inline-flex items-center gap-2">
                       <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
-                      {value.toUpperCase()}
+                      {TASK_PRIORITY_LABELS[value as TaskPriority]}
                     </span>
                   </SelectItem>
                 ))}

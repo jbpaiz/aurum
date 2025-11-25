@@ -14,7 +14,7 @@ import type {
   TaskPriority,
   TaskType
 } from '@/types/tasks'
-import { TASK_PRIORITY_COLORS } from '@/types/tasks'
+import { TASK_PRIORITY_COLORS, TASK_PRIORITY_LABELS } from '@/types/tasks'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 interface TaskModalProps {
@@ -225,7 +225,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
                           className="h-2.5 w-2.5 rounded-full"
                           style={{ backgroundColor: TASK_PRIORITY_COLORS[value as TaskPriority] }}
                         />
-                        {value.toUpperCase()}
+                        {TASK_PRIORITY_LABELS[value as TaskPriority]}
                       </span>
                     </SelectItem>
                   ))}

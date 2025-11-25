@@ -150,6 +150,17 @@ Para adicionar sistema de login:
 2. **Configure** os provedores desejados (Google, GitHub, etc.)
 3. **Atualize** o código para usar `supabase.auth`
 
+#### ✅ Login com Google
+
+1. **Habilite** o provedor em `Authentication > Providers > Google` no Supabase e informe o **Client ID** e **Client Secret** obtidos no [Google Cloud Console](https://console.cloud.google.com).
+2. No Google Cloud Console, cadastre os URIs autorizados:
+   - `http://localhost:3000/auth/callback` (desenvolvimento)
+   - `https://seu-dominio.vercel.app/auth/callback` (produção)
+   - `https://<seu-project-ref>.supabase.co/auth/v1/callback` (obrigatório para Supabase)
+3. Em Supabase, adicione os mesmos URLs em **Redirect URLs** na aba Authentication > URL Configuration.
+4. Garanta que o arquivo `.env.local` possua `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` corretos; reinicie `npm run dev` após qualquer alteração.
+5. Com essas URLs configuradas, o fluxo `Entrar com Google` da tela de login funcionará e redirecionará automaticamente de volta para o dashboard após o callback.
+
 ## 🔒 Segurança
 
 ### Row Level Security (RLS)

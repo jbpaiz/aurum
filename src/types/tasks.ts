@@ -152,6 +152,14 @@ export const TASK_PRIORITY_COLORS: Record<TaskPriority, string> = {
   highest: '#DC2626'
 }
 
+export const TASK_PRIORITY_LABELS: Record<TaskPriority, string> = {
+  lowest: 'Muito baixa',
+  low: 'Baixa',
+  medium: 'Média',
+  high: 'Alta',
+  highest: 'Urgente'
+}
+
 export const TASK_TYPE_LABEL: Record<TaskType, string> = {
   task: 'Tarefa',
   bug: 'Bug',

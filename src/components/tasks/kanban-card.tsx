@@ -6,7 +6,7 @@ import { Calendar, CheckSquare, Paperclip, AlertCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import type { TaskCard } from '@/types/tasks'
-import { TASK_PRIORITY_COLORS, TASK_TYPE_LABEL } from '@/types/tasks'
+import { TASK_PRIORITY_COLORS, TASK_PRIORITY_LABELS, TASK_TYPE_LABEL } from '@/types/tasks'
 
 interface KanbanCardProps {
   task: TaskCard
@@ -54,7 +54,7 @@ export function KanbanCard({ task, onSelect }: KanbanCardProps) {
           style={{ backgroundColor: `${TASK_PRIORITY_COLORS[task.priority]}22`, color: TASK_PRIORITY_COLORS[task.priority] }}
         >
           <span className="h-2 w-2 rounded-full" style={{ backgroundColor: TASK_PRIORITY_COLORS[task.priority] }} />
-          {task.priority.toUpperCase()}
+          {TASK_PRIORITY_LABELS[task.priority]}
         </span>
       </div>
 

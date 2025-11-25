@@ -4,7 +4,7 @@ import { useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import type { TaskCard, TaskColumn } from '@/types/tasks'
-import { TASK_PRIORITY_COLORS } from '@/types/tasks'
+import { TASK_PRIORITY_COLORS, TASK_PRIORITY_LABELS } from '@/types/tasks'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
@@ -76,7 +76,7 @@ export function TaskListView({ columns, onSelectTask, onCreateTask }: TaskListVi
                     className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold text-white"
                     style={{ backgroundColor: TASK_PRIORITY_COLORS[task.priority] }}
                   >
-                    {task.priority.toUpperCase()}
+                    {TASK_PRIORITY_LABELS[task.priority]}
                   </span>
                 </td>
                 <td className="px-6 py-4">

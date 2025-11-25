@@ -20,10 +20,11 @@ import {
 } from 'lucide-react'
 
 interface AuthModalProps {
-  onClose: () => void
+  onClose?: () => void
+  showCloseButton?: boolean
 }
 
-export function AuthModal({ onClose }: AuthModalProps) {
+export function AuthModal({ onClose, showCloseButton = true }: AuthModalProps) {
   const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -56,7 +57,7 @@ export function AuthModal({ onClose }: AuthModalProps) {
             title: "Login realizado com sucesso!",
             description: "Bem-vindo ao Aurum"
           })
-          onClose()
+          onClose?.()
         }
       } else if (mode === 'signup') {
         if (password !== confirmPassword) {
@@ -155,13 +156,15 @@ export function AuthModal({ onClose }: AuthModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
       <div className="relative w-full max-w-5xl overflow-hidden rounded-[32px] bg-white shadow-2xl">
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute right-4 top-4 z-10 rounded-full bg-black/5 p-2 text-gray-500 transition hover:bg-black/10"
-        >
-          <X className="h-4 w-4" />
-        </button>
+        {showCloseButton && onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute right-4 top-4 z-10 rounded-full bg-black/5 p-2 text-gray-500 transition hover:bg-black/10"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
 
         <div className="grid gap-0 md:grid-cols-[1.1fr_0.9fr]">
           <div className="relative hidden overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 p-10 text-white md:flex">
