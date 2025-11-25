@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/contexts/auth-context'
@@ -32,12 +32,62 @@ export function AuthModal({ onClose, showCloseButton = true }: AuthModalProps) {
   const [fullName, setFullName] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [resetStatus, setResetStatus] = useState<'idle' | 'sent' | 'error'>('idle')
+  const [resendTimer, setResendTimer] = useState(0)
 
   const { signIn, signUp, signInWithGoogle, signInWithGitHub, resetPassword } = useAuth()
   const { toast } = useToast()
 
+  const triggerPasswordReset = async () => {
+    if (!email) {
+      toast({
+        variant: 'destructive',
+        title: 'Informe seu email',
+        description: 'Precisamos do email cadastrado para enviar o link.'
+      })
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const { error } = await resetPassword(email)
+      if (error) {
+        setResetStatus('error')
+        toast({
+          variant: 'destructive',
+          title: 'Erro ao enviar email',
+          description: error.message
+        })
+      } else {
+        setResetStatus('sent')
+        setResendTimer(60)
+        toast({
+          variant: 'success',
+          title: 'Email enviado!',
+          description: 'Verifique sua caixa de entrada e spam. Você pode reenviar em instantes.'
+        })
+      }
+    } catch (error) {
+      setResetStatus('error')
+      toast({
+        variant: 'destructive',
+        title: 'Erro inesperado',
+        description: 'Tente novamente mais tarde'
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (mode === 'forgot') {
+      await triggerPasswordReset()
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -87,22 +137,6 @@ export function AuthModal({ onClose, showCloseButton = true }: AuthModalProps) {
           })
           setMode('signin')
         }
-      } else if (mode === 'forgot') {
-        const { error } = await resetPassword(email)
-        if (error) {
-          toast({
-            variant: "destructive",
-            title: "Erro ao enviar email",
-            description: error.message
-          })
-        } else {
-          toast({
-            variant: "success",
-            title: "Email enviado!",
-            description: "Verifique sua caixa de entrada"
-          })
-          setMode('signin')
-        }
       }
     } catch (error) {
       toast({
@@ -146,12 +180,30 @@ export function AuthModal({ onClose, showCloseButton = true }: AuthModalProps) {
     setConfirmPassword('')
     setFullName('')
     setShowPassword(false)
+    setResetStatus('idle')
+    setResendTimer(0)
   }
 
   const switchMode = (newMode: 'signin' | 'signup' | 'forgot') => {
     setMode(newMode)
     resetForm()
   }
+
+  const handleEmailChange = (value: string) => {
+    setEmail(value)
+    if (mode === 'forgot' && resetStatus !== 'idle') {
+      setResetStatus('idle')
+      setResendTimer(0)
+    }
+  }
+
+  useEffect(() => {
+    if (!resendTimer) return
+    const timer = setInterval(() => {
+      setResendTimer((current) => (current > 0 ? current - 1 : 0))
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [resendTimer])
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
@@ -263,7 +315,7 @@ export function AuthModal({ onClose, showCloseButton = true }: AuthModalProps) {
                     type="email"
                     placeholder="voce@empresa.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => handleEmailChange(e.target.value)}
                     className="pl-10"
                     required
                   />
@@ -320,6 +372,30 @@ export function AuthModal({ onClose, showCloseButton = true }: AuthModalProps) {
                 {mode === 'forgot' && 'Enviar link de recuperação'}
               </Button>
             </form>
+
+            {mode === 'forgot' && (
+              <div className="space-y-3 rounded-2xl border border-blue-100 bg-blue-50/60 p-4 text-sm text-gray-600">
+                <p>
+                  Enviaremos um email com o link seguro. Ele pode levar alguns minutos e cair na pasta de spam ou promoções.
+                </p>
+                <div className="flex flex-col gap-2 text-xs text-gray-500 sm:flex-row sm:items-center sm:justify-between">
+                  <span>
+                    {resetStatus === 'sent'
+                      ? `Se o email ${email || 'informado'} estiver cadastrado, o link já foi enviado.`
+                      : 'Use o email cadastrado para receber o link de redefinição.'}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={triggerPasswordReset}
+                    disabled={loading || !email || resendTimer > 0}
+                  >
+                    {resendTimer > 0 ? `Reenviar em ${resendTimer}s` : 'Reenviar link'}
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {mode !== 'forgot' && (
               <div className="space-y-3">

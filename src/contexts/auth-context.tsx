@@ -87,6 +87,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
+        flowType: 'pkce'
       },
     })
     return { error }
@@ -97,6 +98,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       provider: 'github',
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
+        flowType: 'pkce'
       },
     })
     return { error }
