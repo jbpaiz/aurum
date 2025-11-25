@@ -92,6 +92,7 @@ Este comando irá:
 - `type` (TEXT) - 'income' ou 'expense'
 - `color` (TEXT) - Cor da categoria
 - `created_at` (TIMESTAMPTZ) - Data de criação
+- **Constraint**: combinação (`name`, `type`) é única para evitar duplicidades ao aplicar seeds
 
 #### `financial_reports`
 - `id` (UUID) - Chave primária

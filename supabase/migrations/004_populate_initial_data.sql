@@ -18,7 +18,7 @@ INSERT INTO card_providers (id, name, icon, color, popular_brands, supported_typ
 ('caixa', 'Caixa Econômica', '🔵', '#0072CE', ARRAY['Caixa', 'Caixa Econômica'], ARRAY['credit', 'debit']),
 ('xp', 'XP Investimentos', '⚫', '#000000', ARRAY['XP', 'XP Investimentos'], ARRAY['credit', 'debit']),
 ('btg', 'BTG Pactual', '⚪', '#1B1B1B', ARRAY['BTG', 'BTG Pactual'], ARRAY['credit', 'debit']),
-('other', 'Outro', '💳', '#6B7280', ARRAY[], ARRAY['credit', 'debit'])
+('other', 'Outro', '💳', '#6B7280', ARRAY[]::TEXT[], ARRAY['credit', 'debit'])
 ON CONFLICT (id) DO UPDATE SET
     name = EXCLUDED.name,
     icon = EXCLUDED.icon,

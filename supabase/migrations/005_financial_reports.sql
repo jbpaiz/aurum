@@ -44,12 +44,12 @@ ALTER TABLE financial_reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE financial_report_lines ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can access their own reports" ON financial_reports
-    FOR ALL USING (auth.uid() = user_id)
-    WITH CHECK (auth.uid() = user_id);
+    FOR ALL USING ((SELECT auth.uid()) = user_id)
+    WITH CHECK ((SELECT auth.uid()) = user_id);
 
 CREATE POLICY "Users can access their own report lines" ON financial_report_lines
-    FOR ALL USING (auth.uid() = user_id)
-    WITH CHECK (auth.uid() = user_id);
+    FOR ALL USING ((SELECT auth.uid()) = user_id)
+    WITH CHECK ((SELECT auth.uid()) = user_id);
 
 CREATE TRIGGER trg_financial_reports_updated_at
     BEFORE UPDATE ON financial_reports

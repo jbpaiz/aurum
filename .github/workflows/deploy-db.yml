@@ -1,0 +1,45 @@
+name: Deploy Database
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'supabase/migrations/**'
+      - '.github/workflows/deploy-db.yml'
+      - 'scripts/deploy-db.js'
+      - 'package.json'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Create production env file
+        run: |
+          cat <<'EOF' > .env.prod
+          SUPABASE_REMOTE_DB_URL=${SUPABASE_REMOTE_DB_URL}
+          EOF
+        env:
+          SUPABASE_REMOTE_DB_URL: ${{ secrets.SUPABASE_REMOTE_DB_URL }}
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Push migrations to production
+        run: npm run db:deploy -- --non-interactive
