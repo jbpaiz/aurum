@@ -63,38 +63,35 @@ const randomId = () => {
 
 const toAttachmentArray = (value: Json | undefined | null): TaskAttachmentMeta[] => {
   if (!value || !Array.isArray(value)) return []
-  return value
-    .map((item) => {
-      if (typeof item !== 'object' || item === null) return null
-      const record = item as Record<string, unknown>
-      const name = typeof record.name === 'string' ? record.name : 'Anexo'
-      const url = typeof record.url === 'string' ? record.url : ''
-      if (!url) return null
-      return {
-        id: typeof record.id === 'string' ? record.id : randomId(),
-        name,
-        url,
-        type: typeof record.type === 'string' ? record.type : undefined
-      }
+  return value.reduce<TaskAttachmentMeta[]>((acc, item) => {
+    if (typeof item !== 'object' || item === null) return acc
+    const record = item as Record<string, unknown>
+    const url = typeof record.url === 'string' ? record.url : ''
+    if (!url) return acc
+    acc.push({
+      id: typeof record.id === 'string' ? record.id : randomId(),
+      name: typeof record.name === 'string' ? record.name : 'Anexo',
+      url,
+      type: typeof record.type === 'string' ? record.type : undefined
     })
-    .filter((item): item is TaskAttachmentMeta => Boolean(item))
+    return acc
+  }, [])
 }
 
 const toChecklistArray = (value: Json | undefined | null): TaskChecklistItem[] => {
   if (!value || !Array.isArray(value)) return []
-  return value
-    .map((item) => {
-      if (typeof item !== 'object' || item === null) return null
-      const record = item as Record<string, unknown>
-      const title = typeof record.title === 'string' ? record.title : ''
-      if (!title) return null
-      return {
-        id: typeof record.id === 'string' ? record.id : randomId(),
-        title,
-        done: typeof record.done === 'boolean' ? record.done : false
-      }
+  return value.reduce<TaskChecklistItem[]>((acc, item) => {
+    if (typeof item !== 'object' || item === null) return acc
+    const record = item as Record<string, unknown>
+    const title = typeof record.title === 'string' ? record.title : ''
+    if (!title) return acc
+    acc.push({
+      id: typeof record.id === 'string' ? record.id : randomId(),
+      title,
+      done: typeof record.done === 'boolean' ? record.done : false
     })
-    .filter((item): item is TaskChecklistItem => Boolean(item))
+    return acc
+  }, [])
 }
 
 const mapComment = (row: CommentRow): TaskComment => ({
