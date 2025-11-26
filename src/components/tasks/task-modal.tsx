@@ -1,7 +1,10 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { X, Plus, Trash2, Check } from 'lucide-react'
+import { X, Plus, Trash2, Check, GripVertical } from 'lucide-react'
+import { DndContext, DragEndEvent, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core'
+import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -54,6 +57,10 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
   const [formError, setFormError] = useState<string | null>(null)
 
   const isEditing = Boolean(task)
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  )
 
   useEffect(() => {
     if (!open) return
@@ -123,6 +130,17 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
 
   const handleRemoveChecklistItem = (id: string) => {
     setChecklist((prev) => prev.filter((item) => item.id !== id))
+  }
+
+  const handleChecklistReorder = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    setChecklist((prev) => {
+      const oldIndex = prev.findIndex((item) => item.id === active.id)
+      const newIndex = prev.findIndex((item) => item.id === over.id)
+      if (oldIndex === -1 || newIndex === -1) return prev
+      return arrayMove(prev, oldIndex, newIndex)
+    })
   }
 
   const handleRemoveAttachment = (id: string) => {
@@ -324,24 +342,22 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
           <div>
             <Label>Checklist</Label>
             <div className="mt-3 space-y-2">
-              {checklist.length === 0 && <p className="text-sm text-gray-500">Nenhum item adicionado</p>}
-              {checklist.map((item) => (
-                <div key={item.id} className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2 text-sm">
-                  <button
-                    type="button"
-                    className={`mr-3 flex h-6 w-6 items-center justify-center rounded-full border ${
-                      item.done ? 'border-green-500 bg-green-100 text-green-600' : 'border-gray-300 text-gray-400'
-                    }`}
-                    onClick={() => toggleChecklistItem(item.id)}
-                  >
-                    {item.done && <Check className="h-4 w-4" />}
-                  </button>
-                  <span className={`flex-1 text-left ${item.done ? 'text-gray-400 line-through' : 'text-gray-700'}`}>{item.title}</span>
-                  <button type="button" onClick={() => handleRemoveChecklistItem(item.id)}>
-                    <Trash2 className="h-4 w-4 text-gray-400" />
-                  </button>
-                </div>
-              ))}
+              {checklist.length === 0 ? (
+                <p className="text-sm text-gray-500">Nenhum item adicionado</p>
+              ) : (
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleChecklistReorder}>
+                  <SortableContext items={checklist.map((item) => item.id)} strategy={verticalListSortingStrategy}>
+                    {checklist.map((item) => (
+                      <ChecklistItemRow
+                        key={item.id}
+                        item={item}
+                        onToggle={toggleChecklistItem}
+                        onRemove={handleRemoveChecklistItem}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
+              )}
             </div>
             <div className="mt-3 flex gap-2">
               <Input value={checklistItem} onChange={(event) => setChecklistItem(event.target.value)} placeholder="Adicionar item" />
@@ -369,6 +385,48 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
           </div>
         </form>
       </div>
+    </div>
+  )
+}
+
+interface ChecklistItemRowProps {
+  item: TaskChecklistItem
+  onToggle: (id: string) => void
+  onRemove: (id: string) => void
+}
+
+function ChecklistItemRow({ item, onToggle, onRemove }: ChecklistItemRowProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id })
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.85 : 1
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2 text-sm bg-white">
+      <button
+        type="button"
+        className="mr-3 cursor-grab text-gray-400 transition-colors hover:text-gray-600"
+        aria-label="Reordenar item"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        className={`mr-3 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border ${
+          item.done ? 'border-green-500 bg-green-100 text-green-600' : 'border-gray-300 text-gray-400'
+        }`}
+        onClick={() => onToggle(item.id)}
+      >
+        {item.done && <Check className="h-4 w-4" />}
+      </button>
+      <span className={`flex-1 text-left ${item.done ? 'text-gray-400 line-through' : 'text-gray-700'}`}>{item.title}</span>
+      <button type="button" onClick={() => onRemove(item.id)}>
+        <Trash2 className="h-4 w-4 text-gray-400" />
+      </button>
     </div>
   )
 }
