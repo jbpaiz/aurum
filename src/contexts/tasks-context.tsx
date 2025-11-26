@@ -493,6 +493,12 @@ export function TasksProvider({ children }: TasksProviderProps) {
         id: item.id || randomId()
       }))
 
+      const currentTasks = fallbackColumn?.tasks ?? []
+      const highestSortOrder = currentTasks.length
+        ? Math.max(...currentTasks.map((task) => task.sortOrder || 0))
+        : 0
+      const nextSortOrder = highestSortOrder + 1000
+
       const payload: Database['public']['Tables']['tasks']['Insert'] = {
         board_id: input.boardId ?? activeBoard.id,
         column_id: fallbackColumnId,
@@ -514,7 +520,8 @@ export function TasksProvider({ children }: TasksProviderProps) {
         estimate_hours: input.estimateHours ?? null,
         is_blocked: input.isBlocked ?? false,
         blocked_reason: input.blockedReason ?? null,
-        user_id: user.id
+        user_id: user.id,
+        sort_order: nextSortOrder
       }
 
       const { data, error } = await supabase.from('tasks').insert(payload).select('id').single()

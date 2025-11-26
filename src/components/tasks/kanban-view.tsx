@@ -291,9 +291,11 @@ export function KanbanView() {
       ) : viewMode === 'list' ? (
         <TaskListView
           columns={filteredColumns}
+          referenceColumns={activeBoard?.columns ?? []}
           onSelectTask={openEditTaskModal}
           onCreateTask={() => openCreateTaskModal()}
           onChangeTaskColumn={handleChangeTaskColumn}
+          onMoveTask={moveTask}
         />
       ) : (
         <KanbanMetrics columns={filteredColumns} />
