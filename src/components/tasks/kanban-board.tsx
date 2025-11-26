@@ -21,9 +21,11 @@ interface KanbanBoardProps {
   onSelectTask: (task: TaskCard) => void
   onCreateTask: (columnId?: string) => void
   moveTask: (payload: MoveTaskPayload) => Promise<void>
+  onRenameColumn: (column: TaskColumn) => void
+  onMoveColumn: (columnId: string, direction: 'left' | 'right') => void
 }
 
-export function KanbanBoard({ columns, onSelectTask, onCreateTask, moveTask }: KanbanBoardProps) {
+export function KanbanBoard({ columns, onSelectTask, onCreateTask, moveTask, onRenameColumn, onMoveColumn }: KanbanBoardProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 }
@@ -95,12 +97,17 @@ export function KanbanBoard({ columns, onSelectTask, onCreateTask, moveTask }: K
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="flex gap-4 overflow-x-auto pb-4">
-        {columns.map((column) => (
+        {columns.map((column, index) => (
           <KanbanColumn
             key={column.id}
             column={column}
             onSelectTask={onSelectTask}
             onCreateTask={() => onCreateTask(column.id)}
+            onRenameColumn={() => onRenameColumn(column)}
+            onMoveLeft={() => onMoveColumn(column.id, 'left')}
+            onMoveRight={() => onMoveColumn(column.id, 'right')}
+            isFirst={index === 0}
+            isLast={index === columns.length - 1}
           />
         ))}
       </div>

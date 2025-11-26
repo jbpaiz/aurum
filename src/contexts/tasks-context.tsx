@@ -51,6 +51,10 @@ interface TasksContextValue {
   moveTask: (payload: MoveTaskPayload) => Promise<void>
   createColumn: (name: string, category?: TaskColumnCategory, color?: string) => Promise<void>
   createBoard: (name: string, description?: string) => Promise<void>
+  renameBoard: (boardId: string, name: string) => Promise<void>
+  deleteBoard: (boardId: string) => Promise<void>
+  renameColumn: (columnId: string, name: string) => Promise<void>
+  reorderColumn: (columnId: string, direction: 'left' | 'right') => Promise<void>
   refresh: () => Promise<void>
 }
 
@@ -685,6 +689,96 @@ export function TasksProvider({ children }: TasksProviderProps) {
     [activeProject, fetchWorkspace]
   )
 
+  const renameBoard = useCallback(
+    async (boardId: string, name: string) => {
+      const newName = name.trim()
+      if (!newName) return
+      const { error } = await supabase
+        .from('task_boards')
+        .update({ name: newName })
+        .eq('id', boardId)
+
+      if (error) {
+        console.error('Erro ao renomear quadro:', error.message)
+      } else {
+        await fetchWorkspace()
+      }
+    },
+    [fetchWorkspace]
+  )
+
+  const deleteBoard = useCallback(
+    async (boardId: string) => {
+      if (!activeProject) return
+      const totalBoards = activeProject.boards.length
+      if (totalBoards <= 1) {
+        console.warn('Não é possível excluir o único quadro do projeto')
+        return
+      }
+
+      const { error } = await supabase.from('task_boards').delete().eq('id', boardId)
+
+      if (error) {
+        console.error('Erro ao excluir quadro:', error.message)
+        return
+      }
+
+      setActiveBoardId((current) => (current === boardId ? null : current))
+      await fetchWorkspace()
+    },
+    [activeProject, fetchWorkspace]
+  )
+
+  const renameColumn = useCallback(
+    async (columnId: string, name: string) => {
+      const newName = name.trim()
+      if (!newName) return
+      const { error } = await supabase
+        .from('task_columns')
+        .update({ name: newName })
+        .eq('id', columnId)
+
+      if (error) {
+        console.error('Erro ao renomear coluna:', error.message)
+      } else {
+        await fetchWorkspace()
+      }
+    },
+    [fetchWorkspace]
+  )
+
+  const reorderColumn = useCallback(
+    async (columnId: string, direction: 'left' | 'right') => {
+      if (!activeBoard) return
+
+      const ordered = [...activeBoard.columns].sort((a, b) => a.position - b.position)
+      const currentIndex = ordered.findIndex((column) => column.id === columnId)
+      if (currentIndex === -1) return
+
+      const targetIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1
+      if (targetIndex < 0 || targetIndex >= ordered.length) return
+
+      const [movingColumn] = ordered.splice(currentIndex, 1)
+      ordered.splice(targetIndex, 0, movingColumn)
+
+      const updates = ordered.map((column, index) => ({
+        id: column.id,
+        board_id: activeBoard.id,
+        position: (index + 1) * 1000
+      }))
+
+      const { error } = await supabase.from('task_columns').upsert(updates)
+
+      if (error) {
+        console.error('Erro ao reordenar colunas:', error.message)
+        return
+      }
+
+      await fetchWorkspace()
+    },
+    [activeBoard, fetchWorkspace]
+  )
+
   const deleteTask = useCallback(
     async (taskId: string) => {
       if (!user) return
@@ -711,6 +805,10 @@ export function TasksProvider({ children }: TasksProviderProps) {
     moveTask,
     createColumn,
     createBoard,
+    renameBoard,
+    deleteBoard,
+    renameColumn,
+    reorderColumn,
     refresh
   }
 

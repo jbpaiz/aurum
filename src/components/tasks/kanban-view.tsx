@@ -2,11 +2,12 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { Kanban, Columns2, Search, Filter, List as ListIcon, BarChart3 } from 'lucide-react'
+import { Kanban, Columns2, Search, Filter, List as ListIcon, BarChart3, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { useTasks } from '@/contexts/tasks-context'
 import { KanbanBoard } from '@/components/tasks/kanban-board'
 import { TaskModal } from '@/components/tasks/task-modal'
@@ -26,7 +27,11 @@ export function KanbanView() {
     deleteTask,
     moveTask,
     createColumn,
-    createBoard
+    createBoard,
+    renameBoard,
+    deleteBoard,
+    renameColumn,
+    reorderColumn
   } = useTasks()
 
   const [searchTerm, setSearchTerm] = useState('')
@@ -99,6 +104,38 @@ export function KanbanView() {
     await createBoard(name)
   }
 
+  const handleRenameBoard = async () => {
+    if (!activeBoard) return
+    const name = window.prompt('Novo nome do quadro', activeBoard.name)
+    if (!name) return
+    const trimmed = name.trim()
+    if (!trimmed || trimmed === activeBoard.name) return
+    await renameBoard(activeBoard.id, trimmed)
+  }
+
+  const handleDeleteBoard = async () => {
+    if (!activeBoard || !activeProject) return
+    if ((activeProject.boards?.length ?? 0) <= 1) {
+      window.alert('Crie outro quadro antes de excluir este.')
+      return
+    }
+    const confirmed = window.confirm(`Deseja excluir o quadro "${activeBoard.name}"?`)
+    if (!confirmed) return
+    await deleteBoard(activeBoard.id)
+  }
+
+  const handleRenameColumn = async (column: TaskColumn) => {
+    const nextName = window.prompt('Novo nome da coluna', column.name)
+    if (!nextName) return
+    const trimmed = nextName.trim()
+    if (!trimmed || trimmed === column.name) return
+    await renameColumn(column.id, trimmed)
+  }
+
+  const handleMoveColumn = async (columnId: string, direction: 'left' | 'right') => {
+    await reorderColumn(columnId, direction)
+  }
+
   return (
     <div className="flex flex-col gap-5 p-4 md:gap-6 md:p-6">
       <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
@@ -121,6 +158,30 @@ export function KanbanView() {
             <Button onClick={() => openCreateTaskModal()} className="gap-2">
               Nova tarefa
             </Button>
+            {activeBoard && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" className="h-10 w-10">
+                    <MoreHorizontal className="h-4 w-4" />
+                    <span className="sr-only">Opções do quadro</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onSelect={handleRenameBoard}>
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Renomear quadro
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onSelect={handleDeleteBoard}
+                    className="text-red-600 focus:bg-red-50 focus:text-red-600"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Excluir quadro
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
 
@@ -231,6 +292,8 @@ export function KanbanView() {
               onSelectTask={openEditTaskModal}
               onCreateTask={openCreateTaskModal}
               moveTask={moveTask}
+              onRenameColumn={handleRenameColumn}
+              onMoveColumn={handleMoveColumn}
             />
           </div>
         </div>
