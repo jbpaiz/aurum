@@ -764,6 +764,11 @@ export function TasksProvider({ children }: TasksProviderProps) {
       const updates = ordered.map((column, index) => ({
         id: column.id,
         board_id: activeBoard.id,
+        name: column.name,
+        slug: column.slug,
+        category: column.category,
+        color: column.color,
+        wip_limit: column.wipLimit ?? null,
         position: (index + 1) * 1000
       }))
 
