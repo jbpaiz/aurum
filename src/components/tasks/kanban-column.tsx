@@ -2,7 +2,7 @@
 
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { Plus, Pencil, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { KanbanCard } from '@/components/tasks/kanban-card'
 import type { TaskCard, TaskColumn } from '@/types/tasks'
@@ -11,14 +11,9 @@ interface KanbanColumnProps {
   column: TaskColumn
   onSelectTask: (task: TaskCard) => void
   onCreateTask: (columnId: string) => void
-  onRenameColumn: () => void
-  onMoveLeft: () => void
-  onMoveRight: () => void
-  isFirst: boolean
-  isLast: boolean
 }
 
-export function KanbanColumn({ column, onSelectTask, onCreateTask, onRenameColumn, onMoveLeft, onMoveRight, isFirst, isLast }: KanbanColumnProps) {
+export function KanbanColumn({ column, onSelectTask, onCreateTask }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: column.id,
     data: {
@@ -29,51 +24,19 @@ export function KanbanColumn({ column, onSelectTask, onCreateTask, onRenameColum
 
   return (
     <div className="flex w-80 flex-shrink-0 flex-col">
-      <div className="mb-3 flex items-center justify-between gap-2">
+      <div className="mb-3 flex items-center justify-between">
         <div>
           <p className="text-sm font-semibold text-gray-900">{column.name}</p>
           <p className="text-xs text-gray-500">{column.tasks.length} itens</p>
         </div>
-        <div className="flex items-center gap-1">
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-7 w-7 text-gray-500"
-            onClick={() => onCreateTask(column.id)}
-          >
-            <Plus className="h-4 w-4" />
-            <span className="sr-only">Adicionar tarefa</span>
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-7 w-7 text-gray-500"
-            onClick={onRenameColumn}
-          >
-            <Pencil className="h-4 w-4" />
-            <span className="sr-only">Renomear coluna</span>
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-7 w-7 text-gray-500"
-            onClick={onMoveLeft}
-            disabled={isFirst}
-          >
-            <ChevronLeft className="h-4 w-4" />
-            <span className="sr-only">Mover coluna para a esquerda</span>
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-7 w-7 text-gray-500"
-            onClick={onMoveRight}
-            disabled={isLast}
-          >
-            <ChevronRight className="h-4 w-4" />
-            <span className="sr-only">Mover coluna para a direita</span>
-          </Button>
-        </div>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-7 w-7 text-gray-500"
+          onClick={() => onCreateTask(column.id)}
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
       </div>
 
       <div

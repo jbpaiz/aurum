@@ -75,6 +75,26 @@ export function KanbanCard({ task, onSelect }: KanbanCardProps) {
         <p className="mt-1 line-clamp-2 text-xs text-gray-600">{task.description}</p>
       )}
 
+      {task.checklist.length > 0 && (
+        <div className="mt-3 space-y-1 rounded-lg border border-gray-100 bg-gray-50/70 p-2">
+          {task.checklist.map((item) => (
+            <div key={item.id} className="flex items-start gap-2 text-xs">
+              <span
+                className={cn(
+                  'mt-0.5 flex h-3 w-3 items-center justify-center rounded border',
+                  item.done ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-gray-300 bg-white'
+                )}
+              >
+                {item.done && <span className="h-2 w-2 rounded-full bg-white" />}
+              </span>
+              <span className={cn('flex-1 text-gray-600', item.done && 'line-through text-gray-400')}>
+                {item.title}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="mt-3 flex flex-wrap gap-2">
         <Badge variant="secondary" className="bg-blue-50 text-blue-700">
           {TASK_TYPE_LABEL[task.type]}

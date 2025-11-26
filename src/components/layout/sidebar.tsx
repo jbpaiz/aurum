@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
+import type { ReadonlyURLSearchParams } from 'next/navigation'
+import type { LucideIcon } from 'lucide-react'
 import {
   LayoutDashboard,
   Wallet,
@@ -18,7 +20,8 @@ import {
   Bell,
   Banknote,
   Kanban,
-  ChevronDown
+  ChevronDown,
+  Columns2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { HUB_META, resolveHubId, type HubId } from '@/components/layout/hub-config'
@@ -27,7 +30,14 @@ interface SidebarProps {
   children: React.ReactNode
 }
 
-const financeMenuItems = [
+interface NavigationItem {
+  title: string
+  icon: LucideIcon
+  href: string
+  isActive?: (pathname: string, searchParams: ReadonlyURLSearchParams) => boolean
+}
+
+const financeMenuItems: NavigationItem[] = [
   {
     title: 'Dashboard',
     icon: LayoutDashboard,
@@ -70,11 +80,18 @@ const financeMenuItems = [
   }
 ]
 
-const tasksMenuItems = [
+const tasksMenuItems: NavigationItem[] = [
   {
     title: 'Quadro Kanban',
     icon: Kanban,
-    href: '/tasks'
+    href: '/tasks',
+    isActive: (pathname, searchParams) => pathname.startsWith('/tasks') && searchParams.get('manager') !== '1'
+  },
+  {
+    title: 'Gerenciar quadros',
+    icon: Columns2,
+    href: '/tasks?manager=1',
+    isActive: (pathname, searchParams) => pathname.startsWith('/tasks') && searchParams.get('manager') === '1'
   }
 ]
 
@@ -89,7 +106,7 @@ const hubNavigation = {
   }
 } as const
 
-const bottomMenuItems = [
+const bottomMenuItems: NavigationItem[] = [
   {
     title: 'Notificações',
     icon: Bell,
@@ -111,17 +128,23 @@ export function Sidebar({ children }: SidebarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isHubSwitcherOpen, setIsHubSwitcherOpen] = useState(false)
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const currentHub: HubId = resolveHubId(pathname)
   const activeHub = hubNavigation[currentHub]
   const hubEntries = Object.values(hubNavigation)
   const currentMenuItems = activeHub.menu
   const HubIcon = activeHub.icon
 
-  const isActive = (href: string) => {
-    if (href === '/') {
+  const isActive = (item: NavigationItem) => {
+    if (item.isActive) {
+      return item.isActive(pathname, searchParams)
+    }
+
+    const [targetPath] = item.href.split(/[?#]/)
+    if (targetPath === '/') {
       return pathname === '/'
     }
-    return pathname.startsWith(href)
+    return pathname.startsWith(targetPath)
   }
 
   useEffect(() => {
@@ -197,7 +220,7 @@ export function Sidebar({ children }: SidebarProps) {
               <p className="px-3 pb-2 text-xs font-semibold uppercase text-gray-400">{activeHub.name}</p>
               {currentMenuItems.map((item) => {
                 const Icon = item.icon
-                const active = isActive(item.href)
+                const active = isActive(item)
                 return (
                   <Link
                     key={item.title}
@@ -222,7 +245,7 @@ export function Sidebar({ children }: SidebarProps) {
             <nav className="space-y-1 pb-4">
               {bottomMenuItems.map((item) => {
                 const Icon = item.icon
-                const active = isActive(item.href)
+                const active = isActive(item)
                 return (
                   <Link
                     key={item.title}
@@ -306,7 +329,7 @@ export function Sidebar({ children }: SidebarProps) {
                   <p className="px-3 pb-2 text-xs font-semibold uppercase text-gray-400">{activeHub.name}</p>
                   {currentMenuItems.map((item) => {
                     const Icon = item.icon
-                    const active = isActive(item.href)
+                    const active = isActive(item)
                     return (
                       <Link
                         key={item.title}
@@ -333,7 +356,7 @@ export function Sidebar({ children }: SidebarProps) {
               <nav className="space-y-1 pb-4">
                 {bottomMenuItems.map((item) => {
                   const Icon = item.icon
-                  const active = isActive(item.href)
+                  const active = isActive(item)
                   return (
                     <Link
                       key={item.title}

@@ -2,17 +2,19 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { Kanban, Columns2, Search, Filter, List as ListIcon, BarChart3, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { Kanban, Columns2, Search, Filter, List as ListIcon, BarChart3, MoreHorizontal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { useTasks } from '@/contexts/tasks-context'
 import { KanbanBoard } from '@/components/tasks/kanban-board'
 import { TaskModal } from '@/components/tasks/task-modal'
 import { TaskListView } from '@/components/tasks/task-list-view'
 import { KanbanMetrics } from '@/components/tasks/kanban-metrics'
+import { BoardManagementView } from '@/components/tasks/board-management-view'
 import type { CreateTaskInput, TaskCard, TaskColumn, TaskPriority } from '@/types/tasks'
 import { TASK_PRIORITY_COLORS, TASK_PRIORITY_LABELS } from '@/types/tasks'
 
@@ -27,13 +29,12 @@ export function KanbanView() {
     deleteTask,
     moveTask,
     createColumn,
-    createBoard,
-    renameBoard,
-    deleteBoard,
-    renameColumn,
-    reorderColumn
+    createBoard
   } = useTasks()
 
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const [searchTerm, setSearchTerm] = useState('')
   const [labelFilter, setLabelFilter] = useState('')
   const [priorityFilter, setPriorityFilter] = useState<TaskPriority | 'all'>('all')
@@ -45,11 +46,27 @@ export function KanbanView() {
     const stored = window.localStorage.getItem('aurum.tasks.viewMode') as 'kanban' | 'list' | 'metrics' | null
     return stored === 'list' || stored === 'metrics' ? stored : 'kanban'
   })
+  const managerParam = searchParams.get('manager')
 
   useEffect(() => {
     if (typeof window === 'undefined') return
     window.localStorage.setItem('aurum.tasks.viewMode', viewMode)
   }, [viewMode])
+
+  const showManagerView = managerParam === '1'
+
+  const updateManagerVisibility = (open: boolean) => {
+    if (!router || !pathname) return
+
+    const params = new URLSearchParams(searchParams.toString())
+    if (open) {
+      params.set('manager', '1')
+    } else {
+      params.delete('manager')
+    }
+    const query = params.toString()
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
+  }
 
   const filteredColumns: TaskColumn[] = useMemo(() => {
     if (!activeBoard) return []
@@ -104,36 +121,12 @@ export function KanbanView() {
     await createBoard(name)
   }
 
-  const handleRenameBoard = async () => {
-    if (!activeBoard) return
-    const name = window.prompt('Novo nome do quadro', activeBoard.name)
-    if (!name) return
-    const trimmed = name.trim()
-    if (!trimmed || trimmed === activeBoard.name) return
-    await renameBoard(activeBoard.id, trimmed)
-  }
-
-  const handleDeleteBoard = async () => {
-    if (!activeBoard || !activeProject) return
-    if ((activeProject.boards?.length ?? 0) <= 1) {
-      window.alert('Crie outro quadro antes de excluir este.')
-      return
-    }
-    const confirmed = window.confirm(`Deseja excluir o quadro "${activeBoard.name}"?`)
-    if (!confirmed) return
-    await deleteBoard(activeBoard.id)
-  }
-
-  const handleRenameColumn = async (column: TaskColumn) => {
-    const nextName = window.prompt('Novo nome da coluna', column.name)
-    if (!nextName) return
-    const trimmed = nextName.trim()
-    if (!trimmed || trimmed === column.name) return
-    await renameColumn(column.id, trimmed)
-  }
-
-  const handleMoveColumn = async (columnId: string, direction: 'left' | 'right') => {
-    await reorderColumn(columnId, direction)
+  if (showManagerView) {
+    return (
+      <div className="flex flex-col gap-5 p-4 md:gap-6 md:p-6">
+        <BoardManagementView onBack={() => updateManagerVisibility(false)} />
+      </div>
+    )
   }
 
   return (
@@ -167,17 +160,13 @@ export function KanbanView() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onSelect={handleRenameBoard}>
-                    <Pencil className="mr-2 h-4 w-4" />
-                    Renomear quadro
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onSelect={handleDeleteBoard}
-                    className="text-red-600 focus:bg-red-50 focus:text-red-600"
+                    onSelect={(event) => {
+                      event.preventDefault()
+                      updateManagerVisibility(true)
+                    }}
                   >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Excluir quadro
+                    Gerenciar quadros
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -292,8 +281,6 @@ export function KanbanView() {
               onSelectTask={openEditTaskModal}
               onCreateTask={openCreateTaskModal}
               moveTask={moveTask}
-              onRenameColumn={handleRenameColumn}
-              onMoveColumn={handleMoveColumn}
             />
           </div>
         </div>
