@@ -61,7 +61,7 @@ export function TaskListView({
   const renderDate = (date?: string | null) => {
     if (!date) return <span className="text-gray-400">Sem data</span>
     try {
-      return format(new Date(date), "dd 'de' MMM", { locale: ptBR })
+      return format(new Date(date), 'dd/MM/yyyy', { locale: ptBR })
     } catch (error) {
       return <span className="text-gray-400">Sem data</span>
     }
@@ -109,6 +109,10 @@ export function TaskListView({
       }
 
       if (!targetColumnId) return
+
+      if (targetColumnId !== sourceColumnId) {
+        return
+      }
 
       await onMoveTask({
         taskId,

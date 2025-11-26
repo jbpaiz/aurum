@@ -3,6 +3,7 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { CheckSquare, Paperclip, AlertCircle, Flag, Play } from 'lucide-react'
+import { format } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import type { TaskCard } from '@/types/tasks'
@@ -38,10 +39,7 @@ export function KanbanCard({ task, onSelect }: KanbanCardProps) {
     if (!value) return null
     const parsed = new Date(value)
     if (Number.isNaN(parsed.getTime())) return null
-    return parsed.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: 'short'
-    })
+    return format(parsed, 'dd/MM/yyyy')
   }
   const startLabel = formatShortDate(task.startDate)
   const endLabel = formatShortDate(task.endDate)
