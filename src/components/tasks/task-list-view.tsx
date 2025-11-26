@@ -43,7 +43,7 @@ export function TaskListView({ columns, onSelectTask, onCreateTask }: TaskListVi
   }
 
   return (
-    <div className="flex-1 overflow-hidden rounded-2xl border border-gray-200 bg-white">
+    <div className="w-full overflow-hidden rounded-2xl border border-gray-200 bg-white">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">

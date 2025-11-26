@@ -100,9 +100,9 @@ export function KanbanView() {
   }
 
   return (
-    <div className="flex h-full flex-col gap-6 p-6">
-      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+    <div className="flex flex-col gap-5 p-4 md:gap-6 md:p-6">
+      <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">Módulo de tarefas</p>
             <div className="mt-1 flex items-center gap-2 text-2xl font-bold text-gray-900">
@@ -124,7 +124,7 @@ export function KanbanView() {
           </div>
         </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-[1fr_1fr_180px]">
+        <div className="mt-6 grid gap-4 md:grid-cols-[1fr_1fr_200px]">
           <div className="space-y-1">
             <LabelSeamless>Quadro</LabelSeamless>
             <Select value={activeBoard?.id} onValueChange={setActiveBoardId}>
@@ -168,7 +168,7 @@ export function KanbanView() {
           </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
+        <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
             <Filter className="h-4 w-4" />
             <span>Etiquetas:</span>
@@ -215,17 +215,17 @@ export function KanbanView() {
       </div>
 
       {loading ? (
-        <div className="flex flex-1 items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white">
+        <div className="flex min-h-[320px] items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white">
           <p className="text-gray-500">Carregando quadro...</p>
         </div>
       ) : filteredColumns.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-gray-200 bg-white">
+        <div className="flex min-h-[320px] flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-gray-200 bg-white">
           <p className="text-lg font-semibold text-gray-600">Crie sua primeira tarefa</p>
           <Button onClick={() => openCreateTaskModal()}>Adicionar tarefa</Button>
         </div>
       ) : viewMode === 'kanban' ? (
-        <div className="flex-1 rounded-2xl border border-gray-200 bg-white">
-          <div className="h-full overflow-auto p-4">
+        <div className="w-full rounded-2xl border border-gray-200 bg-white">
+          <div className="overflow-auto p-3 sm:p-4">
             <KanbanBoard
               columns={filteredColumns}
               onSelectTask={openEditTaskModal}

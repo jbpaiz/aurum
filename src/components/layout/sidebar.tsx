@@ -3,29 +3,25 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { 
-  LayoutDashboard, 
-  Wallet, 
-  CreditCard, 
-  ArrowUpDown, 
-  PieChart, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Wallet,
+  CreditCard,
+  ArrowUpDown,
+  PieChart,
+  Settings,
   User,
   Menu,
   X,
-  Home,
-  TrendingUp,
-  Receipt,
   Target,
   Calendar,
   Bell,
   Banknote,
   Kanban,
-  DollarSign,
   ChevronDown
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { HUB_META, resolveHubId, type HubId } from '@/components/layout/hub-config'
 
 interface SidebarProps {
   children: React.ReactNode
@@ -82,30 +78,16 @@ const tasksMenuItems = [
   }
 ]
 
-const hubConfigs = {
+const hubNavigation = {
   finance: {
-    id: 'finance',
-    name: 'Financeiro',
-    description: 'Dashboard, contas e relatórios',
-    tagline: 'Controle Financeiro',
-    accent: 'from-blue-600 to-purple-600',
-    icon: DollarSign,
-    entryHref: '/',
+    ...HUB_META.finance,
     menu: financeMenuItems
   },
   tasks: {
-    id: 'tasks',
-    name: 'Tarefas',
-    description: 'Kanban e planejamento ágil',
-    tagline: 'Produtividade e Projetos',
-    accent: 'from-purple-600 to-pink-500',
-    icon: Kanban,
-    entryHref: '/tasks',
+    ...HUB_META.tasks,
     menu: tasksMenuItems
   }
 } as const
-
-type HubId = keyof typeof hubConfigs
 
 const bottomMenuItems = [
   {
@@ -129,9 +111,9 @@ export function Sidebar({ children }: SidebarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isHubSwitcherOpen, setIsHubSwitcherOpen] = useState(false)
   const pathname = usePathname()
-  const currentHub: HubId = pathname.startsWith('/tasks') ? 'tasks' : 'finance'
-  const activeHub = hubConfigs[currentHub]
-  const hubEntries = Object.values(hubConfigs)
+  const currentHub: HubId = resolveHubId(pathname)
+  const activeHub = hubNavigation[currentHub]
+  const hubEntries = Object.values(hubNavigation)
   const currentMenuItems = activeHub.menu
   const HubIcon = activeHub.icon
 
@@ -265,30 +247,14 @@ export function Sidebar({ children }: SidebarProps) {
         </div>
       </div>
 
-      {/* Mobile menu button */}
-      <div className="md:hidden">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="fixed top-4 left-4 z-50 bg-white shadow-md"
-        >
-          {isMobileMenuOpen ? (
-            <X className="h-5 w-5" />
-          ) : (
-            <Menu className="h-5 w-5" />
-          )}
-        </Button>
-      </div>
-
       {/* Mobile Sidebar */}
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setIsMobileMenuOpen(false)} />
           <div className="relative flex flex-col w-64 h-full bg-white shadow-xl">
             <div className="flex items-center gap-3 px-6 pt-8 pb-4">
-              <div className="p-2 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg">
-                <Home className="h-6 w-6 text-white" />
+              <div className={`rounded-lg bg-gradient-to-br ${activeHub.accent} p-2 text-white`}>
+                <HubIcon className="h-6 w-6" />
               </div>
               <div>
                 <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
@@ -395,7 +361,29 @@ export function Sidebar({ children }: SidebarProps) {
       )}
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col bg-gray-50">
+        <div className="md:hidden border-b border-gray-200 bg-white px-4 py-3">
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm"
+              aria-label="Abrir menu"
+              onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+            >
+              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+            <div className="flex items-center gap-3">
+              <span className={cn('flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br text-white', activeHub.accent)}>
+                <HubIcon className="h-5 w-5" />
+              </span>
+              <div className="text-right">
+                <p className="text-[11px] uppercase tracking-[0.3em] text-gray-400">Hub ativo</p>
+                <p className="text-sm font-semibold text-gray-900">{activeHub.name}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {children}
       </div>
     </div>
