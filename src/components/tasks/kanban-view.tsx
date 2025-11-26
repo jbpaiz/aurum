@@ -295,7 +295,6 @@ export function KanbanView() {
           onSelectTask={openEditTaskModal}
           onCreateTask={() => openCreateTaskModal()}
           onChangeTaskColumn={handleChangeTaskColumn}
-          onMoveTask={moveTask}
         />
       ) : (
         <KanbanMetrics columns={filteredColumns} />

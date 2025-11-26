@@ -1,19 +1,24 @@
 "use client"
 
-import { Fragment, useMemo, useCallback, type ReactNode } from 'react'
-import { GripVertical } from 'lucide-react'
-import { DndContext, DragEndEvent, PointerSensor, useDroppable, useSensor, useSensors } from '@dnd-kit/core'
-import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
+import { useMemo, useState, useCallback, type ReactNode } from 'react'
+import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
-import type { MoveTaskPayload, TaskCard, TaskColumn } from '@/types/tasks'
+import type { TaskCard, TaskColumn, TaskPriority } from '@/types/tasks'
 import { TASK_PRIORITY_COLORS, TASK_PRIORITY_LABELS } from '@/types/tasks'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { cn } from '@/lib/utils'
 
-const TABLE_COLUMN_COUNT = 8
+type SortKey = 'key' | 'title' | 'labels' | 'startDate' | 'endDate' | 'columnName' | 'priority'
+type SortDirection = 'asc' | 'desc'
+type SortConfig = { key: SortKey; direction: SortDirection }
+
+const PRIORITY_SEQUENCE: TaskPriority[] = ['lowest', 'low', 'medium', 'high', 'highest']
+
+interface TaskWithMeta extends TaskCard {
+  columnName: string
+  columnColor: string
+}
 
 interface TaskListViewProps {
   columns: TaskColumn[]
@@ -21,18 +26,10 @@ interface TaskListViewProps {
   onSelectTask: (task: TaskCard) => void
   onCreateTask: () => void
   onChangeTaskColumn?: (taskId: string, columnId: string) => Promise<void> | void
-  onMoveTask?: (payload: MoveTaskPayload) => Promise<void> | void
 }
 
-export function TaskListView({
-  columns,
-  referenceColumns,
-  onSelectTask,
-  onCreateTask,
-  onChangeTaskColumn,
-  onMoveTask
-}: TaskListViewProps) {
-  const tasks = useMemo(() => {
+export function TaskListView({ columns, referenceColumns, onSelectTask, onCreateTask, onChangeTaskColumn }: TaskListViewProps) {
+  const tasks = useMemo<TaskWithMeta[]>(() => {
     return columns.flatMap((column) =>
       column.tasks.map((task) => ({
         ...task,
@@ -43,20 +40,8 @@ export function TaskListView({
     )
   }, [columns])
 
-  const dragColumns = referenceColumns ?? columns
-  const dragEnabled = Boolean(onMoveTask)
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 6 }
-    })
-  )
-  const columnLookup = useMemo(() => {
-    const map = new Map<string, TaskColumn>()
-    dragColumns.forEach((column) => {
-      map.set(column.id, column)
-    })
-    return map
-  }, [dragColumns])
+  const [sortConfig, setSortConfig] = useState<SortConfig | null>(null)
+  const columnOptions = referenceColumns ?? columns
 
   const renderDate = (date?: string | null) => {
     if (!date) return <span className="text-gray-400">Sem data</span>
@@ -67,62 +52,60 @@ export function TaskListView({
     }
   }
 
-  const handleDragEnd = useCallback(
-    async (event: DragEndEvent) => {
-      if (!dragEnabled || !onMoveTask) return
+  const getComparableValue = useCallback((task: TaskWithMeta, key: SortKey) => {
+    switch (key) {
+      case 'key':
+        return task.key.toLowerCase()
+      case 'title':
+        return task.title.toLowerCase()
+      case 'labels':
+        return task.labels.join(', ').toLowerCase()
+      case 'startDate':
+        return task.startDate ? new Date(task.startDate).getTime() : null
+      case 'endDate':
+        return task.endDate ? new Date(task.endDate).getTime() : null
+      case 'columnName':
+        return task.columnName.toLowerCase()
+      case 'priority':
+        return PRIORITY_SEQUENCE.indexOf(task.priority)
+      default:
+        return null
+    }
+  }, [])
 
-      const { active, over } = event
-      if (!over) return
+  const sortedTasks = useMemo(() => {
+    if (!sortConfig) return tasks
 
-      const taskId = String(active.id)
-      const sourceColumnId = active.data.current?.columnId as string | undefined
-      if (!sourceColumnId) return
+    const { key, direction } = sortConfig
+    const multiplier = direction === 'asc' ? 1 : -1
 
-      let targetColumnId = over.data?.current?.columnId as string | undefined
-      let targetIndex = 0
+    return [...tasks].sort((taskA, taskB) => {
+      const valueA = getComparableValue(taskA, key)
+      const valueB = getComparableValue(taskB, key)
 
-      if (over.data?.current?.type === 'task-row') {
-        const destinationColumn = targetColumnId ? columnLookup.get(targetColumnId) : undefined
-        if (!destinationColumn) return
+      if (valueA === valueB) return 0
+      if (valueA === null || valueA === undefined) return 1 * multiplier
+      if (valueB === null || valueB === undefined) return -1 * multiplier
 
-        const overTaskId = over.data.current.taskId as string
-        const orderedTasks = destinationColumn.tasks
-        const overIndex = orderedTasks.findIndex((task) => task.id === overTaskId)
-        if (overIndex < 0) return
-        targetIndex = overIndex
-
-        if (sourceColumnId === targetColumnId) {
-          const activeIndex = orderedTasks.findIndex((task) => task.id === taskId)
-          if (activeIndex < 0) return
-          if (activeIndex < targetIndex) {
-            targetIndex -= 1
-          }
-        }
-      } else if (over.data?.current?.type === 'column') {
-        targetColumnId = over.data.current.columnId as string
-        const destinationColumn = targetColumnId ? columnLookup.get(targetColumnId) : undefined
-        targetIndex = destinationColumn ? destinationColumn.tasks.length : 0
-      } else if (typeof over.id === 'string') {
-        targetColumnId = over.id
-        const destinationColumn = columnLookup.get(targetColumnId)
-        targetIndex = destinationColumn ? destinationColumn.tasks.length : 0
+      if (typeof valueA === 'number' && typeof valueB === 'number') {
+        return (valueA - valueB) * multiplier
       }
 
-      if (!targetColumnId) return
+      return String(valueA).localeCompare(String(valueB), 'pt-BR', { sensitivity: 'base' }) * multiplier
+    })
+  }, [getComparableValue, sortConfig, tasks])
 
-      if (targetColumnId !== sourceColumnId) {
-        return
+  const handleSort = useCallback((key: SortKey) => {
+    setSortConfig((current) => {
+      if (!current || current.key !== key) {
+        return { key, direction: 'asc' }
       }
-
-      await onMoveTask({
-        taskId,
-        sourceColumnId,
-        targetColumnId,
-        targetIndex
-      })
-    },
-    [columnLookup, dragEnabled, onMoveTask]
-  )
+      return {
+        key,
+        direction: current.direction === 'asc' ? 'desc' : 'asc'
+      }
+    })
+  }, [])
 
   if (!tasks.length) {
     return (
@@ -133,105 +116,66 @@ export function TaskListView({
     )
   }
 
-  const table = (
-    <table className="min-w-full divide-y divide-gray-200">
-      <thead className="bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-        <tr>
-          <th className="w-10 px-4 py-3" aria-label="Ordenação" />
-          <th className="px-6 py-3 whitespace-nowrap">Chave</th>
-          <th className="px-6 py-3">Título</th>
-          <th className="px-6 py-3 whitespace-nowrap">Etiquetas</th>
-          <th className="px-6 py-3 whitespace-nowrap">Início</th>
-          <th className="px-6 py-3 whitespace-nowrap">Fim</th>
-          <th className="px-6 py-3 whitespace-nowrap">Situação</th>
-          <th className="px-6 py-3 whitespace-nowrap">Prioridade</th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-gray-100 bg-white text-sm">
-        {columns.map((column) => (
-          <Fragment key={column.id}>
-            <SortableContext items={column.tasks.map((task) => task.id)} strategy={verticalListSortingStrategy}>
-              {column.tasks.map((task) => (
-                <TaskListRow
-                  key={task.id}
-                  task={task}
-                  column={column}
-                  onSelectTask={onSelectTask}
-                  onChangeTaskColumn={onChangeTaskColumn}
-                  renderDate={renderDate}
-                  columnOptions={dragColumns}
-                  dragEnabled={dragEnabled}
-                />
-              ))}
-            </SortableContext>
-            {dragEnabled ? <ListColumnDropZone columnId={column.id} /> : null}
-          </Fragment>
-        ))}
-      </tbody>
-    </table>
-  )
-
   return (
     <div className="w-full overflow-hidden rounded-2xl border border-gray-200 bg-white">
       <div className="overflow-x-auto">
-        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-          {table}
-        </DndContext>
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+            <tr>
+              <th className="px-6 py-3 whitespace-nowrap">
+                <SortableHeader label="Chave" sortKey="key" sortConfig={sortConfig} onToggleSort={handleSort} />
+              </th>
+              <th className="px-6 py-3">
+                <SortableHeader label="Título" sortKey="title" sortConfig={sortConfig} onToggleSort={handleSort} />
+              </th>
+              <th className="px-6 py-3 whitespace-nowrap">
+                <SortableHeader label="Etiquetas" sortKey="labels" sortConfig={sortConfig} onToggleSort={handleSort} />
+              </th>
+              <th className="px-6 py-3 whitespace-nowrap">
+                <SortableHeader label="Início" sortKey="startDate" sortConfig={sortConfig} onToggleSort={handleSort} />
+              </th>
+              <th className="px-6 py-3 whitespace-nowrap">
+                <SortableHeader label="Fim" sortKey="endDate" sortConfig={sortConfig} onToggleSort={handleSort} />
+              </th>
+              <th className="px-6 py-3 whitespace-nowrap">
+                <SortableHeader label="Situação" sortKey="columnName" sortConfig={sortConfig} onToggleSort={handleSort} />
+              </th>
+              <th className="px-6 py-3 whitespace-nowrap">
+                <SortableHeader label="Prioridade" sortKey="priority" sortConfig={sortConfig} onToggleSort={handleSort} />
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100 bg-white text-sm">
+            {sortedTasks.map((task) => (
+              <TaskListRow
+                key={task.id}
+                task={task}
+                onSelectTask={onSelectTask}
+                onChangeTaskColumn={onChangeTaskColumn}
+                renderDate={renderDate}
+                columnOptions={columnOptions}
+              />
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   )
 }
 
 interface TaskListRowProps {
-  task: TaskCard
-  column: TaskColumn
+  task: TaskWithMeta
   onSelectTask: (task: TaskCard) => void
   onChangeTaskColumn?: (taskId: string, columnId: string) => Promise<void> | void
   renderDate: (value?: string | null) => ReactNode
   columnOptions: TaskColumn[]
-  dragEnabled: boolean
 }
 
-function TaskListRow({ task, column, onSelectTask, onChangeTaskColumn, renderDate, columnOptions, dragEnabled }: TaskListRowProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: task.id,
-    data: {
-      type: 'task-row',
-      taskId: task.id,
-      columnId: column.id
-    },
-    disabled: !dragEnabled
-  })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition
-  }
-
-  const selectedColumn = columnOptions.find((option) => option.id === task.columnId) ?? column
+function TaskListRow({ task, onSelectTask, onChangeTaskColumn, renderDate, columnOptions }: TaskListRowProps) {
+  const selectedColumn = columnOptions.find((option) => option.id === task.columnId)
 
   return (
-    <tr
-      ref={setNodeRef}
-      style={style}
-      className={cn(
-        'cursor-pointer transition-colors hover:bg-blue-50/40',
-        isDragging && 'bg-blue-50/60 shadow-sm'
-      )}
-      onClick={() => onSelectTask(task)}
-    >
-      <td className="px-4 py-4 align-middle">
-        <button
-          type="button"
-          className="cursor-grab text-gray-400 transition hover:text-gray-700 disabled:cursor-not-allowed disabled:cursor-default active:cursor-grabbing"
-          onClick={(event) => event.stopPropagation()}
-          aria-label="Arrastar para reordenar"
-          {...(dragEnabled ? { ...attributes, ...listeners } : {})}
-          disabled={!dragEnabled}
-        >
-          <GripVertical className="h-4 w-4" />
-        </button>
-      </td>
+    <tr className="cursor-pointer transition-colors hover:bg-blue-50/40" onClick={() => onSelectTask(task)}>
       <td className="px-6 py-4 font-semibold text-gray-900 whitespace-nowrap">{task.key}</td>
       <td className="px-6 py-4">
         <p className="font-medium text-gray-900">{task.title}</p>
@@ -262,10 +206,10 @@ function TaskListRow({ task, column, onSelectTask, onChangeTaskColumn, renderDat
             <div className="flex items-center gap-2">
               <span
                 className="h-2.5 w-2.5 rounded-full"
-                style={{ backgroundColor: selectedColumn?.color ?? '#CBD5F5' }}
+                style={{ backgroundColor: selectedColumn?.color ?? task.columnColor ?? '#CBD5F5' }}
               />
               <span className="text-sm font-medium text-gray-700">
-                {selectedColumn?.name ?? 'Situação'}
+                {selectedColumn?.name ?? task.columnName ?? 'Situação'}
               </span>
             </div>
           </SelectTrigger>
@@ -293,22 +237,40 @@ function TaskListRow({ task, column, onSelectTask, onChangeTaskColumn, renderDat
   )
 }
 
-function ListColumnDropZone({ columnId }: { columnId: string }) {
-  const { setNodeRef, isOver } = useDroppable({
-    id: `list-column-${columnId}`,
-    data: {
-      type: 'column',
-      columnId
-    }
-  })
+interface SortableHeaderProps {
+  label: string
+  sortKey: SortKey
+  sortConfig: SortConfig | null
+  onToggleSort: (key: SortKey) => void
+}
+
+function SortableHeader({ label, sortKey, sortConfig, onToggleSort }: SortableHeaderProps) {
+  const isActive = sortConfig?.key === sortKey
+  const direction = sortConfig?.direction ?? 'asc'
+  const tooltip = isActive
+    ? `Ordenar ${label} em ordem ${direction === 'asc' ? 'descendente' : 'ascendente'}`
+    : `Ordenar ${label} em ordem ascendente`
+
+  const Icon = !isActive ? ArrowUpDown : direction === 'asc' ? ArrowUp : ArrowDown
 
   return (
-    <tr ref={setNodeRef} aria-hidden>
-      <td
-        colSpan={TABLE_COLUMN_COUNT}
-        className={cn('p-0 transition-colors', isOver ? 'bg-blue-50/80' : '')}
-        style={{ height: 6 }}
-      />
-    </tr>
+    <button
+      type="button"
+      className="flex items-center gap-2 rounded-md px-1 py-0.5 text-gray-600 transition hover:text-blue-600"
+      onClick={(event) => {
+        event.stopPropagation()
+        onToggleSort(sortKey)
+      }}
+      aria-pressed={isActive}
+      title={tooltip}
+    >
+      <span>{label}</span>
+      <Icon className={`h-3.5 w-3.5 ${isActive ? 'text-blue-600' : 'text-gray-400'}`} aria-hidden />
+      {isActive ? (
+        <span className="sr-only">
+          {direction === 'asc' ? 'ordenado ascendente' : 'ordenado descendente'}
+        </span>
+      ) : null}
+    </button>
   )
 }
