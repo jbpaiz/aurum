@@ -19,6 +19,7 @@ import type {
   TaskPriority,
   TaskType
 } from '@/types/tasks'
+import { TASK_COLUMN_COLOR_PALETTE } from '@/types/tasks'
 
 type ProjectRow = Database['public']['Tables']['task_projects']['Row']
 type BoardRow = Database['public']['Tables']['task_boards']['Row']
@@ -54,6 +55,7 @@ interface TasksContextValue {
   renameBoard: (boardId: string, name: string) => Promise<void>
   deleteBoard: (boardId: string) => Promise<void>
   renameColumn: (columnId: string, name: string) => Promise<void>
+  updateColumnColor: (columnId: string, color: string) => Promise<void>
   reorderColumn: (columnId: string, direction: 'left' | 'right') => Promise<void>
   refresh: () => Promise<void>
 }
@@ -261,6 +263,15 @@ const slugify = (value: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '')
     .slice(0, 60)
+
+const pickNextColumnColor = (columns?: TaskColumn[], fallback?: string) => {
+  if (fallback) return fallback
+  const used = new Set((columns ?? []).map((column) => column.color?.toLowerCase() ?? ''))
+  const available = TASK_COLUMN_COLOR_PALETTE.find((color) => !used.has(color.toLowerCase()))
+  if (available) return available
+  const index = (columns?.length ?? 0) % TASK_COLUMN_COLOR_PALETTE.length
+  return TASK_COLUMN_COLOR_PALETTE[index]
+}
 
 export function useTasks() {
   const context = useContext(TasksContext)
@@ -656,6 +667,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
     async (name: string, category: TaskColumnCategory = 'todo', color?: string) => {
       if (!activeBoard) return
       const slug = slugify(name) || `coluna-${Date.now()}`
+      const chosenColor = pickNextColumnColor(activeBoard.columns, color)
 
       const { error } = await supabase
         .from('task_columns')
@@ -664,7 +676,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
           name,
           slug,
           category,
-          color: color ?? '#64748B'
+          color: chosenColor
         })
 
       if (error) {
@@ -755,6 +767,24 @@ export function TasksProvider({ children }: TasksProviderProps) {
     [fetchWorkspace]
   )
 
+  const updateColumnColor = useCallback(
+    async (columnId: string, color: string) => {
+      const paletteColor = TASK_COLUMN_COLOR_PALETTE.find((option) => option.toLowerCase() === color.toLowerCase())
+      const nextColor = paletteColor ?? TASK_COLUMN_COLOR_PALETTE[0]
+      const { error } = await supabase
+        .from('task_columns')
+        .update({ color: nextColor })
+        .eq('id', columnId)
+
+      if (error) {
+        console.error('Erro ao atualizar cor da coluna:', error.message)
+      } else {
+        await fetchWorkspace()
+      }
+    },
+    [fetchWorkspace]
+  )
+
   const reorderColumn = useCallback(
     async (columnId: string, direction: 'left' | 'right') => {
       if (!activeBoard) return
@@ -821,6 +851,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
     renameBoard,
     deleteBoard,
     renameColumn,
+    updateColumnColor,
     reorderColumn,
     refresh
   }

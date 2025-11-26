@@ -1,12 +1,14 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Plus, Trash2, ArrowLeft, ArrowRight, CornerUpLeft } from 'lucide-react'
+import { Plus, Trash2, ArrowLeft, ArrowRight, CornerUpLeft, ChevronsUpDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { useTasks } from '@/contexts/tasks-context'
+import { TASK_COLUMN_COLOR_PALETTE } from '@/types/tasks'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 
 interface BoardManagementViewProps {
   onBack?: () => void
@@ -24,6 +26,7 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
     deleteBoard,
     createColumn,
     renameColumn,
+    updateColumnColor,
     reorderColumn
   } = useTasks()
 
@@ -38,6 +41,7 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
   const [creatingColumn, setCreatingColumn] = useState(false)
   const [deletingBoardId, setDeletingBoardId] = useState<string | null>(null)
   const [reorderingColumnId, setReorderingColumnId] = useState<string | null>(null)
+  const [updatingColorColumnId, setUpdatingColorColumnId] = useState<string | null>(null)
   const [savingBoards, setSavingBoards] = useState<Record<string, boolean>>({})
   const [savingColumns, setSavingColumns] = useState<Record<string, boolean>>({})
 
@@ -175,6 +179,17 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
       await reorderColumn(columnId, direction)
     } finally {
       setReorderingColumnId(null)
+    }
+  }
+
+  const handleUpdateColumnColor = async (columnId: string, color: string) => {
+    const column = columns.find((item) => item.id === columnId)
+    if (column && column.color?.toLowerCase() === color.toLowerCase()) return
+    setUpdatingColorColumnId(columnId)
+    try {
+      await updateColumnColor(columnId, color)
+    } finally {
+      setUpdatingColorColumnId(null)
     }
   }
 
@@ -353,6 +368,50 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
                           <ArrowRight className="h-4 w-4" />
                         </Button>
                       </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs font-medium uppercase tracking-wide text-gray-500">Cor</span>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="gap-2"
+                            disabled={updatingColorColumnId === column.id || reorderingColumnId === column.id}
+                          >
+                            <span
+                              className="h-4 w-4 rounded-full border border-white shadow"
+                              style={{ backgroundColor: column.color ?? '#D4D4D8' }}
+                            />
+                            <ChevronsUpDown className="h-3 w-3 text-gray-400" />
+                            <span className="sr-only">Alterar cor da coluna</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-44" align="start">
+                          <div className="grid grid-cols-5 gap-2 p-3">
+                            {TASK_COLUMN_COLOR_PALETTE.map((colorOption) => {
+                              const isActive = column.color?.toLowerCase() === colorOption.toLowerCase()
+                              return (
+                                <DropdownMenuItem
+                                  key={colorOption}
+                                  className={cn(
+                                    'flex items-center justify-center rounded-full p-0 outline-none focus-visible:ring-2 focus-visible:ring-blue-400',
+                                    isActive ? 'ring-2 ring-blue-500 ring-offset-1' : 'ring-0'
+                                  )}
+                                  onSelect={() => handleUpdateColumnColor(column.id, colorOption)}
+                                >
+                                  <span
+                                    className="h-6 w-6 rounded-full border border-white shadow"
+                                    style={{ backgroundColor: colorOption }}
+                                  />
+                                  <span className="sr-only">Selecionar cor {colorOption}</span>
+                                </DropdownMenuItem>
+                              )
+                            })}
+                          </div>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                     {renderColumnMeta(column.id)}
                   </div>

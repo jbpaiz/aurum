@@ -168,3 +168,16 @@ export const TASK_TYPE_LABEL: Record<TaskType, string> = {
   story: 'História',
   epic: 'Épico'
 }
+
+export const TASK_COLUMN_COLOR_PALETTE = [
+  '#2563EB',
+  '#7C3AED',
+  '#F97316',
+  '#16A34A',
+  '#DB2777',
+  '#0EA5E9',
+  '#6366F1',
+  '#F59E0B',
+  '#14B8A6',
+  '#475569'
+] as const

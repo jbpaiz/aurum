@@ -19,7 +19,8 @@ export function TaskListView({ columns, onSelectTask, onCreateTask }: TaskListVi
     return columns.flatMap((column) =>
       column.tasks.map((task) => ({
         ...task,
-        columnName: column.name
+        columnName: column.name,
+        columnColor: column.color
       }))
     )
   }, [columns])
@@ -86,7 +87,16 @@ export function TaskListView({ columns, onSelectTask, onCreateTask }: TaskListVi
                 </td>
                 <td className="px-6 py-4 text-gray-600">{renderDate(task.startDate)}</td>
                 <td className="px-6 py-4 text-gray-600">{renderDate(task.endDate)}</td>
-                <td className="px-6 py-4 text-gray-600">{task.columnName}</td>
+                <td className="px-6 py-4 text-gray-600">
+                  <span className="inline-flex items-center gap-2">
+                    {task.columnColor ? (
+                      <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: task.columnColor }} />
+                    ) : (
+                      <span className="h-2.5 w-2.5 rounded-full bg-gray-300" />
+                    )}
+                    {task.columnName}
+                  </span>
+                </td>
                 <td className="px-6 py-4">
                   <span
                     className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold text-white"

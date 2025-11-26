@@ -10,7 +10,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import type {
   CreateTaskInput,
-  TaskAttachmentMeta,
   TaskCard,
   TaskChecklistItem,
   TaskColumn,
@@ -47,10 +46,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [labelsInput, setLabelsInput] = useState('')
-  const [attachments, setAttachments] = useState<TaskAttachmentMeta[]>([])
   const [checklist, setChecklist] = useState<TaskChecklistItem[]>([])
-  const [attachmentName, setAttachmentName] = useState('')
-  const [attachmentUrl, setAttachmentUrl] = useState('')
   const [checklistItem, setChecklistItem] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -61,6 +57,8 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   )
+  const resolvedColumnId = columnId || task?.columnId || defaultColumnId || columns[0]?.id || ''
+  const selectedColumn = columns.find((column) => column.id === resolvedColumnId)
 
   useEffect(() => {
     if (!open) return
@@ -73,10 +71,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
     setStartDate(task?.startDate ?? '')
     setEndDate(task?.endDate ?? '')
     setLabelsInput(task?.labels?.join(', ') ?? '')
-    setAttachments(task?.attachments ?? [])
     setChecklist(task?.checklist ?? [])
-    setAttachmentName('')
-    setAttachmentUrl('')
     setChecklistItem('')
     setFormError(null)
   }, [open, task, columns, defaultColumnId])
@@ -95,20 +90,6 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
       return crypto.randomUUID()
     }
     return Math.random().toString(36).substring(2, 12)
-  }
-
-  const handleAddAttachment = () => {
-    if (!attachmentName.trim() || !attachmentUrl.trim()) return
-    setAttachments((prev) => [
-      ...prev,
-      {
-        id: randomId(),
-        name: attachmentName.trim(),
-        url: attachmentUrl.trim()
-      }
-    ])
-    setAttachmentName('')
-    setAttachmentUrl('')
   }
 
   const toggleChecklistItem = (id: string) => {
@@ -143,17 +124,12 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
     })
   }
 
-  const handleRemoveAttachment = (id: string) => {
-    setAttachments((prev) => prev.filter((attachment) => attachment.id !== id))
-  }
-
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     if (!title.trim()) {
       setFormError('Informe um título para a tarefa.')
       return
     }
-    const resolvedColumnId = columnId || task?.columnId || defaultColumnId || columns[0]?.id || ''
     if (!resolvedColumnId) {
       setFormError('Selecione a coluna antes de salvar.')
       return
@@ -178,7 +154,6 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
       startDate: startDate || null,
       endDate: endDate || null,
       labels,
-      attachments,
       checklist
     })
     setIsSaving(false)
@@ -206,7 +181,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">{isEditing ? 'Editar tarefa' : 'Nova tarefa'}</h2>
-            <p className="text-sm text-gray-500">Defina título, prioridade, etiquetas e anexos</p>
+            <p className="text-sm text-gray-500">Defina título, prioridade, etiquetas e checklist</p>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="h-5 w-5" />
@@ -230,14 +205,20 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
             </div>
             <div className="space-y-2">
               <Label>Coluna</Label>
-              <Select value={columnId || task?.columnId || defaultColumnId || columns[0]?.id || ''} onValueChange={setColumnId}>
-                <SelectTrigger>
+              <Select value={resolvedColumnId} onValueChange={setColumnId}>
+                <SelectTrigger className="flex items-center gap-2">
+                  {selectedColumn && (
+                    <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: selectedColumn.color }} />
+                  )}
                   <SelectValue placeholder="Selecione a coluna" />
                 </SelectTrigger>
                 <SelectContent>
                   {columns.map((column) => (
                     <SelectItem key={column.id} value={column.id}>
-                      {column.name}
+                      <span className="inline-flex items-center gap-2">
+                        <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: column.color }} />
+                        {column.name}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -310,33 +291,6 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
               onChange={(event) => setDescription(event.target.value)}
               placeholder="Detalhe a tarefa, critérios de aceite, links úteis..."
             />
-          </div>
-
-          <div>
-            <Label>Anexos</Label>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {attachments.map((attachment) => (
-                <div
-                  key={attachment.id}
-                  className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1 text-xs text-gray-600"
-                >
-                  <a href={attachment.url} target="_blank" rel="noreferrer" className="font-medium text-blue-600">
-                    {attachment.name}
-                  </a>
-                  <button type="button" onClick={() => handleRemoveAttachment(attachment.id)}>
-                    <Trash2 className="h-3.5 w-3.5 text-gray-400" />
-                  </button>
-                </div>
-              ))}
-            </div>
-            <div className="mt-3 grid gap-2 md:grid-cols-[1fr_1fr_auto]">
-              <Input value={attachmentName} onChange={(event) => setAttachmentName(event.target.value)} placeholder="Nome" />
-              <Input value={attachmentUrl} onChange={(event) => setAttachmentUrl(event.target.value)} placeholder="URL https://" />
-              <Button type="button" variant="outline" onClick={handleAddAttachment}>
-                <Plus className="mr-2 h-4 w-4" />
-                Adicionar
-              </Button>
-            </div>
           </div>
 
           <div>
