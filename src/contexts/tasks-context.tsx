@@ -56,7 +56,7 @@ interface TasksContextValue {
   deleteBoard: (boardId: string) => Promise<void>
   renameColumn: (columnId: string, name: string) => Promise<void>
   updateColumnColor: (columnId: string, color: string) => Promise<void>
-  reorderColumn: (columnId: string, direction: 'left' | 'right') => Promise<void>
+  reorderColumns: (orderedIds: string[]) => Promise<void>
   refresh: () => Promise<void>
 }
 
@@ -785,19 +785,14 @@ export function TasksProvider({ children }: TasksProviderProps) {
     [fetchWorkspace]
   )
 
-  const reorderColumn = useCallback(
-    async (columnId: string, direction: 'left' | 'right') => {
-      if (!activeBoard) return
+  const reorderColumns = useCallback(
+    async (orderedIds: string[]) => {
+      if (!activeBoard || !orderedIds.length) return
+      const ordered = orderedIds
+        .map((id) => activeBoard.columns.find((column) => column.id === id))
+        .filter((column): column is TaskColumn => Boolean(column))
 
-      const ordered = [...activeBoard.columns].sort((a, b) => a.position - b.position)
-      const currentIndex = ordered.findIndex((column) => column.id === columnId)
-      if (currentIndex === -1) return
-
-      const targetIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1
-      if (targetIndex < 0 || targetIndex >= ordered.length) return
-
-      const [movingColumn] = ordered.splice(currentIndex, 1)
-      ordered.splice(targetIndex, 0, movingColumn)
+      if (!ordered.length) return
 
       const updates = ordered.map((column, index) => ({
         id: column.id,
@@ -852,7 +847,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
     deleteBoard,
     renameColumn,
     updateColumnColor,
-    reorderColumn,
+    reorderColumns,
     refresh
   }
 

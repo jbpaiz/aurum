@@ -1,13 +1,17 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Plus, Trash2, ArrowLeft, ArrowRight, CornerUpLeft, ChevronsUpDown } from 'lucide-react'
+import { Plus, Trash2, CornerUpLeft, ChevronsUpDown, GripVertical } from 'lucide-react'
+import { DndContext, DragEndEvent, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { useTasks } from '@/contexts/tasks-context'
 import { TASK_COLUMN_COLOR_PALETTE } from '@/types/tasks'
+import type { TaskColumn } from '@/types/tasks'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 
 interface BoardManagementViewProps {
@@ -27,7 +31,7 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
     createColumn,
     renameColumn,
     updateColumnColor,
-    reorderColumn
+    reorderColumns
   } = useTasks()
 
   const boards = useMemo(() => activeProject?.boards ?? [], [activeProject])
@@ -40,10 +44,16 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
   const [creatingBoard, setCreatingBoard] = useState(false)
   const [creatingColumn, setCreatingColumn] = useState(false)
   const [deletingBoardId, setDeletingBoardId] = useState<string | null>(null)
-  const [reorderingColumnId, setReorderingColumnId] = useState<string | null>(null)
   const [updatingColorColumnId, setUpdatingColorColumnId] = useState<string | null>(null)
   const [savingBoards, setSavingBoards] = useState<Record<string, boolean>>({})
   const [savingColumns, setSavingColumns] = useState<Record<string, boolean>>({})
+  const [columnCards, setColumnCards] = useState<TaskColumn[]>(columns)
+  const [isSavingOrder, setIsSavingOrder] = useState(false)
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  )
 
   const boardTimers = useRef<Record<string, number>>({})
   const columnTimers = useRef<Record<string, number>>({})
@@ -63,6 +73,10 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
     })
     setColumnNames(drafts)
     setNewColumnName('')
+  }, [columns])
+
+  useEffect(() => {
+    setColumnCards(columns)
   }, [columns])
 
   useEffect(() => () => {
@@ -173,14 +187,34 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
     }
   }
 
-  const handleMoveColumn = async (columnId: string, direction: 'left' | 'right') => {
-    setReorderingColumnId(columnId)
-    try {
-      await reorderColumn(columnId, direction)
-    } finally {
-      setReorderingColumnId(null)
-    }
-  }
+  const persistColumnOrder = useCallback(
+    async (ordered: TaskColumn[]) => {
+      if (!ordered.length) return
+      setIsSavingOrder(true)
+      try {
+        await reorderColumns(ordered.map((column) => column.id))
+      } finally {
+        setIsSavingOrder(false)
+      }
+    },
+    [reorderColumns]
+  )
+
+  const handleColumnDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event
+      if (!over || active.id === over.id) return
+      setColumnCards((prev) => {
+        const oldIndex = prev.findIndex((item) => item.id === active.id)
+        const newIndex = prev.findIndex((item) => item.id === over.id)
+        if (oldIndex === -1 || newIndex === -1) return prev
+        const reordered = arrayMove(prev, oldIndex, newIndex)
+        void persistColumnOrder(reordered)
+        return reordered
+      })
+    },
+    [persistColumnOrder]
+  )
 
   const handleUpdateColumnColor = async (columnId: string, color: string) => {
     const column = columns.find((item) => item.id === columnId)
@@ -201,19 +235,6 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
     if (!board) return null
     const updatedAt = new Date(board.updatedAt).toLocaleDateString('pt-BR')
     return <span className="text-xs text-gray-500">Atualizado em {updatedAt}</span>
-  }
-
-  const renderColumnMeta = (columnId: string) => {
-    if (savingColumns[columnId]) {
-      return <span className="text-xs text-blue-600">Salvando...</span>
-    }
-    const column = columns.find((item) => item.id === columnId)
-    if (!column) return null
-    return (
-      <span className="text-xs uppercase tracking-wide text-gray-400">
-        {column.category.replace('_', ' ')}
-      </span>
-    )
   }
 
   if (!activeProject) {
@@ -340,83 +361,26 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
 
           {activeBoard ? (
             <>
-              <div className="space-y-3">
-                {columns.map((column, index) => (
-                  <div key={column.id} className="flex flex-col gap-3 rounded-2xl border border-gray-200 p-4">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                      <Input
-                        value={columnNames[column.id] ?? ''}
-                        onChange={(event) => scheduleColumnRename(column.id, event.target.value)}
-                        onBlur={() => persistColumnRename(column.id, columnNames[column.id] ?? '')}
-                        disabled={savingColumns[column.id] || reorderingColumnId === column.id}
+              <DndContext sensors={sensors} onDragEnd={handleColumnDragEnd}>
+                <SortableContext items={columnCards.map((column) => column.id)} strategy={verticalListSortingStrategy}>
+                  <div className="space-y-3">
+                    {columnCards.map((column) => (
+                      <SortableColumnCard
+                        key={column.id}
+                        column={column}
+                        inputValue={columnNames[column.id] ?? ''}
+                        onNameChange={(value) => scheduleColumnRename(column.id, value)}
+                        onNameBlur={() => persistColumnRename(column.id, columnNames[column.id] ?? '')}
+                        inputDisabled={savingColumns[column.id] || isSavingOrder}
+                        isNameSaving={Boolean(savingColumns[column.id])}
+                        onSelectColor={(color) => handleUpdateColumnColor(column.id, color)}
+                        isColorUpdating={updatingColorColumnId === column.id}
+                        isOrderSaving={isSavingOrder}
                       />
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          disabled={index === 0 || reorderingColumnId === column.id}
-                          onClick={() => handleMoveColumn(column.id, 'left')}
-                        >
-                          <ArrowLeft className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          disabled={index === columns.length - 1 || reorderingColumnId === column.id}
-                          onClick={() => handleMoveColumn(column.id, 'right')}
-                        >
-                          <ArrowRight className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs font-medium uppercase tracking-wide text-gray-500">Cor</span>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="gap-2"
-                            disabled={updatingColorColumnId === column.id || reorderingColumnId === column.id}
-                          >
-                            <span
-                              className="h-4 w-4 rounded-full border border-white shadow"
-                              style={{ backgroundColor: column.color ?? '#D4D4D8' }}
-                            />
-                            <ChevronsUpDown className="h-3 w-3 text-gray-400" />
-                            <span className="sr-only">Alterar cor da coluna</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-44" align="start">
-                          <div className="grid grid-cols-5 gap-2 p-3">
-                            {TASK_COLUMN_COLOR_PALETTE.map((colorOption) => {
-                              const isActive = column.color?.toLowerCase() === colorOption.toLowerCase()
-                              return (
-                                <DropdownMenuItem
-                                  key={colorOption}
-                                  className={cn(
-                                    'flex items-center justify-center rounded-full p-0 outline-none focus-visible:ring-2 focus-visible:ring-blue-400',
-                                    isActive ? 'ring-2 ring-blue-500 ring-offset-1' : 'ring-0'
-                                  )}
-                                  onSelect={() => handleUpdateColumnColor(column.id, colorOption)}
-                                >
-                                  <span
-                                    className="h-6 w-6 rounded-full border border-white shadow"
-                                    style={{ backgroundColor: colorOption }}
-                                  />
-                                  <span className="sr-only">Selecionar cor {colorOption}</span>
-                                </DropdownMenuItem>
-                              )
-                            })}
-                          </div>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                    {renderColumnMeta(column.id)}
+                    ))}
                   </div>
-                ))}
-              </div>
+                </SortableContext>
+              </DndContext>
 
               <form onSubmit={handleCreateColumn} className="mt-4 flex flex-col gap-2 rounded-2xl bg-gray-50/80 p-4 sm:flex-row">
                 <Input
@@ -438,6 +402,105 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
           )}
         </section>
       </div>
+    </div>
+  )
+}
+
+interface SortableColumnCardProps {
+  column: TaskColumn
+  inputValue: string
+  onNameChange: (value: string) => void
+  onNameBlur: () => void
+  inputDisabled: boolean
+  isNameSaving: boolean
+  onSelectColor: (color: string) => void
+  isColorUpdating: boolean
+  isOrderSaving: boolean
+}
+
+function SortableColumnCard({
+  column,
+  inputValue,
+  onNameChange,
+  onNameBlur,
+  inputDisabled,
+  isNameSaving,
+  onSelectColor,
+  isColorUpdating,
+  isOrderSaving
+}: SortableColumnCardProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: column.id })
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.92 : 1
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
+        <button
+          type="button"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-dashed border-gray-300 text-gray-400 transition hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          aria-label="Reordenar coluna"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
+        <Input
+          value={inputValue}
+          onChange={(event) => onNameChange(event.target.value)}
+          onBlur={onNameBlur}
+          disabled={inputDisabled}
+        />
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <span className="text-xs font-medium uppercase tracking-wide text-gray-500">Cor</span>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              disabled={isColorUpdating || inputDisabled}
+            >
+              <span
+                className="h-4 w-4 rounded-full border border-white shadow"
+                style={{ backgroundColor: column.color ?? '#D4D4D8' }}
+              />
+              <ChevronsUpDown className="h-3 w-3 text-gray-400" />
+              <span className="sr-only">Alterar cor da coluna</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-44" align="start">
+            <div className="grid grid-cols-5 gap-2 p-3">
+              {TASK_COLUMN_COLOR_PALETTE.map((colorOption) => {
+                const isActive = column.color?.toLowerCase() === colorOption.toLowerCase()
+                return (
+                  <DropdownMenuItem
+                    key={colorOption}
+                    className={cn(
+                      'flex items-center justify-center rounded-full p-0 outline-none focus-visible:ring-2 focus-visible:ring-blue-400',
+                      isActive ? 'ring-2 ring-blue-500 ring-offset-1' : 'ring-0'
+                    )}
+                    onSelect={() => onSelectColor(colorOption)}
+                  >
+                    <span className="h-6 w-6 rounded-full border border-white shadow" style={{ backgroundColor: colorOption }} />
+                    <span className="sr-only">Selecionar cor {colorOption}</span>
+                  </DropdownMenuItem>
+                )
+              })}
+            </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      {(isNameSaving || isOrderSaving) && (
+        <span className="mt-2 inline-block text-xs text-blue-600">
+          {isNameSaving ? 'Salvando alterações...' : 'Atualizando ordem...'}
+        </span>
+      )}
     </div>
   )
 }

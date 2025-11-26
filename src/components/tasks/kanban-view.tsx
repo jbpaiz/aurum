@@ -109,6 +109,10 @@ export function KanbanView() {
     }
   }
 
+  const handleChangeTaskColumn = async (taskId: string, targetColumnId: string) => {
+    await updateTask(taskId, { columnId: targetColumnId })
+  }
+
   const handleCreateColumn = async () => {
     const name = window.prompt('Nome da nova coluna (ex: Revisão QA)')
     if (!name) return
@@ -285,7 +289,12 @@ export function KanbanView() {
           </div>
         </div>
       ) : viewMode === 'list' ? (
-        <TaskListView columns={filteredColumns} onSelectTask={openEditTaskModal} onCreateTask={() => openCreateTaskModal()} />
+        <TaskListView
+          columns={filteredColumns}
+          onSelectTask={openEditTaskModal}
+          onCreateTask={() => openCreateTaskModal()}
+          onChangeTaskColumn={handleChangeTaskColumn}
+        />
       ) : (
         <KanbanMetrics columns={filteredColumns} />
       )}

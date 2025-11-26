@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { TaskCard, TaskColumn } from '@/types/tasks'
 import { TASK_PRIORITY_COLORS, TASK_PRIORITY_LABELS } from '@/types/tasks'
 import { format } from 'date-fns'
@@ -12,13 +12,15 @@ interface TaskListViewProps {
   columns: TaskColumn[]
   onSelectTask: (task: TaskCard) => void
   onCreateTask: () => void
+  onChangeTaskColumn?: (taskId: string, columnId: string) => Promise<void> | void
 }
 
-export function TaskListView({ columns, onSelectTask, onCreateTask }: TaskListViewProps) {
+export function TaskListView({ columns, onSelectTask, onCreateTask, onChangeTaskColumn }: TaskListViewProps) {
   const tasks = useMemo(() => {
     return columns.flatMap((column) =>
       column.tasks.map((task) => ({
         ...task,
+        columnId: column.id,
         columnName: column.name,
         columnColor: column.color
       }))
@@ -51,10 +53,10 @@ export function TaskListView({ columns, onSelectTask, onCreateTask }: TaskListVi
             <tr>
               <th className="px-6 py-3 whitespace-nowrap">Chave</th>
               <th className="px-6 py-3">Título</th>
-              <th className="px-6 py-3">Etiquetas</th>
+              <th className="px-6 py-3 whitespace-nowrap">Etiquetas</th>
               <th className="px-6 py-3 whitespace-nowrap">Início</th>
               <th className="px-6 py-3 whitespace-nowrap">Fim</th>
-              <th className="px-6 py-3 whitespace-nowrap">Coluna</th>
+              <th className="px-6 py-3 whitespace-nowrap">Situação</th>
               <th className="px-6 py-3 whitespace-nowrap">Prioridade</th>
             </tr>
           </thead>
@@ -72,30 +74,41 @@ export function TaskListView({ columns, onSelectTask, onCreateTask }: TaskListVi
                     <p className="text-xs text-gray-500 truncate">{task.description}</p>
                   ) : null}
                 </td>
-                <td className="px-6 py-4">
-                  <div className="flex flex-wrap gap-1">
-                    {task.labels.length ? (
-                      task.labels.map((label) => (
-                        <Badge key={`${task.id}-${label}`} variant="outline" className="bg-gray-50 text-gray-600">
-                          {label}
-                        </Badge>
-                      ))
-                    ) : (
-                      <span className="text-xs text-gray-400">Sem etiquetas</span>
-                    )}
-                  </div>
+                <td className="px-6 py-4 text-gray-600 whitespace-nowrap">
+                  {task.labels.length ? (
+                    <span className="block max-w-[220px] truncate" title={task.labels.join(', ')}>
+                      {task.labels.join(', ')}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-gray-400">Sem etiquetas</span>
+                  )}
                 </td>
                 <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{renderDate(task.startDate)}</td>
                 <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{renderDate(task.endDate)}</td>
                 <td className="px-6 py-4 text-gray-600 whitespace-nowrap">
-                  <span className="inline-flex items-center gap-2">
-                    {task.columnColor ? (
-                      <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: task.columnColor }} />
-                    ) : (
-                      <span className="h-2.5 w-2.5 rounded-full bg-gray-300" />
-                    )}
-                    {task.columnName}
-                  </span>
+                  <Select
+                    value={task.columnId}
+                    onValueChange={(value) => onChangeTaskColumn?.(task.id, value)}
+                    disabled={!onChangeTaskColumn}
+                  >
+                    <SelectTrigger
+                      className="h-9 w-[200px] justify-between"
+                      onClick={(event) => event.stopPropagation()}
+                      onPointerDown={(event) => event.stopPropagation()}
+                    >
+                      <SelectValue placeholder="Situação" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {columns.map((column) => (
+                        <SelectItem key={column.id} value={column.id} className="gap-2">
+                          <span className="inline-flex items-center gap-2">
+                            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: column.color }} />
+                            {column.name}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
