@@ -37,6 +37,7 @@ const TASK_TYPES: { value: TaskType; label: string }[] = [
 export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSave, onDeleteTask }: TaskModalProps) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
+  const [taskKey, setTaskKey] = useState('')
   const [columnId, setColumnId] = useState<string>('')
   const [priority, setPriority] = useState<TaskPriority>('medium')
   const [type, setType] = useState<TaskType>('task')
@@ -58,6 +59,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
     if (!open) return
     setTitle(task?.title ?? '')
     setDescription(task?.description ?? '')
+    setTaskKey(task?.key ?? '')
     setColumnId(task?.columnId ?? defaultColumnId ?? columns[0]?.id ?? '')
     setPriority(task?.priority ?? 'medium')
     setType(task?.type ?? 'task')
@@ -141,11 +143,18 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
     setFormError(null)
 
     setIsSaving(true)
+    const normalizedKey = taskKey.trim()
+    if (isEditing && !normalizedKey) {
+      setFormError('Informe um código para a tarefa, ou utilize o padrão sugerido.')
+      return
+    }
+
     await onSave({
       id: task?.id,
       title: title.trim(),
       description,
       columnId: resolvedColumnId,
+      key: normalizedKey || undefined,
       priority,
       type,
       startDate: startDate || null,
@@ -192,10 +201,14 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
               {formError}
             </div>
           )}
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
               <Label>Título</Label>
               <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Ex: Implementar fluxo de onboarding" />
+            </div>
+            <div className="space-y-2">
+              <Label>Código (ex: JIRA-120)</Label>
+              <Input value={taskKey} onChange={(event) => setTaskKey(event.target.value)} placeholder={task?.key ?? 'AUR-123'} />
             </div>
             <div className="space-y-2">
               <Label>Coluna</Label>

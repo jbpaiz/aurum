@@ -443,6 +443,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
     const payload: Partial<Database['public']['Tables']['tasks']['Insert']> = {}
     if (input.title !== undefined) payload.title = input.title
     if (input.description !== undefined) payload.description = input.description
+    if (input.key !== undefined) payload.key = input.key?.trim()
     if (input.priority) payload.priority = input.priority
     if (input.type) payload.type = input.type
     if (input.startDate !== undefined) payload.start_date = input.startDate
@@ -505,11 +506,18 @@ export function TasksProvider({ children }: TasksProviderProps) {
         user_id: user.id
       }
 
-      const { error } = await supabase.from('tasks').insert(payload)
+      const { data, error } = await supabase.from('tasks').insert(payload).select('id').single()
 
       if (error) {
         console.error('Erro ao criar tarefa:', error.message)
       } else {
+        const customKey = input.key?.trim()
+        if (data?.id && customKey) {
+          const { error: keyError } = await supabase.from('tasks').update({ key: customKey }).eq('id', data.id)
+          if (keyError) {
+            console.error('Erro ao atualizar chave da tarefa:', keyError.message)
+          }
+        }
         await fetchWorkspace()
       }
     },

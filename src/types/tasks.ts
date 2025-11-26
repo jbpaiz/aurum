@@ -119,6 +119,7 @@ export interface CreateTaskInput {
   description?: string
   columnId?: string
   boardId?: string
+  key?: string
   priority?: TaskPriority
   type?: TaskType
   startDate?: string | null

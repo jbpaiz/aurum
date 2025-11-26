@@ -50,11 +50,11 @@ export function TaskListView({ columns, onSelectTask, onCreateTask }: TaskListVi
             <tr>
               <th className="px-6 py-3">Chave</th>
               <th className="px-6 py-3">Título</th>
-              <th className="px-6 py-3">Coluna</th>
-              <th className="px-6 py-3">Prioridade</th>
               <th className="px-6 py-3">Etiquetas</th>
               <th className="px-6 py-3">Início</th>
               <th className="px-6 py-3">Fim</th>
+              <th className="px-6 py-3">Coluna</th>
+              <th className="px-6 py-3">Prioridade</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 bg-white text-sm">
@@ -71,15 +71,6 @@ export function TaskListView({ columns, onSelectTask, onCreateTask }: TaskListVi
                     <p className="text-xs text-gray-500 truncate">{task.description}</p>
                   ) : null}
                 </td>
-                <td className="px-6 py-4 text-gray-600">{task.columnName}</td>
-                <td className="px-6 py-4">
-                  <span
-                    className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold text-white"
-                    style={{ backgroundColor: TASK_PRIORITY_COLORS[task.priority] }}
-                  >
-                    {TASK_PRIORITY_LABELS[task.priority]}
-                  </span>
-                </td>
                 <td className="px-6 py-4">
                   <div className="flex flex-wrap gap-1">
                     {task.labels.length ? (
@@ -95,6 +86,15 @@ export function TaskListView({ columns, onSelectTask, onCreateTask }: TaskListVi
                 </td>
                 <td className="px-6 py-4 text-gray-600">{renderDate(task.startDate)}</td>
                 <td className="px-6 py-4 text-gray-600">{renderDate(task.endDate)}</td>
+                <td className="px-6 py-4 text-gray-600">{task.columnName}</td>
+                <td className="px-6 py-4">
+                  <span
+                    className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold text-white"
+                    style={{ backgroundColor: TASK_PRIORITY_COLORS[task.priority] }}
+                  >
+                    {TASK_PRIORITY_LABELS[task.priority]}
+                  </span>
+                </td>
               </tr>
             ))}
           </tbody>
