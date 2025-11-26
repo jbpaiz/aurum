@@ -6,7 +6,7 @@ import { DndContext, DragEndEvent, PointerSensor, useDroppable, useSensor, useSe
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
 import type { MoveTaskPayload, TaskCard, TaskColumn } from '@/types/tasks'
 import { TASK_PRIORITY_COLORS, TASK_PRIORITY_LABELS } from '@/types/tasks'
 import { format } from 'date-fns'
@@ -260,7 +260,9 @@ function TaskListRow({ task, column, onSelectTask, onChangeTaskColumn, renderDat
                 className="h-2.5 w-2.5 rounded-full"
                 style={{ backgroundColor: selectedColumn?.color ?? '#CBD5F5' }}
               />
-              <SelectValue placeholder="Situação" />
+              <span className="text-sm font-medium text-gray-700">
+                {selectedColumn?.name ?? 'Situação'}
+              </span>
             </div>
           </SelectTrigger>
           <SelectContent>

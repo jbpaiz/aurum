@@ -293,6 +293,22 @@ export function TasksProvider({ children }: TasksProviderProps) {
   const [loading, setLoading] = useState(false)
   const creatingDefaultRef = useRef(false)
 
+  const updateBoardState = useCallback(
+    (boardId: string, updater: (board: TaskBoard) => TaskBoard) => {
+      setProjects((currentProjects) =>
+        currentProjects.map((project) => {
+          const hasBoard = project.boards.some((board) => board.id === boardId)
+          if (!hasBoard) return project
+          return {
+            ...project,
+            boards: project.boards.map((board) => (board.id === boardId ? updater(board) : board))
+          }
+        })
+      )
+    },
+    [setProjects]
+  )
+
   const createDefaultWorkspace = useCallback(async () => {
     if (!user || creatingDefaultRef.current) return false
     creatingDefaultRef.current = true
@@ -351,7 +367,8 @@ export function TasksProvider({ children }: TasksProviderProps) {
     return false
   }, [user])
 
-  const fetchWorkspace = useCallback(async () => {
+  const fetchWorkspace = useCallback(async (options?: { silent?: boolean }) => {
+    const silent = options?.silent ?? false
     if (!user) {
       setProjects([])
       setActiveProjectId(null)
@@ -360,7 +377,9 @@ export function TasksProvider({ children }: TasksProviderProps) {
       return
     }
 
-    setLoading(true)
+    if (!silent) {
+      setLoading(true)
+    }
 
     try {
       for (let attempt = 0; attempt < 2; attempt += 1) {
@@ -426,7 +445,9 @@ export function TasksProvider({ children }: TasksProviderProps) {
         return
       }
     } finally {
-      setLoading(false)
+      if (!silent) {
+        setLoading(false)
+      }
     }
   }, [user, activeProjectId, activeBoardId, createDefaultWorkspace])
 
@@ -546,23 +567,80 @@ export function TasksProvider({ children }: TasksProviderProps) {
     async (taskId: string, updates: Partial<CreateTaskInput>) => {
       if (!user) return
 
+      const taskSnapshot = activeBoard
+        ? activeBoard.columns.flatMap((column) => column.tasks).find((task) => task.id === taskId)
+        : undefined
+
       const payload = buildTaskPayload(updates)
       if (updates.columnId) payload.column_id = updates.columnId
       if (updates.boardId) payload.board_id = updates.boardId
 
-      if (activeBoard) {
-        const taskSnapshot = activeBoard.columns.flatMap((column) => column.tasks).find((task) => task.id === taskId)
-        const targetColumnId = updates.columnId ?? taskSnapshot?.columnId
-        const destinationColumn = activeBoard.columns.find((column) => column.id === targetColumnId)
-        const nowDate = new Date().toISOString().split('T')[0]
+      const targetColumnId = updates.columnId ?? taskSnapshot?.columnId
+      const destinationColumn = activeBoard?.columns.find((column) => column.id === targetColumnId)
+      const nowDate = new Date().toISOString().split('T')[0]
 
-        if (destinationColumn?.category === 'in_progress' && !updates.startDate && !taskSnapshot?.startDate) {
-          payload.start_date = nowDate
+      if (destinationColumn?.category === 'in_progress' && !updates.startDate && !taskSnapshot?.startDate) {
+        payload.start_date = nowDate
+      }
+
+      if (destinationColumn?.category === 'done' && !updates.endDate && !taskSnapshot?.endDate) {
+        payload.due_date = nowDate
+      }
+
+      const shouldOptimisticMove = Boolean(taskSnapshot && activeBoard && updates.columnId && destinationColumn)
+
+      if (shouldOptimisticMove && destinationColumn) {
+        const highestSortOrder = destinationColumn.tasks.length
+          ? Math.max(...destinationColumn.tasks.map((task) => task.sortOrder ?? 0))
+          : 0
+        const nextSortOrder = highestSortOrder + 100
+        payload.sort_order = nextSortOrder
+
+        updateBoardState(activeBoard!.id, (board) => {
+          const columns = board.columns.map((column) => {
+            if (column.id === taskSnapshot!.columnId) {
+              return {
+                ...column,
+                tasks: column.tasks.filter((task) => task.id !== taskId)
+              }
+            }
+
+            if (column.id === destinationColumn.id) {
+              const updatedTask: TaskCard = {
+                ...taskSnapshot!,
+                columnId: destinationColumn.id,
+                sortOrder: nextSortOrder,
+                startDate: payload.start_date ?? taskSnapshot!.startDate,
+                endDate: payload.due_date ?? taskSnapshot!.endDate
+              }
+              return {
+                ...column,
+                tasks: [...column.tasks, updatedTask]
+              }
+            }
+
+            return column
+          })
+
+          return {
+            ...board,
+            columns
+          }
+        })
+
+        const { error } = await supabase
+          .from('tasks')
+          .update(payload)
+          .eq('id', taskId)
+
+        if (error) {
+          console.error('Erro ao atualizar tarefa:', error.message)
+          await fetchWorkspace()
+          return
         }
 
-        if (destinationColumn?.category === 'done' && !updates.endDate && !taskSnapshot?.endDate) {
-          payload.due_date = nowDate
-        }
+        await fetchWorkspace({ silent: true })
+        return
       }
 
       const { error } = await supabase
@@ -576,7 +654,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
         await fetchWorkspace()
       }
     },
-    [user, fetchWorkspace, activeBoard]
+    [user, fetchWorkspace, activeBoard, updateBoardState]
   )
 
   const normalizeColumnOrders = useCallback(
@@ -665,9 +743,54 @@ export function TasksProvider({ children }: TasksProviderProps) {
         }
       }
 
-      await fetchWorkspace()
+      if (taskSnapshot) {
+        updateBoardState(activeBoard.id, (board) => {
+          const columns = board.columns.map((column) => {
+            if (column.id === sourceColumnId && column.id === targetColumnId) {
+              const filtered = column.tasks.filter((task) => task.id !== taskId)
+              const insertIndex = Math.max(0, Math.min(targetIndex, filtered.length))
+              const nextTasks = [...filtered]
+              nextTasks.splice(insertIndex, 0, {
+                ...taskSnapshot,
+                columnId: targetColumnId,
+                sortOrder: newSortOrder,
+                startDate: updatePayload.start_date ?? taskSnapshot.startDate,
+                endDate: updatePayload.due_date ?? taskSnapshot.endDate
+              })
+              return { ...column, tasks: nextTasks }
+            }
+
+            if (column.id === sourceColumnId) {
+              return { ...column, tasks: column.tasks.filter((task) => task.id !== taskId) }
+            }
+
+            if (column.id === targetColumnId) {
+              const filtered = column.tasks.filter((task) => task.id !== taskId)
+              const insertIndex = Math.max(0, Math.min(targetIndex, filtered.length))
+              const nextTasks = [...filtered]
+              nextTasks.splice(insertIndex, 0, {
+                ...taskSnapshot,
+                columnId: targetColumnId,
+                sortOrder: newSortOrder,
+                startDate: updatePayload.start_date ?? taskSnapshot.startDate,
+                endDate: updatePayload.due_date ?? taskSnapshot.endDate
+              })
+              return { ...column, tasks: nextTasks }
+            }
+
+            return column
+          })
+
+          return {
+            ...board,
+            columns
+          }
+        })
+      }
+
+      void fetchWorkspace({ silent: true })
     },
-    [activeBoard, fetchWorkspace, normalizeColumnOrders]
+    [activeBoard, fetchWorkspace, normalizeColumnOrders, updateBoardState]
   )
 
   const createColumn = useCallback(
