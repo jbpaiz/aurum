@@ -206,10 +206,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
             <div className="space-y-2">
               <Label>Coluna</Label>
               <Select value={resolvedColumnId} onValueChange={setColumnId}>
-                <SelectTrigger className="flex items-center gap-2">
-                  {selectedColumn && (
-                    <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: selectedColumn.color }} />
-                  )}
+                <SelectTrigger>
                   <SelectValue placeholder="Selecione a coluna" />
                 </SelectTrigger>
                 <SelectContent>

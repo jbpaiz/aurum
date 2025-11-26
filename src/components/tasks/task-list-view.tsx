@@ -49,13 +49,13 @@ export function TaskListView({ columns, onSelectTask, onCreateTask }: TaskListVi
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
             <tr>
-              <th className="px-6 py-3">Chave</th>
+              <th className="px-6 py-3 whitespace-nowrap">Chave</th>
               <th className="px-6 py-3">Título</th>
               <th className="px-6 py-3">Etiquetas</th>
-              <th className="px-6 py-3">Início</th>
-              <th className="px-6 py-3">Fim</th>
-              <th className="px-6 py-3">Coluna</th>
-              <th className="px-6 py-3">Prioridade</th>
+              <th className="px-6 py-3 whitespace-nowrap">Início</th>
+              <th className="px-6 py-3 whitespace-nowrap">Fim</th>
+              <th className="px-6 py-3 whitespace-nowrap">Coluna</th>
+              <th className="px-6 py-3 whitespace-nowrap">Prioridade</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 bg-white text-sm">
@@ -65,7 +65,7 @@ export function TaskListView({ columns, onSelectTask, onCreateTask }: TaskListVi
                 className="cursor-pointer transition-colors hover:bg-blue-50/40"
                 onClick={() => onSelectTask(task)}
               >
-                <td className="px-6 py-4 font-semibold text-gray-900">{task.key}</td>
+                <td className="px-6 py-4 font-semibold text-gray-900 whitespace-nowrap">{task.key}</td>
                 <td className="px-6 py-4">
                   <p className="font-medium text-gray-900">{task.title}</p>
                   {task.description ? (
@@ -85,9 +85,9 @@ export function TaskListView({ columns, onSelectTask, onCreateTask }: TaskListVi
                     )}
                   </div>
                 </td>
-                <td className="px-6 py-4 text-gray-600">{renderDate(task.startDate)}</td>
-                <td className="px-6 py-4 text-gray-600">{renderDate(task.endDate)}</td>
-                <td className="px-6 py-4 text-gray-600">
+                <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{renderDate(task.startDate)}</td>
+                <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{renderDate(task.endDate)}</td>
+                <td className="px-6 py-4 text-gray-600 whitespace-nowrap">
                   <span className="inline-flex items-center gap-2">
                     {task.columnColor ? (
                       <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: task.columnColor }} />
@@ -97,7 +97,7 @@ export function TaskListView({ columns, onSelectTask, onCreateTask }: TaskListVi
                     {task.columnName}
                   </span>
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-6 py-4 whitespace-nowrap">
                   <span
                     className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold text-white"
                     style={{ backgroundColor: TASK_PRIORITY_COLORS[task.priority] }}
