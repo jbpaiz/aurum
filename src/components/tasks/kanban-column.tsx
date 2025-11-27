@@ -12,9 +12,10 @@ interface KanbanColumnProps {
   onSelectTask: (task: TaskCard) => void
   onCreateTask: (columnId: string) => void
   onToggleChecklistItem?: (taskId: string, checklistItemId: string, done: boolean) => Promise<void> | void
+  columnWidthClass?: string
 }
 
-export function KanbanColumn({ column, onSelectTask, onCreateTask, onToggleChecklistItem }: KanbanColumnProps) {
+export function KanbanColumn({ column, onSelectTask, onCreateTask, onToggleChecklistItem, columnWidthClass }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: column.id,
     data: {
@@ -22,9 +23,10 @@ export function KanbanColumn({ column, onSelectTask, onCreateTask, onToggleCheck
       columnId: column.id
     }
   })
+  const widthClass = columnWidthClass ?? 'w-80'
 
   return (
-    <div className="flex w-80 flex-shrink-0 flex-col">
+    <div className={`flex ${widthClass} flex-shrink-0 flex-col`}>
       <div className="mb-3 flex items-center justify-between">
         <div>
           <p className="text-sm font-semibold text-gray-900">{column.name}</p>

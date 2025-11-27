@@ -507,6 +507,28 @@ export function TasksProvider({ children }: TasksProviderProps) {
     return payload
   }
 
+  const mergeTaskWithUpdates = (task: TaskCard, updates: Partial<CreateTaskInput>): TaskCard => ({
+    ...task,
+    title: updates.title ?? task.title,
+    description: updates.description ?? task.description,
+    key: updates.key ?? task.key,
+    priority: updates.priority ?? task.priority,
+    type: updates.type ?? task.type,
+    startDate: updates.startDate ?? task.startDate,
+    endDate: updates.endDate ?? task.endDate,
+    labels: updates.labels ?? task.labels,
+    checklist: updates.checklist ?? task.checklist,
+    sprintId: updates.sprintId ?? task.sprintId,
+    assigneeId: updates.assigneeId ?? task.assigneeId,
+    attachments: updates.attachments ?? task.attachments,
+    storyPoints: updates.storyPoints ?? task.storyPoints,
+    estimateHours: updates.estimateHours ?? task.estimateHours,
+    isBlocked: updates.isBlocked ?? task.isBlocked,
+    blockedReason: updates.blockedReason ?? task.blockedReason,
+    columnId: updates.columnId ?? task.columnId,
+    boardId: updates.boardId ?? task.boardId
+  })
+
   const createTask = useCallback(
     async (input: CreateTaskInput) => {
       if (!user || !activeBoard) return
@@ -581,6 +603,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
   const updateTask = useCallback(
     async (taskId: string, updates: Partial<CreateTaskInput>) => {
       if (!user) return
+      const normalizedUpdates: Partial<CreateTaskInput> = { ...updates }
 
       const taskSnapshot = activeBoard
         ? activeBoard.columns.flatMap((column) => column.tasks).find((task) => task.id === taskId)
@@ -601,6 +624,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
 
       if (movingToAnotherColumn && !updates.startDate && !taskSnapshot?.startDate) {
         payload.start_date = nowDate
+        normalizedUpdates.startDate = nowDate
       }
 
       if (
@@ -610,9 +634,16 @@ export function TasksProvider({ children }: TasksProviderProps) {
         !taskSnapshot?.endDate
       ) {
         payload.due_date = nowDate
+        normalizedUpdates.endDate = nowDate
       }
 
-      const shouldOptimisticMove = Boolean(taskSnapshot && activeBoard && updates.columnId && destinationColumn)
+      const shouldOptimisticMove = Boolean(
+        taskSnapshot &&
+        activeBoard &&
+        updates.columnId &&
+        destinationColumn &&
+        updates.columnId !== taskSnapshot.columnId
+      )
 
       if (shouldOptimisticMove && destinationColumn) {
         const highestSortOrder = destinationColumn.tasks.length
@@ -631,13 +662,14 @@ export function TasksProvider({ children }: TasksProviderProps) {
             }
 
             if (column.id === destinationColumn.id) {
-              const updatedTask: TaskCard = {
-                ...taskSnapshot!,
-                columnId: destinationColumn.id,
-                sortOrder: nextSortOrder,
-                startDate: payload.start_date ?? taskSnapshot!.startDate,
-                endDate: payload.due_date ?? taskSnapshot!.endDate
-              }
+              const updatedTask = mergeTaskWithUpdates(
+                {
+                  ...taskSnapshot!,
+                  columnId: destinationColumn.id,
+                  sortOrder: nextSortOrder
+                },
+                normalizedUpdates
+              )
               return {
                 ...column,
                 tasks: [...column.tasks, updatedTask]
@@ -676,6 +708,20 @@ export function TasksProvider({ children }: TasksProviderProps) {
       if (error) {
         console.error('Erro ao atualizar tarefa:', error.message)
       } else {
+        if (taskSnapshot && activeBoard) {
+          updateBoardState(activeBoard.id, (board) => ({
+            ...board,
+            columns: board.columns.map((column) => {
+              if (column.id !== taskSnapshot.columnId) return column
+              return {
+                ...column,
+                tasks: column.tasks.map((task) =>
+                  task.id === taskId ? mergeTaskWithUpdates(task, normalizedUpdates) : task
+                )
+              }
+            })
+          }))
+        }
         await fetchWorkspace()
       }
     },

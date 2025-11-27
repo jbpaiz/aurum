@@ -32,6 +32,8 @@ export function KanbanBoard({ columns, onSelectTask, onCreateTask, moveTask, onT
   )
 
   const [activeCard, setActiveCard] = useState<TaskCard | null>(null)
+  const columnCount = columns.length
+  const columnWidthClass = columnCount <= 4 ? 'w-80' : columnCount === 5 ? 'w-[272px]' : 'w-[256px]'
 
   const findTaskById = (taskId: UniqueIdentifier): TaskCard | null => {
     for (const column of columns) {
@@ -103,6 +105,7 @@ export function KanbanBoard({ columns, onSelectTask, onCreateTask, moveTask, onT
             onSelectTask={onSelectTask}
             onCreateTask={() => onCreateTask(column.id)}
             onToggleChecklistItem={onToggleChecklistItem}
+            columnWidthClass={columnWidthClass}
           />
         ))}
       </div>
