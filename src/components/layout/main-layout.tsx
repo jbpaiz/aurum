@@ -34,7 +34,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   return (
     <Sidebar>
       <Header />
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1">
         {children}
       </main>
     </Sidebar>

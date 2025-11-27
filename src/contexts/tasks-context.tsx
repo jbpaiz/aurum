@@ -56,6 +56,7 @@ interface TasksContextValue {
   renameBoard: (boardId: string, name: string) => Promise<void>
   deleteBoard: (boardId: string) => Promise<void>
   renameColumn: (columnId: string, name: string) => Promise<void>
+  deleteColumn: (columnId: string) => Promise<void>
   updateColumnColor: (columnId: string, color: string) => Promise<void>
   reorderColumns: (orderedIds: string[]) => Promise<void>
   refresh: () => Promise<void>
@@ -971,6 +972,19 @@ export function TasksProvider({ children }: TasksProviderProps) {
     [fetchWorkspace]
   )
 
+  const deleteColumn = useCallback(
+    async (columnId: string) => {
+      const { error } = await supabase.from('task_columns').delete().eq('id', columnId)
+
+      if (error) {
+        console.error('Erro ao excluir coluna:', error.message)
+      } else {
+        await fetchWorkspace()
+      }
+    },
+    [fetchWorkspace]
+  )
+
   const updateColumnColor = useCallback(
     async (columnId: string, color: string) => {
       const paletteColor = TASK_COLUMN_COLOR_PALETTE.find((option) => option.toLowerCase() === color.toLowerCase())
@@ -1051,6 +1065,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
     renameBoard,
     deleteBoard,
     renameColumn,
+    deleteColumn,
     updateColumnColor,
     reorderColumns,
     refresh

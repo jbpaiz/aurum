@@ -28,6 +28,7 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
     createBoard,
     renameBoard,
     deleteBoard,
+    deleteColumn,
     createColumn,
     renameColumn,
     updateColumnColor,
@@ -44,6 +45,7 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
   const [creatingBoard, setCreatingBoard] = useState(false)
   const [creatingColumn, setCreatingColumn] = useState(false)
   const [deletingBoardId, setDeletingBoardId] = useState<string | null>(null)
+  const [deletingColumnId, setDeletingColumnId] = useState<string | null>(null)
   const [updatingColorColumnId, setUpdatingColorColumnId] = useState<string | null>(null)
   const [savingBoards, setSavingBoards] = useState<Record<string, boolean>>({})
   const [savingColumns, setSavingColumns] = useState<Record<string, boolean>>({})
@@ -184,6 +186,29 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
       setNewColumnName('')
     } finally {
       setCreatingColumn(false)
+    }
+  }
+
+  const handleDeleteColumn = async (column: TaskColumn) => {
+    if (!activeBoard) return
+    if (columns.length <= 1) {
+      window.alert('Mantenha pelo menos uma coluna no quadro.')
+      return
+    }
+
+    if (column.tasks.length > 0) {
+      window.alert('Mova ou conclua as tarefas desta coluna antes de removê-la.')
+      return
+    }
+
+    const confirmed = window.confirm(`Excluir a coluna "${column.name}"? Essa ação não pode ser desfeita.`)
+    if (!confirmed) return
+
+    setDeletingColumnId(column.id)
+    try {
+      await deleteColumn(column.id)
+    } finally {
+      setDeletingColumnId(null)
     }
   }
 
@@ -371,11 +396,13 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
                         inputValue={columnNames[column.id] ?? ''}
                         onNameChange={(value) => scheduleColumnRename(column.id, value)}
                         onNameBlur={() => persistColumnRename(column.id, columnNames[column.id] ?? '')}
-                        inputDisabled={savingColumns[column.id] || isSavingOrder}
+                        inputDisabled={savingColumns[column.id] || isSavingOrder || deletingColumnId === column.id}
                         isNameSaving={Boolean(savingColumns[column.id])}
                         onSelectColor={(color) => handleUpdateColumnColor(column.id, color)}
                         isColorUpdating={updatingColorColumnId === column.id}
                         isOrderSaving={isSavingOrder}
+                        onDeleteColumn={() => handleDeleteColumn(column)}
+                        isDeleting={deletingColumnId === column.id}
                       />
                     ))}
                   </div>
@@ -416,6 +443,8 @@ interface SortableColumnCardProps {
   onSelectColor: (color: string) => void
   isColorUpdating: boolean
   isOrderSaving: boolean
+  onDeleteColumn: () => void
+  isDeleting: boolean
 }
 
 function SortableColumnCard({
@@ -427,7 +456,9 @@ function SortableColumnCard({
   isNameSaving,
   onSelectColor,
   isColorUpdating,
-  isOrderSaving
+  isOrderSaving,
+  onDeleteColumn,
+  isDeleting
 }: SortableColumnCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: column.id })
   const style = {
@@ -455,50 +486,67 @@ function SortableColumnCard({
           disabled={inputDisabled}
         />
       </div>
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <span className="text-xs font-medium uppercase tracking-wide text-gray-500">Cor</span>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              disabled={isColorUpdating || inputDisabled}
-            >
-              <span
-                className="h-4 w-4 rounded-full border border-white shadow"
-                style={{ backgroundColor: column.color ?? '#D4D4D8' }}
-              />
-              <ChevronsUpDown className="h-3 w-3 text-gray-400" />
-              <span className="sr-only">Alterar cor da coluna</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-44" align="start">
-            <div className="grid grid-cols-5 gap-2 p-3">
-              {TASK_COLUMN_COLOR_PALETTE.map((colorOption) => {
-                const isActive = column.color?.toLowerCase() === colorOption.toLowerCase()
-                return (
-                  <DropdownMenuItem
-                    key={colorOption}
-                    className={cn(
-                      'flex items-center justify-center rounded-full p-0 outline-none focus-visible:ring-2 focus-visible:ring-blue-400',
-                      isActive ? 'ring-2 ring-blue-500 ring-offset-1' : 'ring-0'
-                    )}
-                    onSelect={() => onSelectColor(colorOption)}
-                  >
-                    <span className="h-6 w-6 rounded-full border border-white shadow" style={{ backgroundColor: colorOption }} />
-                    <span className="sr-only">Selecionar cor {colorOption}</span>
-                  </DropdownMenuItem>
-                )
-              })}
-            </div>
-          </DropdownMenuContent>
-        </DropdownMenu>
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-medium uppercase tracking-wide text-gray-500">Cor</span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                disabled={isColorUpdating || inputDisabled || isDeleting}
+              >
+                <span
+                  className="h-4 w-4 rounded-full border border-white shadow"
+                  style={{ backgroundColor: column.color ?? '#D4D4D8' }}
+                />
+                <ChevronsUpDown className="h-3 w-3 text-gray-400" />
+                <span className="sr-only">Alterar cor da coluna</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-44" align="start">
+              <div className="grid grid-cols-5 gap-2 p-3">
+                {TASK_COLUMN_COLOR_PALETTE.map((colorOption) => {
+                  const isActive = column.color?.toLowerCase() === colorOption.toLowerCase()
+                  return (
+                    <DropdownMenuItem
+                      key={colorOption}
+                      className={cn(
+                        'flex items-center justify-center rounded-full p-0 outline-none focus-visible:ring-2 focus-visible:ring-blue-400',
+                        isActive ? 'ring-2 ring-blue-500 ring-offset-1' : 'ring-0'
+                      )}
+                      onSelect={() => onSelectColor(colorOption)}
+                    >
+                      <span className="h-6 w-6 rounded-full border border-white shadow" style={{ backgroundColor: colorOption }} />
+                      <span className="sr-only">Selecionar cor {colorOption}</span>
+                    </DropdownMenuItem>
+                  )
+                })}
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="text-red-600"
+          onClick={onDeleteColumn}
+          disabled={isDeleting || inputDisabled}
+        >
+          <Trash2 className="h-4 w-4" />
+          Remover coluna
+        </Button>
       </div>
-      {(isNameSaving || isOrderSaving) && (
+      {(isNameSaving || isOrderSaving || isDeleting) && (
         <span className="mt-2 inline-block text-xs text-blue-600">
-          {isNameSaving ? 'Salvando alterações...' : 'Atualizando ordem...'}
+          {isDeleting
+            ? 'Removendo coluna...'
+            : isNameSaving
+              ? 'Salvando alterações...'
+              : 'Atualizando ordem...'}
         </span>
       )}
     </div>
