@@ -2,7 +2,7 @@
 
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { CheckSquare, Paperclip, AlertCircle, Flag, Play } from 'lucide-react'
+import { CheckSquare, Paperclip, AlertCircle, Flag, Play, Check } from 'lucide-react'
 import { format } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
@@ -12,9 +12,10 @@ import { TASK_PRIORITY_COLORS, TASK_PRIORITY_LABELS, TASK_TYPE_LABEL } from '@/t
 interface KanbanCardProps {
   task: TaskCard
   onSelect: (task: TaskCard) => void
+  onToggleChecklistItem?: (taskId: string, checklistItemId: string, done: boolean) => Promise<void> | void
 }
 
-export function KanbanCard({ task, onSelect }: KanbanCardProps) {
+export function KanbanCard({ task, onSelect, onToggleChecklistItem }: KanbanCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
     data: {
@@ -77,14 +78,24 @@ export function KanbanCard({ task, onSelect }: KanbanCardProps) {
         <div className="mt-3 space-y-1 rounded-lg border border-gray-100 bg-gray-50/70 p-2">
           {task.checklist.map((item) => (
             <div key={item.id} className="flex items-start gap-2 text-xs">
-              <span
+              <button
+                type="button"
                 className={cn(
-                  'mt-0.5 flex h-3 w-3 items-center justify-center rounded border',
-                  item.done ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-gray-300 bg-white'
+                  'mt-0.5 flex h-4 w-4 items-center justify-center rounded border text-white transition',
+                  onToggleChecklistItem ? 'cursor-pointer' : 'cursor-default opacity-60',
+                  item.done ? 'border-emerald-500 bg-emerald-500' : 'border-gray-300 bg-white text-transparent'
                 )}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  if (!onToggleChecklistItem) return
+                  void onToggleChecklistItem(task.id, item.id, !item.done)
+                }}
+                aria-pressed={item.done}
+                aria-label={item.done ? 'Marcar item como pendente' : 'Marcar item como concluído'}
+                disabled={!onToggleChecklistItem}
               >
-                {item.done && <span className="h-2 w-2 rounded-full bg-white" />}
-              </span>
+                {item.done ? <Check className="h-3 w-3" /> : null}
+              </button>
               <span className={cn('flex-1 text-gray-600', item.done && 'line-through text-gray-400')}>
                 {item.title}
               </span>

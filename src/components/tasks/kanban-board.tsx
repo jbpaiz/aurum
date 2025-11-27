@@ -21,9 +21,10 @@ interface KanbanBoardProps {
   onSelectTask: (task: TaskCard) => void
   onCreateTask: (columnId?: string) => void
   moveTask: (payload: MoveTaskPayload) => Promise<void>
+  onToggleChecklistItem?: (taskId: string, checklistItemId: string, done: boolean) => Promise<void> | void
 }
 
-export function KanbanBoard({ columns, onSelectTask, onCreateTask, moveTask }: KanbanBoardProps) {
+export function KanbanBoard({ columns, onSelectTask, onCreateTask, moveTask, onToggleChecklistItem }: KanbanBoardProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 }
@@ -101,6 +102,7 @@ export function KanbanBoard({ columns, onSelectTask, onCreateTask, moveTask }: K
             column={column}
             onSelectTask={onSelectTask}
             onCreateTask={() => onCreateTask(column.id)}
+            onToggleChecklistItem={onToggleChecklistItem}
           />
         ))}
       </div>

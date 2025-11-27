@@ -50,6 +50,7 @@ interface TasksContextValue {
   updateTask: (taskId: string, updates: Partial<CreateTaskInput>) => Promise<void>
   deleteTask: (taskId: string) => Promise<void>
   moveTask: (payload: MoveTaskPayload) => Promise<void>
+  toggleTaskChecklistItem: (taskId: string, checklistItemId: string, done: boolean) => Promise<void>
   createColumn: (name: string, category?: TaskColumnCategory, color?: string) => Promise<void>
   createBoard: (name: string, description?: string) => Promise<void>
   renameBoard: (boardId: string, name: string) => Promise<void>
@@ -793,6 +794,53 @@ export function TasksProvider({ children }: TasksProviderProps) {
     [activeBoard, fetchWorkspace, normalizeColumnOrders, updateBoardState]
   )
 
+  const toggleTaskChecklistItem = useCallback(
+    async (taskId: string, checklistItemId: string, done: boolean) => {
+      if (!activeBoard) return
+      const taskSnapshot = activeBoard.columns
+        .flatMap((column) => column.tasks)
+        .find((task) => task.id === taskId)
+
+      if (!taskSnapshot) return
+
+      const updatedChecklist = taskSnapshot.checklist.map((item) =>
+        item.id === checklistItemId ? { ...item, done } : item
+      )
+
+      updateBoardState(activeBoard.id, (board) => ({
+        ...board,
+        columns: board.columns.map((column) => {
+          if (column.id !== taskSnapshot.columnId) return column
+          return {
+            ...column,
+            tasks: column.tasks.map((task) =>
+              task.id === taskId
+                ? {
+                    ...task,
+                    checklist: updatedChecklist
+                  }
+                : task
+            )
+          }
+        })
+      }))
+
+      const { error } = await supabase
+        .from('tasks')
+        .update({ checklist: updatedChecklist as unknown as Json })
+        .eq('id', taskId)
+
+      if (error) {
+        console.error('Erro ao atualizar checklist da tarefa:', error.message)
+        await fetchWorkspace()
+        return
+      }
+
+      await fetchWorkspace({ silent: true })
+    },
+    [activeBoard, fetchWorkspace, updateBoardState]
+  )
+
   const createColumn = useCallback(
     async (name: string, category: TaskColumnCategory = 'todo', color?: string) => {
       if (!activeBoard) return
@@ -971,6 +1019,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
     updateTask,
     deleteTask,
     moveTask,
+    toggleTaskChecklistItem,
     createColumn,
     createBoard,
     renameBoard,

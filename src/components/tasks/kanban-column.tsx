@@ -11,9 +11,10 @@ interface KanbanColumnProps {
   column: TaskColumn
   onSelectTask: (task: TaskCard) => void
   onCreateTask: (columnId: string) => void
+  onToggleChecklistItem?: (taskId: string, checklistItemId: string, done: boolean) => Promise<void> | void
 }
 
-export function KanbanColumn({ column, onSelectTask, onCreateTask }: KanbanColumnProps) {
+export function KanbanColumn({ column, onSelectTask, onCreateTask, onToggleChecklistItem }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: column.id,
     data: {
@@ -47,7 +48,12 @@ export function KanbanColumn({ column, onSelectTask, onCreateTask }: KanbanColum
       >
         <SortableContext items={column.tasks.map((task) => task.id)} strategy={verticalListSortingStrategy}>
           {column.tasks.map((task) => (
-            <KanbanCard key={task.id} task={task} onSelect={onSelectTask} />
+            <KanbanCard
+              key={task.id}
+              task={task}
+              onSelect={onSelectTask}
+              onToggleChecklistItem={onToggleChecklistItem}
+            />
           ))}
         </SortableContext>
 

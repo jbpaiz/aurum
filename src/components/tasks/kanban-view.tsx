@@ -28,6 +28,7 @@ export function KanbanView() {
     updateTask,
     deleteTask,
     moveTask,
+    toggleTaskChecklistItem,
     createColumn,
     createBoard
   } = useTasks()
@@ -284,6 +285,7 @@ export function KanbanView() {
               columns={filteredColumns}
               onSelectTask={openEditTaskModal}
               onCreateTask={openCreateTaskModal}
+              onToggleChecklistItem={toggleTaskChecklistItem}
               moveTask={moveTask}
             />
           </div>

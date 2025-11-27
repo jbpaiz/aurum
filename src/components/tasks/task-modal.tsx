@@ -96,6 +96,10 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
     setChecklist((prev) => prev.map((item) => (item.id === id ? { ...item, done: !item.done } : item)))
   }
 
+  const updateChecklistItemTitle = (id: string, title: string) => {
+    setChecklist((prev) => prev.map((item) => (item.id === id ? { ...item, title } : item)))
+  }
+
   const handleAddChecklistItem = () => {
     if (!checklistItem.trim()) return
     setChecklist((prev) => [
@@ -304,6 +308,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
                         item={item}
                         onToggle={toggleChecklistItem}
                         onRemove={handleRemoveChecklistItem}
+                        onChangeTitle={updateChecklistItemTitle}
                       />
                     ))}
                   </SortableContext>
@@ -344,9 +349,10 @@ interface ChecklistItemRowProps {
   item: TaskChecklistItem
   onToggle: (id: string) => void
   onRemove: (id: string) => void
+  onChangeTitle: (id: string, title: string) => void
 }
 
-function ChecklistItemRow({ item, onToggle, onRemove }: ChecklistItemRowProps) {
+function ChecklistItemRow({ item, onToggle, onRemove, onChangeTitle }: ChecklistItemRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id })
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -355,10 +361,14 @@ function ChecklistItemRow({ item, onToggle, onRemove }: ChecklistItemRowProps) {
   }
 
   return (
-    <div ref={setNodeRef} style={style} className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2 text-sm bg-white">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+    >
       <button
         type="button"
-        className="mr-3 cursor-grab text-gray-400 transition-colors hover:text-gray-600"
+        className="cursor-grab text-gray-400 transition-colors hover:text-gray-600"
         aria-label="Reordenar item"
         {...attributes}
         {...listeners}
@@ -367,15 +377,21 @@ function ChecklistItemRow({ item, onToggle, onRemove }: ChecklistItemRowProps) {
       </button>
       <button
         type="button"
-        className={`mr-3 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border ${
+        className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border ${
           item.done ? 'border-green-500 bg-green-100 text-green-600' : 'border-gray-300 text-gray-400'
         }`}
         onClick={() => onToggle(item.id)}
+        aria-pressed={item.done}
       >
         {item.done && <Check className="h-4 w-4" />}
       </button>
-      <span className={`flex-1 text-left ${item.done ? 'text-gray-400 line-through' : 'text-gray-700'}`}>{item.title}</span>
-      <button type="button" onClick={() => onRemove(item.id)}>
+      <Input
+        value={item.title}
+        onChange={(event) => onChangeTitle(item.id, event.target.value)}
+        className={`flex-1 text-sm ${item.done ? 'text-gray-400 line-through' : 'text-gray-700'}`}
+        placeholder="Descrição do item"
+      />
+      <button type="button" onClick={() => onRemove(item.id)} aria-label="Remover item">
         <Trash2 className="h-4 w-4 text-gray-400" />
       </button>
     </div>
