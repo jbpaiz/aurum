@@ -491,8 +491,8 @@ export function TasksProvider({ children }: TasksProviderProps) {
     if (input.title !== undefined) payload.title = input.title
     if (input.description !== undefined) payload.description = input.description
     if (input.key !== undefined) payload.key = input.key?.trim()
-    if (input.priority) payload.priority = input.priority
-    if (input.type) payload.type = input.type
+    if (input.priority !== undefined) payload.priority = input.priority
+    if (input.type !== undefined) payload.type = input.type
     if (input.startDate !== undefined) payload.start_date = input.startDate
     if (input.endDate !== undefined) payload.due_date = input.endDate
     if (input.labels !== undefined) payload.labels = input.labels
