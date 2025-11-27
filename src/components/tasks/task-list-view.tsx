@@ -1,14 +1,13 @@
 "use client"
 
 import { useMemo, useState, useCallback, type ReactNode } from 'react'
-import { ArrowUpDown, ArrowUp, ArrowDown, CheckSquare } from 'lucide-react'
+import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
 import type { TaskCard, TaskColumn, TaskPriority } from '@/types/tasks'
 import { TASK_PRIORITY_COLORS, TASK_PRIORITY_LABELS } from '@/types/tasks'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { cn } from '@/lib/utils'
 
 type SortKey = 'key' | 'title' | 'labels' | 'startDate' | 'endDate' | 'columnName' | 'priority'
 type SortDirection = 'asc' | 'desc'
@@ -175,8 +174,6 @@ interface TaskListRowProps {
 
 function TaskListRow({ task, onSelectTask, onChangeTaskColumn, renderDate, columnOptions }: TaskListRowProps) {
   const selectedColumn = columnOptions.find((option) => option.id === task.columnId)
-  const checklistDone = task.checklist.filter((item) => item.done).length
-  const hasChecklist = task.checklist.length > 0
 
   return (
     <tr className="cursor-pointer transition-colors hover:bg-blue-50/40" onClick={() => onSelectTask(task)}>
@@ -188,47 +185,6 @@ function TaskListRow({ task, onSelectTask, onChangeTaskColumn, renderDate, colum
             {task.description}
           </p>
         ) : null}
-        <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
-          {hasChecklist ? (
-            <div className="group relative inline-flex">
-              <button
-                type="button"
-                className="inline-flex items-center gap-1.5 px-0 py-0 text-gray-500 transition hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-200"
-                aria-label="Ver checklist"
-              >
-                <CheckSquare className="h-3.5 w-3.5 text-gray-400" aria-hidden />
-                <span className="text-[11px] font-medium text-gray-500">
-                  {checklistDone}/{task.checklist.length}
-                </span>
-              </button>
-              <div className="pointer-events-none invisible absolute left-0 top-full z-20 mt-2 w-[260px] rounded-xl border border-gray-200 bg-white p-3 text-left text-gray-700 opacity-0 shadow-lg transition duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
-                <p className="text-xs font-semibold text-gray-600">
-                  {checklistDone}/{task.checklist.length} itens concluídos
-                </p>
-                <ul className="mt-2 space-y-1 text-xs">
-                  {task.checklist.map((item) => (
-                    <li key={item.id} className="flex items-start gap-2">
-                      <span
-                        className={cn(
-                          'mt-1 h-2 w-2 flex-shrink-0 rounded-full',
-                          item.done ? 'bg-emerald-500' : 'bg-gray-300'
-                        )}
-                      />
-                      <span className={cn('flex-1', item.done && 'line-through text-gray-400')}>
-                        {item.title}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          ) : (
-            <div className="inline-flex items-center gap-1.5 text-[11px] text-gray-400">
-              <CheckSquare className="h-3.5 w-3.5" aria-hidden />
-              <span>Sem checklist</span>
-            </div>
-          )}
-        </div>
       </td>
       <td className="px-6 py-4 text-gray-600 whitespace-nowrap">
         {task.labels.length ? (
