@@ -126,6 +126,8 @@ export function KanbanView() {
     await createBoard(name)
   }
 
+  const activeTasksCount = activeBoard?.columns.reduce((total, column) => total + column.tasks.length, 0) ?? 0
+
   if (showManagerView) {
     return (
       <div className="flex flex-col gap-5 p-4 md:gap-6 md:p-6">
@@ -140,9 +142,12 @@ export function KanbanView() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">Módulo de tarefas</p>
-            <div className="mt-1 flex items-center gap-2 text-2xl font-bold text-gray-900">
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-2xl font-bold text-gray-900">
               <Kanban className="h-6 w-6 text-blue-500" />
               {activeBoard?.name ?? 'Kanban'}
+              <Badge variant="outline" className="text-sm font-medium text-gray-600">
+                {activeTasksCount} tarefas ativas
+              </Badge>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -224,6 +229,35 @@ export function KanbanView() {
         </div>
 
         <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-2 rounded-xl bg-gray-100 p-1 text-sm font-medium">
+            <Button
+              variant={viewMode === 'kanban' ? 'default' : 'ghost'}
+              size="sm"
+              className={`rounded-lg ${viewMode === 'kanban' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'}`}
+              onClick={() => setViewMode('kanban')}
+            >
+              <Kanban className="mr-2 h-4 w-4" />
+              Quadro
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              className={`rounded-lg ${viewMode === 'list' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'}`}
+              onClick={() => setViewMode('list')}
+            >
+              <ListIcon className="mr-2 h-4 w-4" />
+              Lista
+            </Button>
+            <Button
+              variant={viewMode === 'metrics' ? 'default' : 'ghost'}
+              size="sm"
+              className={`rounded-lg ${viewMode === 'metrics' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'}`}
+              onClick={() => setViewMode('metrics')}
+            >
+              <BarChart3 className="mr-2 h-4 w-4" />
+              Métricas
+            </Button>
+          </div>
           <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
             <Filter className="h-4 w-4" />
             <span>Etiquetas:</span>
@@ -233,38 +267,6 @@ export function KanbanView() {
               value={labelFilter}
               onChange={(event) => setLabelFilter(event.target.value)}
             />
-            <Badge variant="outline" className="bg-gray-50 text-gray-600">
-              {activeBoard?.columns.reduce((total, column) => total + column.tasks.length, 0) ?? 0} tarefas ativas
-            </Badge>
-          </div>
-          <div className="flex items-center gap-2 rounded-full bg-gray-100 p-1 text-sm font-medium">
-            <Button
-              variant={viewMode === 'kanban' ? 'default' : 'ghost'}
-              size="sm"
-              className={viewMode === 'kanban' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'}
-              onClick={() => setViewMode('kanban')}
-            >
-              <Kanban className="mr-2 h-4 w-4" />
-              Quadro
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
-              size="sm"
-              className={viewMode === 'list' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'}
-              onClick={() => setViewMode('list')}
-            >
-              <ListIcon className="mr-2 h-4 w-4" />
-              Lista
-            </Button>
-            <Button
-              variant={viewMode === 'metrics' ? 'default' : 'ghost'}
-              size="sm"
-              className={viewMode === 'metrics' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'}
-              onClick={() => setViewMode('metrics')}
-            >
-              <BarChart3 className="mr-2 h-4 w-4" />
-              Métricas
-            </Button>
           </div>
         </div>
       </div>
