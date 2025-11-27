@@ -46,7 +46,8 @@ export function TaskListView({ columns, referenceColumns, onSelectTask, onCreate
   const renderDate = (date?: string | null) => {
     if (!date) return <span className="text-gray-400">Sem data</span>
     try {
-      return format(new Date(date), 'dd/MM/yyyy', { locale: ptBR })
+      const normalized = date.includes('T') ? date : `${date}T00:00:00`
+      return format(new Date(normalized), 'dd/MM/yyyy', { locale: ptBR })
     } catch (error) {
       return <span className="text-gray-400">Sem data</span>
     }

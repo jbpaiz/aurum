@@ -274,6 +274,19 @@ const pickNextColumnColor = (columns?: TaskColumn[], fallback?: string) => {
   return TASK_COLUMN_COLOR_PALETTE[index]
 }
 
+const getLastColumnId = (board?: TaskBoard | null): string | null => {
+  if (!board || !board.columns.length) return null
+  const sortedColumns = [...board.columns].sort((a, b) => {
+    const aPosition = a.position ?? board.columns.indexOf(a)
+    const bPosition = b.position ?? board.columns.indexOf(b)
+    if (aPosition === bPosition) {
+      return (a.createdAt ?? '').localeCompare(b.createdAt ?? '')
+    }
+    return aPosition - bPosition
+  })
+  return sortedColumns[sortedColumns.length - 1]?.id ?? null
+}
+
 export function useTasks() {
   const context = useContext(TasksContext)
   if (!context) {
@@ -579,12 +592,22 @@ export function TasksProvider({ children }: TasksProviderProps) {
       const targetColumnId = updates.columnId ?? taskSnapshot?.columnId
       const destinationColumn = activeBoard?.columns.find((column) => column.id === targetColumnId)
       const nowDate = new Date().toISOString().split('T')[0]
+      const lastColumnId = getLastColumnId(activeBoard)
 
-      if (destinationColumn?.category === 'in_progress' && !updates.startDate && !taskSnapshot?.startDate) {
+      const movingToAnotherColumn = Boolean(
+        taskSnapshot?.columnId && updates.columnId && updates.columnId !== taskSnapshot.columnId
+      )
+
+      if (movingToAnotherColumn && !updates.startDate && !taskSnapshot?.startDate) {
         payload.start_date = nowDate
       }
 
-      if (destinationColumn?.category === 'done' && !updates.endDate && !taskSnapshot?.endDate) {
+      if (
+        movingToAnotherColumn &&
+        updates.columnId === lastColumnId &&
+        !updates.endDate &&
+        !taskSnapshot?.endDate
+      ) {
         payload.due_date = nowDate
       }
 
@@ -676,6 +699,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
       if (!activeBoard) return
       const destinationColumn = activeBoard.columns.find((column) => column.id === targetColumnId)
       if (!destinationColumn) return
+      const lastColumnId = getLastColumnId(activeBoard)
 
       const filteredTasks = destinationColumn.tasks
         .filter((task) => task.id !== taskId)
@@ -719,11 +743,13 @@ export function TasksProvider({ children }: TasksProviderProps) {
         sort_order: newSortOrder
       }
 
-      if (destinationColumn.category === 'in_progress' && !taskSnapshot?.startDate) {
+      const movingBetweenColumns = sourceColumnId !== targetColumnId
+
+      if (movingBetweenColumns && !taskSnapshot?.startDate) {
         updatePayload.start_date = nowDate
       }
 
-      if (destinationColumn.category === 'done' && !taskSnapshot?.endDate) {
+      if (movingBetweenColumns && targetColumnId === lastColumnId && !taskSnapshot?.endDate) {
         updatePayload.due_date = nowDate
       }
 

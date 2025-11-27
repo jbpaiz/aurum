@@ -38,7 +38,8 @@ export function KanbanCard({ task, onSelect, onToggleChecklistItem }: KanbanCard
   const hasAttachments = task.attachments.length > 0
   const formatShortDate = (value?: string | null) => {
     if (!value) return null
-    const parsed = new Date(value)
+    const normalized = value.includes('T') ? value : `${value}T00:00:00`
+    const parsed = new Date(normalized)
     if (Number.isNaN(parsed.getTime())) return null
     return format(parsed, 'dd/MM/yyyy')
   }
