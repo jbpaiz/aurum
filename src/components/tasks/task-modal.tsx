@@ -243,39 +243,31 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
               <Label>Prioridade</Label>
-              <Select value={priority} onValueChange={(value) => setPriority(value as TaskPriority)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.keys(TASK_PRIORITY_COLORS).map((value) => (
-                    <SelectItem key={value} value={value}>
-                      <span className="inline-flex items-center gap-2">
-                        <span
-                          className="h-2.5 w-2.5 rounded-full"
-                          style={{ backgroundColor: TASK_PRIORITY_COLORS[value as TaskPriority] }}
-                        />
-                        {TASK_PRIORITY_LABELS[value as TaskPriority]}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <select
+                value={priority}
+                onChange={(e) => setPriority(e.target.value as TaskPriority)}
+                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              >
+                {Object.keys(TASK_PRIORITY_COLORS).map((value) => (
+                  <option key={value} value={value}>
+                    {TASK_PRIORITY_LABELS[value as TaskPriority]}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="space-y-2">
               <Label>Tipo</Label>
-              <Select value={type} onValueChange={(value) => setType(value as TaskType)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TASK_TYPES.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <select
+                value={type}
+                onChange={(e) => setType(e.target.value as TaskType)}
+                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              >
+                {TASK_TYPES.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="space-y-2">
               <Label>Início da tarefa</Label>
