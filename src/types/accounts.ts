@@ -1,7 +1,7 @@
 export interface BankAccount {
   id: string
   name: string
-  type: 'checking' | 'savings' | 'wallet' | 'investment' | 'other'
+  type: 'checking' | 'savings' | 'wallet' | 'investment' | 'credit_card' | 'other'
   bank?: string
   icon: string
   color: string
@@ -34,13 +34,14 @@ export interface Transfer {
   userId?: string
 }
 
-export type AccountType = 'checking' | 'savings' | 'wallet' | 'investment' | 'other'
+export type AccountType = 'checking' | 'savings' | 'wallet' | 'investment' | 'credit_card' | 'other'
 
 export const ACCOUNT_TYPES = {
   checking: { label: 'Conta Corrente', icon: '🏦' },
   savings: { label: 'Poupança', icon: '🐷' },
   wallet: { label: 'Carteira', icon: '💰' },
   investment: { label: 'Investimentos', icon: '📈' },
+  credit_card: { label: 'Cartão de Crédito', icon: '💳' },
   other: { label: 'Outros', icon: '🏪' }
 }
 

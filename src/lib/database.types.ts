@@ -19,7 +19,7 @@ export interface Database {
           id: string // UUID
           user_id: string // UUID
           name: string
-          type: 'checking' | 'savings' | 'wallet' | 'investment' | 'other'
+          type: 'checking' | 'savings' | 'wallet' | 'investment' | 'credit_card' | 'other'
           bank: string | null
           icon: string
           color: string
@@ -32,7 +32,7 @@ export interface Database {
           id?: string
           user_id: string
           name: string
-          type: 'checking' | 'savings' | 'wallet' | 'investment' | 'other'
+          type: 'checking' | 'savings' | 'wallet' | 'investment' | 'credit_card' | 'other'
           bank?: string | null
           icon?: string
           color?: string
@@ -45,7 +45,7 @@ export interface Database {
           id?: string
           user_id?: string
           name?: string
-          type?: 'checking' | 'savings' | 'wallet' | 'investment' | 'other'
+          type?: 'checking' | 'savings' | 'wallet' | 'investment' | 'credit_card' | 'other'
           bank?: string | null
           icon?: string
           color?: string
