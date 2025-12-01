@@ -37,18 +37,67 @@ const TASK_TYPES: { value: TaskType; label: string }[] = [
   { value: 'epic', label: 'Épico' }
 ]
 
+// Chaves para persistir dados do formulário
+const STORAGE_KEY = 'task_modal_form_data'
+
 export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSave, onDeleteTask }: TaskModalProps) {
   const { activeBoard } = useTasks()
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [taskKey, setTaskKey] = useState('')
-  const [columnId, setColumnId] = useState<string>('')
-  const [priority, setPriority] = useState<TaskPriority>('medium')
-  const [type, setType] = useState<TaskType>('task')
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
-  const [labelsInput, setLabelsInput] = useState('')
-  const [checklist, setChecklist] = useState<TaskChecklistItem[]>([])
+  
+  // Função para carregar dados persistidos
+  const loadPersistedData = () => {
+    if (typeof window === 'undefined') return null
+    const saved = sessionStorage.getItem(STORAGE_KEY)
+    if (saved) {
+      try {
+        return JSON.parse(saved)
+      } catch {
+        return null
+      }
+    }
+    return null
+  }
+
+  // Inicializar com dados persistidos ou valores padrão
+  const [title, setTitle] = useState(() => {
+    const persisted = loadPersistedData()
+    return persisted?.title ?? ''
+  })
+  const [description, setDescription] = useState(() => {
+    const persisted = loadPersistedData()
+    return persisted?.description ?? ''
+  })
+  const [taskKey, setTaskKey] = useState(() => {
+    const persisted = loadPersistedData()
+    return persisted?.taskKey ?? ''
+  })
+  const [columnId, setColumnId] = useState<string>(() => {
+    const persisted = loadPersistedData()
+    return persisted?.columnId ?? ''
+  })
+  const [priority, setPriority] = useState<TaskPriority>(() => {
+    const persisted = loadPersistedData()
+    return persisted?.priority ?? 'medium'
+  })
+  const [type, setType] = useState<TaskType>(() => {
+    const persisted = loadPersistedData()
+    return persisted?.type ?? 'task'
+  })
+  const [startDate, setStartDate] = useState(() => {
+    const persisted = loadPersistedData()
+    return persisted?.startDate ?? ''
+  })
+  const [endDate, setEndDate] = useState(() => {
+    const persisted = loadPersistedData()
+    return persisted?.endDate ?? ''
+  })
+  const [labelsInput, setLabelsInput] = useState(() => {
+    const persisted = loadPersistedData()
+    return persisted?.labelsInput ?? ''
+  })
+  const [checklist, setChecklist] = useState<TaskChecklistItem[]>(() => {
+    const persisted = loadPersistedData()
+    return persisted?.checklist ?? []
+  })
   const [checklistItem, setChecklistItem] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -62,21 +111,66 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
   const resolvedColumnId = columnId || task?.columnId || defaultColumnId || columns[0]?.id || ''
   const selectedColumn = columns.find((column) => column.id === resolvedColumnId)
 
+  // Salvar dados no sessionStorage sempre que mudarem
+  useEffect(() => {
+    if (typeof window === 'undefined' || !open) return
+    
+    const formData = {
+      title,
+      description,
+      taskKey,
+      columnId,
+      priority,
+      type,
+      startDate,
+      endDate,
+      labelsInput,
+      checklist
+    }
+    
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(formData))
+  }, [title, description, taskKey, columnId, priority, type, startDate, endDate, labelsInput, checklist, open])
+
+  // Limpar dados persistidos
+  const clearPersistedData = () => {
+    if (typeof window === 'undefined') return
+    sessionStorage.removeItem(STORAGE_KEY)
+  }
+
   useEffect(() => {
     if (!open) return
-    setTitle(task?.title ?? '')
-    setDescription(task?.description ?? '')
-    setTaskKey(task?.key ?? '')
-    setColumnId(task?.columnId ?? defaultColumnId ?? columns[0]?.id ?? '')
-    setPriority(task?.priority ?? 'medium')
-    setType(task?.type ?? 'task')
-    setStartDate(task?.startDate ?? '')
-    setEndDate(task?.endDate ?? '')
-    setLabelsInput(task?.labels?.join(', ') ?? '')
-    setChecklist(task?.checklist ?? [])
-    setChecklistItem('')
-    setFormError(null)
-  }, [open, task, columns, defaultColumnId])
+    
+    // Se estiver editando uma tarefa existente, carregar dados dela
+    if (task) {
+      setTitle(task.title ?? '')
+      setDescription(task.description ?? '')
+      setTaskKey(task.key ?? '')
+      setColumnId(task.columnId ?? defaultColumnId ?? columns[0]?.id ?? '')
+      setPriority(task.priority ?? 'medium')
+      setType(task.type ?? 'task')
+      setStartDate(task.startDate ?? '')
+      setEndDate(task.endDate ?? '')
+      setLabelsInput(task.labels?.join(', ') ?? '')
+      setChecklist(task.checklist ?? [])
+      setChecklistItem('')
+      setFormError(null)
+    } else {
+      // Se for nova tarefa, tentar carregar dados persistidos
+      const persisted = loadPersistedData()
+      if (persisted) {
+        // Já foram carregados no useState inicial
+        // Apenas garantir que columnId está correto se não foi salvo
+        if (!persisted.columnId && defaultColumnId) {
+          setColumnId(defaultColumnId)
+        }
+      } else {
+        // Se não há dados persistidos e não está editando, usar valores padrão
+        if (!title && !description) {
+          setColumnId(defaultColumnId ?? columns[0]?.id ?? '')
+        }
+      }
+    }
+  }, [open, task])
 
   const labels = useMemo(
     () =>
@@ -196,6 +290,9 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
 
     await onSave(payload)
     setIsSaving(false)
+    
+    // Limpar dados persistidos após salvar com sucesso
+    clearPersistedData()
     onClose()
   }
 
@@ -206,6 +303,8 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
     try {
       setIsDeleting(true)
       await onDeleteTask(task.id)
+      // Limpar dados persistidos após deletar
+      clearPersistedData()
       onClose()
     } finally {
       setIsDeleting(false)
