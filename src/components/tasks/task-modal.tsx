@@ -176,7 +176,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
     () =>
       labelsInput
         .split(',')
-        .map((label) => label.trim())
+        .map((label: string) => label.trim())
         .filter(Boolean),
     [labelsInput]
   )
