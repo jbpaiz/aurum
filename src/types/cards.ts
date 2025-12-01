@@ -17,6 +17,10 @@ export interface CreditCard {
   isActive: boolean
   createdAt: string
   userId?: string
+  creditLimit?: number // Limite do cartão de crédito
+  currentBalance?: number // Saldo atual/fatura (positivo = deve, negativo = crédito)
+  dueDay?: number // Dia de vencimento da fatura (1-31)
+  closingDay?: number // Dia de fechamento da fatura (1-31)
 }
 
 export interface CardTransaction {

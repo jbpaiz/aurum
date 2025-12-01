@@ -22,13 +22,16 @@ import {
   Briefcase,
   Smartphone,
   Coffee,
-  ShoppingCart
+  ShoppingCart,
+  ArrowRightLeft
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useAccounts } from '@/contexts/accounts-context'
 import { AccountModal } from './account-modal'
+import { TransferModal } from '@/components/transfers/transfer-modal'
+import { useToast } from '@/hooks/use-toast'
 import { DeleteAccountModal } from './delete-account-modal'
 import { BankAccount, ACCOUNT_TYPES } from '@/types/accounts'
 
@@ -55,8 +58,10 @@ export function AccountsPage() {
   const [showBalances, setShowBalances] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false)
   const [selectedAccount, setSelectedAccount] = useState<BankAccount | null>(null)
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add')
+  const { toast } = useToast()
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -139,6 +144,14 @@ export function AccountsPage() {
           >
             {showBalances ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             {showBalances ? 'Ocultar Saldos' : 'Mostrar Saldos'}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setIsTransferModalOpen(true)}
+            className="gap-2"
+          >
+            <ArrowRightLeft className="h-4 w-4" />
+            Transferir
           </Button>
           <Button onClick={handleAddAccount} className="gap-2">
             <Plus className="h-4 w-4" />
@@ -303,6 +316,17 @@ export function AccountsPage() {
         onClose={closeModal}
         account={selectedAccount}
         mode={modalMode}
+      />
+
+      <TransferModal
+        open={isTransferModalOpen}
+        onClose={() => setIsTransferModalOpen(false)}
+        onSuccess={() => {
+          toast({
+            title: 'Transferência realizada com sucesso!',
+            variant: 'default'
+          })
+        }}
       />
 
       <DeleteAccountModal

@@ -9,13 +9,15 @@ import {
   Calendar,
   DollarSign,
   Edit,
-  Trash2
+  Trash2,
+  ArrowRightLeft
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { TransactionModal, TransactionFormValues } from '@/components/modals/transaction-modal'
+import { TransferModal } from '@/components/transfers/transfer-modal'
 import { useTransactions, TransactionRecord, type TransactionFormData } from '@/hooks/use-transactions'
 import { useToast } from '@/hooks/use-toast'
 
@@ -30,6 +32,7 @@ export function TransactionsPage() {
     isSaving
   } = useTransactions()
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all')
   const [editingTransaction, setEditingTransaction] = useState<TransactionFormValues | null>(null)
@@ -177,16 +180,26 @@ export function TransactionsPage() {
           <h1 className="text-3xl font-bold text-gray-900">Transações</h1>
           <p className="text-gray-600">Gerencie todas as suas movimentações financeiras</p>
         </div>
-        <Button
-          onClick={() => {
-            setEditingTransaction(null)
-            setIsModalOpen(true)
-          }}
-          className="gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Nova Transação
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => setIsTransferModalOpen(true)}
+            variant="outline"
+            className="gap-2"
+          >
+            <ArrowRightLeft className="h-4 w-4" />
+            Transferência
+          </Button>
+          <Button
+            onClick={() => {
+              setEditingTransaction(null)
+              setIsModalOpen(true)
+            }}
+            className="gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Nova Transação
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -378,6 +391,20 @@ export function TransactionsPage() {
           onClose={() => {
             setEditingTransaction(null)
             setIsModalOpen(false)
+          }}
+        />
+      )}
+
+      {/* Modal de Transferência */}
+      {isTransferModalOpen && (
+        <TransferModal
+          open={isTransferModalOpen}
+          onClose={() => setIsTransferModalOpen(false)}
+          onSuccess={() => {
+            toast({
+              title: 'Transferência realizada!',
+              description: 'A transferência entre contas foi concluída.'
+            })
           }}
         />
       )}

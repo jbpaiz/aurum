@@ -14,6 +14,7 @@ interface AccountsContextType {
   deleteAccount: (id: string) => Promise<void>
   getAccountById: (id: string) => BankAccount | undefined
   updateAccountBalance: (accountId: string, amount: number, operation: 'add' | 'subtract') => Promise<void>
+  refresh: () => Promise<void>
 }
 
 const AccountsContext = createContext<AccountsContextType | undefined>(undefined)
@@ -196,7 +197,8 @@ export function AccountsProvider({ children }: AccountsProviderProps) {
     updateAccount,
     deleteAccount,
     getAccountById,
-    updateAccountBalance
+    updateAccountBalance,
+    refresh: fetchAccounts
   }
 
   return (

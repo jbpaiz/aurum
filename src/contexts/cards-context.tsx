@@ -13,8 +13,11 @@ interface CardsContextType {
   addCard: (card: Omit<CreditCard, 'id' | 'createdAt' | 'userId'>) => Promise<void>
   updateCard: (id: string, updates: Partial<CreditCard>) => Promise<void>
   deleteCard: (id: string) => Promise<void>
+  payInvoice: (cardId: string, amount: number, accountId: string, date: string) => Promise<void>
+  addCardExpense: (cardId: string, amount: number) => Promise<void>
   getCardsByProvider: (providerId: string) => CreditCard[]
   getProviderById: (id: string) => CardProvider | undefined
+  refresh: () => Promise<void>
 }
 
 const CardsContext = createContext<CardsContextType | undefined>(undefined)
@@ -46,7 +49,11 @@ export function CardsProvider({ children }: CardsProviderProps) {
     type: card.type,
     isActive: card.is_active,
     createdAt: card.created_at,
-    userId: card.user_id
+    userId: card.user_id,
+    creditLimit: card.credit_limit ? Number(card.credit_limit) : undefined,
+    currentBalance: card.current_balance ? Number(card.current_balance) : undefined,
+    dueDay: card.due_day ?? undefined,
+    closingDay: card.closing_day ?? undefined
   }), [])
 
   const fetchCards = useCallback(async () => {
@@ -107,7 +114,11 @@ export function CardsProvider({ children }: CardsProviderProps) {
         alias: cardData.alias,
         last_four_digits: cardData.lastFourDigits ?? null,
         type: cardData.type,
-        is_active: cardData.isActive
+        is_active: cardData.isActive,
+        credit_limit: cardData.creditLimit ?? null,
+        current_balance: cardData.currentBalance ?? 0,
+        due_day: cardData.dueDay ?? null,
+        closing_day: cardData.closingDay ?? null
       }
 
       const { data, error } = await supabase
@@ -137,6 +148,10 @@ export function CardsProvider({ children }: CardsProviderProps) {
       if (updates.lastFourDigits !== undefined) dbUpdates.last_four_digits = updates.lastFourDigits ?? null
       if (updates.type !== undefined) dbUpdates.type = updates.type
       if (updates.isActive !== undefined) dbUpdates.is_active = updates.isActive
+      if (updates.creditLimit !== undefined) dbUpdates.credit_limit = updates.creditLimit ?? null
+      if (updates.currentBalance !== undefined) dbUpdates.current_balance = updates.currentBalance ?? 0
+      if (updates.dueDay !== undefined) dbUpdates.due_day = updates.dueDay ?? null
+      if (updates.closingDay !== undefined) dbUpdates.closing_day = updates.closingDay ?? null
 
       const { data, error } = await supabase
         .from('cards')
@@ -184,6 +199,71 @@ export function CardsProvider({ children }: CardsProviderProps) {
     return providers.find(provider => provider.id === id)
   }
 
+  // Pagar fatura do cartão de crédito
+  const payInvoice = useCallback(async (cardId: string, amount: number, accountId: string, date: string) => {
+    if (!user) throw new Error('Usuário não autenticado')
+
+    try {
+      const card = cards.find(c => c.id === cardId)
+      if (!card) throw new Error('Cartão não encontrado')
+
+      // Criar transação de pagamento de fatura
+      const { error: txError } = await supabase.from('transactions').insert({
+        user_id: user.id,
+        type: 'expense',
+        description: `Pagamento fatura ${card.alias}`,
+        amount,
+        account_id: accountId,
+        transaction_date: date,
+        category_id: null,
+        notes: JSON.stringify({ type: 'invoice_payment', cardId })
+      })
+
+      if (txError) throw txError
+
+      // Atualizar saldo do cartão
+      const newBalance = (card.currentBalance || 0) - amount
+      const { error: cardError } = await supabase
+        .from('cards')
+        .update({ current_balance: newBalance })
+        .eq('id', cardId)
+        .eq('user_id', user.id)
+
+      if (cardError) throw cardError
+
+      await fetchCards()
+    } catch (error) {
+      console.error('Erro ao pagar fatura:', error)
+      throw error
+    }
+  }, [cards, fetchCards, user])
+
+  // Adicionar despesa no cartão (aumenta saldo/fatura)
+  const addCardExpense = useCallback(async (cardId: string, amount: number) => {
+    if (!user) throw new Error('Usuário não autenticado')
+
+    try {
+      const card = cards.find(c => c.id === cardId)
+      if (!card) throw new Error('Cartão não encontrado')
+
+      const newBalance = (card.currentBalance || 0) + amount
+      const { error } = await supabase
+        .from('cards')
+        .update({ current_balance: newBalance })
+        .eq('id', cardId)
+        .eq('user_id', user.id)
+
+      if (error) throw error
+
+      setCards(prev => prev.map(c => 
+        c.id === cardId ? { ...c, currentBalance: newBalance } : c
+      ))
+    } catch (error) {
+      console.error('Erro ao adicionar despesa no cartão:', error)
+      throw error
+    }
+  }, [cards, user])
+
   const value: CardsContextType = {
     cards: cards.filter(card => card.isActive),
     providers,
@@ -191,8 +271,11 @@ export function CardsProvider({ children }: CardsProviderProps) {
     addCard,
     updateCard,
     deleteCard,
+    payInvoice,
+    addCardExpense,
     getCardsByProvider,
-    getProviderById
+    getProviderById,
+    refresh: fetchCards
   }
 
   return (
