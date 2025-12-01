@@ -14,23 +14,18 @@ export function AuthCallbackHandler() {
   const [message, setMessage] = useState('Conectando sua conta do Google...')
 
   useEffect(() => {
-    const code = searchParams.get('code')
     const errorDescription = searchParams.get('error_description')
 
-    const exchangeCode = async () => {
+    const handleCallback = async () => {
       if (errorDescription) {
         setMessage(decodeURIComponent(errorDescription))
         setStatus('error')
         return
       }
 
-      if (!code) {
-        setMessage('Código de autorização não encontrado.')
-        setStatus('error')
-        return
-      }
-
-      const { error } = await supabase.auth.exchangeCodeForSession(code)
+      // O Supabase automaticamente processa o callback OAuth e troca o code por session
+      // Não precisamos fazer nada manualmente aqui
+      const { data, error } = await supabase.auth.getSession()
 
       if (error) {
         setMessage(error.message)
@@ -38,10 +33,15 @@ export function AuthCallbackHandler() {
         return
       }
 
-      router.replace('/')
+      if (data.session) {
+        router.replace('/')
+      } else {
+        setMessage('Não foi possível estabelecer a sessão.')
+        setStatus('error')
+      }
     }
 
-    exchangeCode()
+    handleCallback()
   }, [router, searchParams])
 
   if (status === 'loading') {
