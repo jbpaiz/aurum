@@ -206,7 +206,7 @@ export function AddCardModal({ onClose }: AddCardModalProps) {
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, type: 'credit' }))}
+                    onClick={() => setFormData((prev: typeof formData) => ({ ...prev, type: 'credit' }))}
                     className={`p-3 border rounded-lg text-left transition-all hover:shadow-sm ${
                       formData.type === 'credit'
                         ? 'border-primary bg-primary/5'
@@ -224,7 +224,7 @@ export function AddCardModal({ onClose }: AddCardModalProps) {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, type: 'debit' }))}
+                    onClick={() => setFormData((prev: typeof formData) => ({ ...prev, type: 'debit' }))}
                     className={`p-3 border rounded-lg text-left transition-all hover:shadow-sm ${
                       formData.type === 'debit'
                         ? 'border-primary bg-primary/5'
@@ -250,7 +250,7 @@ export function AddCardModal({ onClose }: AddCardModalProps) {
                   id="alias"
                   placeholder="Ex: Nubank Principal, Itaú Pessoal..."
                   value={formData.alias}
-                  onChange={(e) => setFormData(prev => ({ ...prev, alias: e.target.value }))}
+                  onChange={(e) => setFormData((prev: typeof formData) => ({ ...prev, alias: e.target.value }))}
                   maxLength={50}
                 />
                 <p className="text-xs text-muted-foreground">
@@ -267,7 +267,7 @@ export function AddCardModal({ onClose }: AddCardModalProps) {
                   value={formData.lastFourDigits}
                   onChange={(e) => {
                     const value = e.target.value.replace(/\D/g, '').slice(0, 4)
-                    setFormData(prev => ({ ...prev, lastFourDigits: value }))
+                    setFormData((prev: typeof formData) => ({ ...prev, lastFourDigits: value }))
                   }}
                   maxLength={4}
                   className="font-mono"
