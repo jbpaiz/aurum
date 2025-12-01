@@ -112,23 +112,23 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
   useEffect(() => {
     if (!open) return
     
+    // Carregar dados persistidos primeiro (se existirem)
+    const persisted = loadPersistedData()
+    
     // Se estiver editando uma tarefa existente
     if (task) {
-      // Tentar carregar dados persistidos APENAS se forem da mesma tarefa
-      const persisted = loadPersistedData()
-      
+      // Se há dados persistidos da mesma tarefa, usar eles (usuário estava editando)
       if (persisted && persisted.taskId === task.id) {
-        // Carregar dados editados que foram persistidos
-        setTitle(persisted.title ?? '')
-        setDescription(persisted.description ?? '')
-        setTaskKey(persisted.taskKey ?? '')
+        setTitle(persisted.title ?? task.title ?? '')
+        setDescription(persisted.description ?? task.description ?? '')
+        setTaskKey(persisted.taskKey ?? task.key ?? '')
         setColumnId(persisted.columnId ?? task.columnId ?? defaultColumnId ?? columns[0]?.id ?? '')
-        setPriority(persisted.priority ?? 'medium')
-        setType(persisted.type ?? 'task')
-        setStartDate(persisted.startDate ?? '')
-        setEndDate(persisted.endDate ?? '')
-        setLabelsInput(persisted.labelsInput ?? '')
-        setChecklist(persisted.checklist ?? [])
+        setPriority(persisted.priority ?? task.priority ?? 'medium')
+        setType(persisted.type ?? task.type ?? 'task')
+        setStartDate(persisted.startDate ?? task.startDate ?? '')
+        setEndDate(persisted.endDate ?? task.endDate ?? '')
+        setLabelsInput(persisted.labelsInput ?? task.labels?.join(', ') ?? '')
+        setChecklist(persisted.checklist ?? task.checklist ?? [])
       } else {
         // Se não há dados persistidos ou são de outra tarefa, carregar dados originais
         clearPersistedData()
@@ -149,7 +149,6 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
       setFormError(null)
     } else {
       // Se for nova tarefa, tentar carregar dados persistidos
-      const persisted = loadPersistedData()
       if (persisted && !persisted.taskId) {
         setTitle(persisted.title ?? '')
         setDescription(persisted.description ?? '')
@@ -162,8 +161,18 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
         setLabelsInput(persisted.labelsInput ?? '')
         setChecklist(persisted.checklist ?? [])
       } else {
-        // Se não há dados persistidos, usar valores padrão
+        // Se não há dados persistidos, limpar e usar valores padrão
+        clearPersistedData()
+        setTitle('')
+        setDescription('')
+        setTaskKey('')
         setColumnId(defaultColumnId ?? columns[0]?.id ?? '')
+        setPriority('medium')
+        setType('task')
+        setStartDate('')
+        setEndDate('')
+        setLabelsInput('')
+        setChecklist([])
       }
     }
   }, [open, task, defaultColumnId, columns])
