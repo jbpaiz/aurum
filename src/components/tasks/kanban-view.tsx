@@ -141,27 +141,28 @@ export function KanbanView() {
 
   return (
     <div className="flex flex-col gap-5 p-4 md:gap-6 md:p-6">
-      <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
+      <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6">
         {/* Header com título e ações */}
-        <div className="flex items-start justify-between gap-4">
-          <div>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex-1 min-w-0">
             <p className="text-xs font-semibold uppercase tracking-wide text-blue-600 mb-1">Módulo de tarefas</p>
-            <div className="flex items-center gap-2">
-              <Kanban className="h-6 w-6 text-blue-500" />
-              <h1 className="text-2xl font-bold text-gray-900">{activeBoard?.name ?? 'Kanban'}</h1>
-              <Badge variant="outline" className="text-sm font-medium text-gray-600">
-                {activeTasksCount} tarefas ativas
+            <div className="flex items-center gap-2 flex-wrap">
+              <Kanban className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500 flex-shrink-0" />
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">{activeBoard?.name ?? 'Kanban'}</h1>
+              <Badge variant="outline" className="text-xs sm:text-sm font-medium text-gray-600">
+                {activeTasksCount}
               </Badge>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button onClick={() => openCreateTaskModal()} className="gap-2">
-              Nova tarefa
+          <div className="flex gap-2 flex-shrink-0">
+            <Button onClick={() => openCreateTaskModal()} size="sm" className="gap-2">
+              <span className="hidden sm:inline">Nova tarefa</span>
+              <span className="sm:hidden">Nova</span>
             </Button>
             {activeBoard && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon" className="h-10 w-10">
+                  <Button variant="outline" size="sm" className="h-9 w-9 p-0">
                     <MoreHorizontal className="h-4 w-4" />
                     <span className="sr-only">Opções do quadro</span>
                   </Button>
@@ -182,10 +183,10 @@ export function KanbanView() {
         </div>
 
         {/* Seletor de quadro e filtros */}
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="flex-1 max-w-md">
+        <div className="mt-4 sm:mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex-1 w-full sm:max-w-md">
             <Select value={activeBoard?.id || ''} onValueChange={setActiveBoardId}>
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Selecione o quadro" />
               </SelectTrigger>
               <SelectContent>
@@ -201,7 +202,8 @@ export function KanbanView() {
           <Button 
             variant={hasActiveFilters ? "default" : "outline"} 
             onClick={() => setIsFiltersModalOpen(true)}
-            className="gap-2"
+            size="sm"
+            className="gap-2 w-full sm:w-auto"
           >
             <Filter className="h-4 w-4" />
             Filtros
@@ -214,11 +216,11 @@ export function KanbanView() {
         </div>
 
         {/* Modos de visualização */}
-        <div className="mt-6 flex items-center gap-2 rounded-xl bg-gray-100 p-1">
+        <div className="mt-4 sm:mt-6 flex items-center gap-1 sm:gap-2 rounded-xl bg-gray-100 p-1">
           <Button
             variant={viewMode === 'kanban' ? 'default' : 'ghost'}
             size="sm"
-            className={`flex-1 rounded-lg ${viewMode === 'kanban' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'}`}
+            className={`flex-1 rounded-lg text-xs sm:text-sm ${viewMode === 'kanban' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'}`}
             onClick={() => setViewMode('kanban')}
           >
             <Kanban className="h-4 w-4 sm:mr-2" />
@@ -227,7 +229,7 @@ export function KanbanView() {
           <Button
             variant={viewMode === 'list' ? 'default' : 'ghost'}
             size="sm"
-            className={`flex-1 rounded-lg ${viewMode === 'list' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'}`}
+            className={`flex-1 rounded-lg text-xs sm:text-sm ${viewMode === 'list' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'}`}
             onClick={() => setViewMode('list')}
           >
             <ListIcon className="h-4 w-4 sm:mr-2" />
@@ -236,7 +238,7 @@ export function KanbanView() {
           <Button
             variant={viewMode === 'metrics' ? 'default' : 'ghost'}
             size="sm"
-            className={`flex-1 rounded-lg ${viewMode === 'metrics' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'}`}
+            className={`flex-1 rounded-lg text-xs sm:text-sm ${viewMode === 'metrics' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'}`}
             onClick={() => setViewMode('metrics')}
           >
             <BarChart3 className="h-4 w-4 sm:mr-2" />

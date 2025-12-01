@@ -38,7 +38,7 @@ const TASK_TYPES: { value: TaskType; label: string }[] = [
 ]
 
 export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSave, onDeleteTask }: TaskModalProps) {
-  const { tasks } = useTasks()
+  const { activeBoard } = useTasks()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [taskKey, setTaskKey] = useState('')
@@ -151,7 +151,8 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
     }
 
     // Validar título duplicado (exceto ao editar a própria tarefa)
-    const duplicateTitle = tasks?.find(
+    const allTasks = activeBoard?.columns.flatMap(col => col.tasks) ?? []
+    const duplicateTitle = allTasks.find(
       t => t.title?.toLowerCase().trim() === title.toLowerCase().trim() && t.id !== task?.id
     )
     if (duplicateTitle) {
@@ -162,7 +163,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
 
     // Validar código duplicado se fornecido (exceto ao editar a própria tarefa)
     if (normalizedKey) {
-      const duplicateKey = tasks?.find(
+      const duplicateKey = allTasks.find(
         t => t.key?.toLowerCase() === normalizedKey.toLowerCase() && t.id !== task?.id
       )
       if (duplicateKey) {
