@@ -184,7 +184,7 @@ export function KanbanView() {
         {/* Seletor de quadro e filtros */}
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="flex-1 max-w-md">
-            <Select value={activeBoard?.id} onValueChange={setActiveBoardId}>
+            <Select value={activeBoard?.id || ''} onValueChange={setActiveBoardId}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o quadro" />
               </SelectTrigger>

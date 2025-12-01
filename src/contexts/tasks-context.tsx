@@ -557,14 +557,59 @@ export function TasksProvider({ children }: TasksProviderProps) {
         : 0
       const nextSortOrder = highestSortOrder + 1000
 
-      // Nota: project_id, user_id, key e outros campos são preenchidos automaticamente pelo trigger
+      // Buscar todas as tasks existentes DESTE USUÁRIO para encontrar o maior número de key
+      const { data: existingTasks } = await supabase
+        .from('tasks')
+        .select('key')
+        .eq('project_id', activeProject.id)
+        .eq('user_id', user.id)
+        .like('key', `${activeProject.code}-%`)
+        .order('created_at', { ascending: false })
+        .limit(100)
+
+      let maxNumber = activeProject.issueCounter || 0
+      
+      // Extrair números das keys existentes para encontrar o maior
+      if (existingTasks && existingTasks.length > 0) {
+        existingTasks.forEach(task => {
+          const match = task.key?.match(new RegExp(`^${activeProject.code}-(\\d+)$`))
+          if (match && match[1]) {
+            const num = parseInt(match[1], 10)
+            if (num > maxNumber) {
+              maxNumber = num
+            }
+          }
+        })
+      }
+
+      const nextIssueNumber = maxNumber + 1
+      const taskKey = input.key?.trim() || `${activeProject.code}-${nextIssueNumber}`
+
+      console.log('🔑 Key Debug:', {
+        'input.key': input.key,
+        'input.key?.trim()': input.key?.trim(),
+        'taskKey final': taskKey,
+        'nextIssueNumber': nextIssueNumber
+      })
+
+      // Atualizar o contador do projeto (para referência, mas cada usuário tem sua própria sequência)
+      await supabase
+        .from('task_projects')
+        .update({ issue_counter: nextIssueNumber })
+        .eq('id', activeProject.id)
+        .eq('user_id', user.id)
+
       const payload: Database['public']['Tables']['tasks']['Insert'] = {
+        project_id: activeProject.id,
         board_id: input.boardId ?? activeBoard.id,
         column_id: fallbackColumnId,
+        user_id: user.id,
+        key: taskKey,
         title: input.title,
         description: input.description ?? null,
         type: input.type ?? 'task',
         priority: input.priority ?? 'medium',
+        reporter_id: user.id,
         start_date:
           input.startDate ?? (fallbackColumn?.category === 'in_progress' ? nowDate : null),
         due_date:
@@ -573,7 +618,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
         attachments: attachments as unknown as Json,
         checklist: checklist as unknown as Json,
         sprint_id: input.sprintId ?? null,
-        assignee_id: input.assigneeId ?? null,
+        assignee_id: input.assigneeId ?? user.id,
         story_points: input.storyPoints ?? null,
         estimate_hours: input.estimateHours ?? null,
         is_blocked: input.isBlocked ?? false,
@@ -585,6 +630,8 @@ export function TasksProvider({ children }: TasksProviderProps) {
 
       if (error) {
         console.error('Erro ao criar tarefa:', error.message, error)
+        console.error('Payload enviado:', payload)
+        alert(`Erro ao criar tarefa: ${error.message}`)
       } else {
         await fetchWorkspace()
       }

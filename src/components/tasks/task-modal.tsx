@@ -18,6 +18,7 @@ import type {
 } from '@/types/tasks'
 import { TASK_PRIORITY_COLORS, TASK_PRIORITY_LABELS } from '@/types/tasks'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useTasks } from '@/contexts/tasks-context'
 
 interface TaskModalProps {
   open: boolean
@@ -37,6 +38,7 @@ const TASK_TYPES: { value: TaskType; label: string }[] = [
 ]
 
 export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSave, onDeleteTask }: TaskModalProps) {
+  const { tasks } = useTasks()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [taskKey, setTaskKey] = useState('')
@@ -144,10 +146,33 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
     const normalizedKey = taskKey.trim()
     if (isEditing && !normalizedKey) {
       setFormError('Informe um código para a tarefa, ou utilize o padrão sugerido.')
+      setIsSaving(false)
       return
     }
 
-    await onSave({
+    // Validar título duplicado (exceto ao editar a própria tarefa)
+    const duplicateTitle = tasks?.find(
+      t => t.title?.toLowerCase().trim() === title.toLowerCase().trim() && t.id !== task?.id
+    )
+    if (duplicateTitle) {
+      setFormError(`Já existe uma tarefa com o título "${title}". Use outro título.`)
+      setIsSaving(false)
+      return
+    }
+
+    // Validar código duplicado se fornecido (exceto ao editar a própria tarefa)
+    if (normalizedKey) {
+      const duplicateKey = tasks?.find(
+        t => t.key?.toLowerCase() === normalizedKey.toLowerCase() && t.id !== task?.id
+      )
+      if (duplicateKey) {
+        setFormError(`Já existe uma tarefa com o código "${normalizedKey}". Use outro código.`)
+        setIsSaving(false)
+        return
+      }
+    }
+
+    const payload = {
       id: task?.id,
       title: title.trim(),
       description,
@@ -159,7 +184,16 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
       endDate: endDate || null,
       labels,
       checklist
+    }
+
+    console.log('📋 TaskModal payload:', {
+      'taskKey state': taskKey,
+      'normalizedKey': normalizedKey,
+      'payload.key': payload.key,
+      'full payload': payload
     })
+
+    await onSave(payload)
     setIsSaving(false)
     onClose()
   }
