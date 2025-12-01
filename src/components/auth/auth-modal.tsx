@@ -15,7 +15,8 @@ import {
   DollarSign,
   Loader2,
   X,
-  CheckCircle2
+  CheckCircle2,
+  TrendingUp
 } from 'lucide-react'
 
 interface AuthModalProps {
@@ -203,53 +204,73 @@ export function AuthModal({ onClose, showCloseButton = true }: AuthModalProps) {
   }, [resendTimer])
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/20 backdrop-blur-sm p-4">
-      <div className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl">
-        {showCloseButton && onClose && (
-          <button
-            type="button"
-            onClick={onClose}
-            className="absolute right-4 top-4 z-10 rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        )}
+    <div className="fixed inset-0 z-50 flex bg-white">
+      {/* Close Button */}
+      {showCloseButton && onClose && (
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-6 top-6 z-10 rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      )}
 
-        <div className="space-y-6 p-8">
-          <div className="space-y-3 text-center">
-            <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600">
-              <DollarSign className="h-7 w-7 text-white" />
+      {/* Left Side - Illustration */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 items-center justify-center p-12">
+        <div className="max-w-lg space-y-8">
+          <div className="space-y-4">
+            <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
+              <DollarSign className="h-8 w-8 text-white" />
             </div>
-            <h2 className="text-3xl font-bold text-gray-900">Aurum</h2>
-            <p className="text-sm text-gray-500">
-              {mode === 'signin' && 'Entre para acessar sua conta'}
-              {mode === 'signup' && 'Crie sua conta e organize suas finanças'}
-              {mode === 'forgot' && 'Recupere o acesso à sua conta'}
+            <h1 className="text-5xl font-bold text-gray-900">Aurum</h1>
+            <p className="text-xl text-gray-600">
+              Controle financeiro inteligente e produtividade em um só lugar
             </p>
           </div>
-
-          <div className="flex items-center gap-2 rounded-xl bg-gray-50 p-1">
-            {(
-              [
-                { id: 'signin', label: 'Entrar' },
-                { id: 'signup', label: 'Criar conta' },
-                { id: 'forgot', label: 'Recuperar' }
-              ] as const
-            ).map((item) => (
-              <Button
-                key={item.id}
-                type="button"
-                variant="ghost"
-                className={`flex-1 rounded-lg text-sm transition-all ${
-                  mode === item.id 
-                    ? 'bg-white text-gray-900 shadow-sm font-medium' 
-                    : 'text-gray-500 hover:text-gray-900'
-                }`}
-                onClick={() => switchMode(item.id)}
-              >
-                {item.label}
-              </Button>
+          
+          <div className="space-y-4">
+            {[
+              { icon: <TrendingUp className="h-5 w-5" />, title: 'Gestão Financeira', desc: 'Controle total de receitas e despesas' },
+              { icon: <CheckCircle2 className="h-5 w-5" />, title: 'Metas e Tarefas', desc: 'Organize sua vida com kanban integrado' },
+              { icon: <DollarSign className="h-5 w-5" />, title: 'Relatórios', desc: 'Visualize seu progresso em tempo real' }
+            ].map((item, i) => (
+              <div key={i} className="flex gap-4 items-start">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/80 text-blue-600 shadow-sm">
+                  {item.icon}
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">{item.title}</h3>
+                  <p className="text-sm text-gray-600">{item.desc}</p>
+                </div>
+              </div>
             ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Right Side - Form */}
+      <div className="flex-1 flex items-center justify-center p-8 overflow-y-auto">
+        <div className="w-full max-w-md space-y-8">
+          {/* Logo for mobile */}
+          <div className="lg:hidden text-center">
+            <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 mb-4">
+              <DollarSign className="h-6 w-6 text-white" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900">Aurum</h2>
+          </div>
+
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900">
+              {mode === 'signin' && 'Bem-vindo de volta'}
+              {mode === 'signup' && 'Criar sua conta'}
+              {mode === 'forgot' && 'Recuperar senha'}
+            </h2>
+            <p className="mt-2 text-gray-600">
+              {mode === 'signin' && 'Entre para continuar no Aurum'}
+              {mode === 'signup' && 'Comece a organizar suas finanças hoje'}
+              {mode === 'forgot' && 'Vamos ajudar você a recuperar o acesso'}
+            </p>
           </div>
 
           {mode !== 'forgot' && (
@@ -259,111 +280,111 @@ export function AuthModal({ onClose, showCloseButton = true }: AuthModalProps) {
                 variant="outline" 
                 onClick={handleGoogleSignIn} 
                 disabled={loading} 
-                className="w-full h-12 border-2 border-blue-500 text-blue-600 hover:bg-blue-50 font-medium text-base"
+                className="w-full h-12 border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-medium text-base"
               >
                 <Chrome className="mr-2 h-5 w-5" /> 
-                Continuar com Google
+                Entrar com Google
               </Button>
 
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-gray-200" />
+                  <span className="w-full border-t border-gray-300" />
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-gray-400">Ou use email</span>
+                <div className="relative flex justify-center text-sm">
+                  <span className="bg-white px-4 text-gray-500">ou</span>
                 </div>
               </div>
             </>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-              {mode === 'signup' && (
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium uppercase tracking-wide text-gray-500">Nome completo</label>
-                  <div className="relative">
-                    <User className="absolute left-3.5 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      type="text"
-                      placeholder="Seu nome completo"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      className="h-11 pl-10 border-gray-200 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium uppercase tracking-wide text-gray-500">Email</label>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {mode === 'signup' && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Nome completo</label>
                 <div className="relative">
-                  <Mail className="absolute left-3.5 top-3 h-4 w-4 text-gray-400" />
+                  <User className="absolute left-3.5 top-3.5 h-5 w-5 text-gray-400" />
                   <Input
-                    type="email"
-                    placeholder="voce@exemplo.com"
-                    value={email}
-                    onChange={(e) => handleEmailChange(e.target.value)}
-                    className="h-11 pl-10 border-gray-200 focus:border-blue-500"
+                    type="text"
+                    placeholder="Seu nome completo"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="h-12 pl-11 text-base border-gray-300"
                     required
                   />
                 </div>
               </div>
+            )}
 
-              {mode !== 'forgot' && (
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium uppercase tracking-wide text-gray-500">Senha</label>
-                  <div className="relative">
-                    <Lock className="absolute left-3.5 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="Mínimo 6 caracteres"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="h-11 pl-10 pr-10 border-gray-200 focus:border-blue-500"
-                      required
-                      minLength={6}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3.5 top-3 text-gray-400 hover:text-gray-600"
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Email</label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-3.5 h-5 w-5 text-gray-400" />
+                <Input
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={email}
+                  onChange={(e) => handleEmailChange(e.target.value)}
+                  className="h-12 pl-11 text-base border-gray-300"
+                  required
+                />
+              </div>
+            </div>
+
+            {mode !== 'forgot' && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Senha</label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-3.5 h-5 w-5 text-gray-400" />
+                  <Input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Mínimo 6 caracteres"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="h-12 pl-11 pr-11 text-base border-gray-300"
+                    required
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-3.5 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
                 </div>
-              )}
+              </div>
+            )}
 
-              {mode === 'signup' && (
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium uppercase tracking-wide text-gray-500">Confirmar senha</label>
-                  <div className="relative">
-                    <Lock className="absolute left-3.5 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="Repita sua senha"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="h-11 pl-10 border-gray-200 focus:border-blue-500"
-                      required
-                      minLength={6}
-                    />
-                  </div>
+            {mode === 'signup' && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Confirmar senha</label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-3.5 h-5 w-5 text-gray-400" />
+                  <Input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Repita sua senha"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="h-12 pl-11 text-base border-gray-300"
+                    required
+                    minLength={6}
+                  />
                 </div>
-              )}
+              </div>
+            )}
 
-              <Button type="submit" className="w-full h-11 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700" disabled={loading}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {mode === 'signin' && 'Entrar'}
-                {mode === 'signup' && 'Criar conta'}
-                {mode === 'forgot' && 'Enviar link'}
-              </Button>
+            <Button type="submit" className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-base font-medium" disabled={loading}>
+              {loading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+              {mode === 'signin' && 'Entrar'}
+              {mode === 'signup' && 'Criar conta'}
+              {mode === 'forgot' && 'Enviar link'}
+            </Button>
           </form>
 
           {mode === 'forgot' && resetStatus === 'sent' && (
-            <div className="space-y-3 rounded-xl border border-blue-100 bg-blue-50/50 p-4 text-sm text-gray-600">
-              <p className="text-xs">
-                Link enviado para {email}. Verifique sua caixa de entrada.
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+              <p className="text-sm text-gray-700">
+                Link enviado para <strong>{email}</strong>. Verifique sua caixa de entrada.
               </p>
               <Button
                 type="button"
@@ -371,44 +392,60 @@ export function AuthModal({ onClose, showCloseButton = true }: AuthModalProps) {
                 size="sm"
                 onClick={triggerPasswordReset}
                 disabled={loading || !email || resendTimer > 0}
-                className="w-full"
+                className="mt-3 w-full"
               >
-                {resendTimer > 0 ? `Reenviar em ${resendTimer}s` : 'Reenviar'}
+                {resendTimer > 0 ? `Reenviar em ${resendTimer}s` : 'Reenviar link'}
               </Button>
             </div>
           )}
 
-          <div className="text-center text-sm text-gray-500">
-              {mode === 'signin' && (
-                <div className="flex flex-col gap-2">
-                  <button type="button" className="text-blue-600 hover:text-blue-700 font-medium" onClick={() => switchMode('forgot')}>
-                    Esqueceu a senha?
-                  </button>
-                  <div>
-                    Não tem conta?{' '}
-                    <button type="button" className="text-blue-600 hover:text-blue-700 font-medium" onClick={() => switchMode('signup')}>
-                      Criar conta
-                    </button>
-                  </div>
-                </div>
-              )}
-              {mode === 'signup' && (
-                <div>
-                  Já tem uma conta?{' '}
-                  <button type="button" className="text-blue-600 hover:text-blue-700 font-medium" onClick={() => switchMode('signin')}>
-                    Entrar
-                  </button>
-                </div>
-              )}
-              {mode === 'forgot' && (
-                <div>
-                  Lembrou a senha?{' '}
-                  <button type="button" className="text-blue-600 hover:text-blue-700 font-medium" onClick={() => switchMode('signin')}>
-                    Voltar
+          <div className="text-center text-sm">
+            {mode === 'signin' && (
+              <div className="space-y-3">
+                <button 
+                  type="button" 
+                  className="text-blue-600 hover:text-blue-700 font-medium hover:underline" 
+                  onClick={() => switchMode('forgot')}
+                >
+                  Esqueceu a senha?
+                </button>
+                <div className="text-gray-600">
+                  Não tem conta?{' '}
+                  <button 
+                    type="button" 
+                    className="text-blue-600 hover:text-blue-700 font-medium hover:underline" 
+                    onClick={() => switchMode('signup')}
+                  >
+                    Criar conta gratuita
                   </button>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+            {mode === 'signup' && (
+              <div className="text-gray-600">
+                Já tem uma conta?{' '}
+                <button 
+                  type="button" 
+                  className="text-blue-600 hover:text-blue-700 font-medium hover:underline" 
+                  onClick={() => switchMode('signin')}
+                >
+                  Entrar
+                </button>
+              </div>
+            )}
+            {mode === 'forgot' && (
+              <div className="text-gray-600">
+                Lembrou a senha?{' '}
+                <button 
+                  type="button" 
+                  className="text-blue-600 hover:text-blue-700 font-medium hover:underline" 
+                  onClick={() => switchMode('signin')}
+                >
+                  Voltar ao login
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
