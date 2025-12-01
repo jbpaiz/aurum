@@ -96,6 +96,10 @@ export interface Database {
           last_four_digits: string | null
           type: 'credit' | 'debit'
           is_active: boolean
+          credit_limit: number | null
+          current_balance: number | null
+          due_day: number | null
+          closing_day: number | null
           created_at: string
           updated_at: string
         }
@@ -108,6 +112,10 @@ export interface Database {
           last_four_digits?: string | null
           type: 'credit' | 'debit'
           is_active?: boolean
+          credit_limit?: number | null
+          current_balance?: number | null
+          due_day?: number | null
+          closing_day?: number | null
           created_at?: string
           updated_at?: string
         }
@@ -120,6 +128,10 @@ export interface Database {
           last_four_digits?: string | null
           type?: 'credit' | 'debit'
           is_active?: boolean
+          credit_limit?: number | null
+          current_balance?: number | null
+          due_day?: number | null
+          closing_day?: number | null
           created_at?: string
           updated_at?: string
         }
