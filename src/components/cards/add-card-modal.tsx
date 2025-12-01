@@ -71,7 +71,7 @@ export function AddCardModal({ onClose }: AddCardModalProps) {
   const handleProviderSelect = (provider: CardProvider) => {
     setSelectedProvider(provider)
     // Auto-preencher o alias com o nome da operadora
-    setFormData(prev => ({
+    setFormData((prev: typeof formData) => ({
       ...prev,
       alias: provider.name === 'Outro' ? '' : provider.name
     }))
