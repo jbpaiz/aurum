@@ -103,7 +103,7 @@ export function TransferModal({ open, onClose, onSuccess }: TransferModalProps) 
       // Importante: account_id deve ser NULL, e from/to devem estar preenchidos
       const transferData = {
         user_id: user.id,
-        type: 'transfer',
+        type: 'transfer' as const,
         description: description || `Transferência: ${fromAccountExists.name} → ${toAccountExists.name}`,
         amount: parsedAmount,
         from_account_id: fromAccountId,
