@@ -151,13 +151,6 @@ export function KanbanView() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" className="gap-2" onClick={handleCreateBoard}>
-              <Columns2 className="h-4 w-4" />
-              Novo quadro
-            </Button>
-            <Button variant="outline" onClick={handleCreateColumn}>
-              Nova coluna
-            </Button>
             <Button onClick={() => openCreateTaskModal()} className="gap-2">
               Nova tarefa
             </Button>
