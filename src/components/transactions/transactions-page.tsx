@@ -104,7 +104,7 @@ export function TransactionsPage() {
         toast({ title: 'Transação registrada!' })
       }
 
-      setIsModalOpen(false)
+      closeModal()
       setEditingTransaction(null)
     } catch (error) {
       const description = error instanceof Error ? error.message : 'Não foi possível salvar a transação'
@@ -145,7 +145,7 @@ export function TransactionsPage() {
     }
 
     setEditingTransaction(modalData)
-    setIsModalOpen(true)
+    openModal()
   }
 
   const formatCurrency = (amount: number) =>
