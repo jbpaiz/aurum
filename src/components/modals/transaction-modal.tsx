@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { AccountSelector } from '@/components/accounts/account-selector'
 import { SimplePaymentMethodSelector } from '@/components/payment-methods/simple-payment-method-selector'
+import { CardSelector } from '@/components/cards/card-selector'
 import { 
   DollarSign, 
   Calendar, 
@@ -31,6 +32,7 @@ export interface TransactionFormValues {
   date: string
   accountId?: string
   paymentMethod?: string // Método de pagamento opcional (PIX, dinheiro, etc.)
+  cardId?: string // ID do cartão de crédito (quando paymentMethod === 'credit_card')
   installments?: number
 }
 
@@ -73,6 +75,7 @@ export function TransactionModal({ transaction, onSave, onClose, isSaving = fals
   const [date, setDate] = useState(transaction?.date || new Date().toISOString().split('T')[0])
   const [accountId, setAccountId] = useState(transaction?.accountId || '')
   const [paymentMethod, setPaymentMethod] = useState(transaction?.paymentMethod || '')
+  const [cardId, setCardId] = useState(transaction?.cardId || '')
   const [installments, setInstallments] = useState(transaction?.installments?.toString() || '1')
   const [amountError, setAmountError] = useState<string | null>(null)
   const [accountError, setAccountError] = useState<string | null>(null)
@@ -85,6 +88,13 @@ export function TransactionModal({ transaction, onSave, onClose, isSaving = fals
       setCategory('')
     }
   }, [type, isEditing])
+
+  // Reset cardId quando mudar forma de pagamento
+  useEffect(() => {
+    if (paymentMethod !== 'credit_card') {
+      setCardId('')
+    }
+  }, [paymentMethod])
 
   const parseCurrencyToNumber = (value: string) => {
     if (!value) return NaN
@@ -124,6 +134,7 @@ export function TransactionModal({ transaction, onSave, onClose, isSaving = fals
       date,
       accountId,
       ...(paymentMethod && { paymentMethod }),
+      ...(paymentMethod === 'credit_card' && cardId && { cardId }),
       ...(type === 'expense' && installmentsNumber > 1 && { installments: installmentsNumber })
     }
 
@@ -349,6 +360,22 @@ export function TransactionModal({ transaction, onSave, onClose, isSaving = fals
                 disabled={isSaving}
               />
             </div>
+
+            {/* Seletor de Cartão (apenas se for cartão de crédito) */}
+            {paymentMethod === 'credit_card' && (
+              <div className="space-y-2">
+                <Label>Cartão de Crédito</Label>
+                <CardSelector
+                  value={cardId}
+                  onChange={setCardId}
+                  placeholder="Selecione o cartão"
+                  disabled={isSaving}
+                />
+                <p className="text-xs text-muted-foreground">
+                  A despesa será lançada no cartão selecionado
+                </p>
+              </div>
+            )}
 
             {/* Parcelas (apenas para despesas) */}
             {type === 'expense' && (
