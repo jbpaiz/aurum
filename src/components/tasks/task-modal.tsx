@@ -116,6 +116,9 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
       return
     }
     
+    // Se já foi inicializado nesta sessão, não recarregar
+    if (isInitialized.current) return
+    
     // Carregar dados persistidos primeiro (se existirem)
     const persisted = loadPersistedData()
     
