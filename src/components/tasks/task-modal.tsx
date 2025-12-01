@@ -223,26 +223,20 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
     // Validar título duplicado (exceto ao editar a própria tarefa)
     const allTasks = activeBoard?.columns.flatMap(col => col.tasks) ?? []
     
-    console.log('🔍 DEBUG Validação:', {
-      'task prop': task,
-      'task.id': task?.id,
-      'title sendo validado': title,
-      'isEditing': isEditing,
-      'allTasks': allTasks.map(t => ({ id: t.id, title: t.title }))
-    })
-    
     const duplicateTitle = allTasks.find(
       t => t.title?.toLowerCase().trim() === title.toLowerCase().trim() && t.id !== task?.id
     )
     
-    console.log('🔍 DEBUG Duplicate:', {
-      'duplicateTitle': duplicateTitle,
-      'comparação': duplicateTitle?.id + ' !== ' + task?.id,
-      'resultado': duplicateTitle?.id !== task?.id
-    })
-    
     if (duplicateTitle) {
-      setFormError(`Já existe uma tarefa com o título "${title}". Use outro título.`)
+      const duplicateColumn = activeBoard?.columns.find(col => 
+        col.tasks.some(t => t.id === duplicateTitle.id)
+      )
+      
+      setFormError(
+        `Já existe outra tarefa com o título "${title}" na coluna "${duplicateColumn?.name || 'desconhecida'}". ` +
+        `${task?.id ? `(Esta tarefa: ${task.id.slice(0, 8)}... | Duplicata: ${duplicateTitle.id.slice(0, 8)}...)` : ''} ` +
+        `Delete a tarefa duplicada ou use outro título.`
+      )
       setIsSaving(false)
       return
     }
