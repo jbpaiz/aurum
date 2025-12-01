@@ -25,12 +25,16 @@ import { AddCardModal } from '@/components/cards/add-card-modal'
 import { PayInvoiceModal } from '@/components/cards/pay-invoice-modal'
 import { EditCardLimitModal } from '@/components/cards/edit-card-limit-modal'
 import { useCards } from '@/contexts/cards-context'
+import { usePersistedModalState } from '@/hooks/use-persisted-modal'
 import type { CreditCard as CreditCardType } from '@/types/cards'
 
 export function CardsPage() {
   const { cards, providers, loading, deleteCard } = useCards()
   const [showNumbers, setShowNumbers] = useState(false)
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  
+  // Usar hook persistente para manter modal aberto ao trocar de aba
+  const { isOpen: isAddModalOpen, open: openAddModal, close: closeAddModal } = usePersistedModalState('add-card')
+  
   const [selectedCardForPayment, setSelectedCardForPayment] = useState<CreditCardType | null>(null)
   const [selectedCardForEdit, setSelectedCardForEdit] = useState<CreditCardType | null>(null)
 
@@ -101,7 +105,7 @@ export function CardsPage() {
             {showNumbers ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             {showNumbers ? 'Ocultar' : 'Mostrar'}
           </Button>
-          <Button onClick={() => setIsAddModalOpen(true)} className="gap-2">
+          <Button onClick={openAddModal} className="gap-2">
             <Plus className="h-4 w-4" />
             Novo Cartão
           </Button>
@@ -333,7 +337,7 @@ export function CardsPage() {
 
       {/* Modals */}
       {isAddModalOpen && (
-        <AddCardModal onClose={() => setIsAddModalOpen(false)} />
+        <AddCardModal onClose={closeAddModal} />
       )}
       
       {selectedCardForPayment && (

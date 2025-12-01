@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, CreditCard as CreditCardIcon } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -15,17 +15,58 @@ interface AddCardModalProps {
   onClose: () => void
 }
 
+// Chave para persistir dados do formulário
+const STORAGE_KEY = 'add_card_form_data'
+const STORAGE_PROVIDER_KEY = 'add_card_provider'
+
 export function AddCardModal({ onClose }: AddCardModalProps) {
   const { providers, addCard } = useCards()
   const { showToast } = useSimpleToast()
   
-  const [selectedProvider, setSelectedProvider] = useState<CardProvider | null>(null)
-  const [formData, setFormData] = useState({
-    alias: '',
-    lastFourDigits: '',
-    type: 'credit' as 'credit' | 'debit'
+  // Recuperar dados salvos do sessionStorage
+  const [selectedProvider, setSelectedProvider] = useState<CardProvider | null>(() => {
+    if (typeof window === 'undefined') return null
+    const saved = sessionStorage.getItem(STORAGE_PROVIDER_KEY)
+    if (saved) {
+      try {
+        const providerId = JSON.parse(saved)
+        return providers.find(p => p.id === providerId) || null
+      } catch {
+        return null
+      }
+    }
+    return null
   })
+  
+  const [formData, setFormData] = useState(() => {
+    if (typeof window === 'undefined') {
+      return { alias: '', lastFourDigits: '', type: 'credit' as 'credit' | 'debit' }
+    }
+    const saved = sessionStorage.getItem(STORAGE_KEY)
+    if (saved) {
+      try {
+        return JSON.parse(saved)
+      } catch {
+        return { alias: '', lastFourDigits: '', type: 'credit' as 'credit' | 'debit' }
+      }
+    }
+    return { alias: '', lastFourDigits: '', type: 'credit' as 'credit' | 'debit' }
+  })
+  
   const [loading, setLoading] = useState(false)
+
+  // Salvar dados no sessionStorage quando mudarem
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(formData))
+  }, [formData])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (selectedProvider) {
+      sessionStorage.setItem(STORAGE_PROVIDER_KEY, JSON.stringify(selectedProvider.id))
+    }
+  }, [selectedProvider])
 
   const handleProviderSelect = (provider: CardProvider) => {
     setSelectedProvider(provider)
@@ -34,6 +75,12 @@ export function AddCardModal({ onClose }: AddCardModalProps) {
       ...prev,
       alias: provider.name === 'Outro' ? '' : provider.name
     }))
+  }
+
+  const clearPersistedData = () => {
+    if (typeof window === 'undefined') return
+    sessionStorage.removeItem(STORAGE_KEY)
+    sessionStorage.removeItem(STORAGE_PROVIDER_KEY)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -83,6 +130,8 @@ export function AddCardModal({ onClose }: AddCardModalProps) {
         description: `${formData.alias} foi adicionado com sucesso`
       })
 
+      // Limpar dados salvos após sucesso
+      clearPersistedData()
       onClose()
     } catch (error) {
       showToast({

@@ -32,6 +32,7 @@ import { useAccounts } from '@/contexts/accounts-context'
 import { AccountModal } from './account-modal'
 import { TransferModal } from '@/components/transfers/transfer-modal'
 import { useToast } from '@/hooks/use-toast'
+import { usePersistedModalState } from '@/hooks/use-persisted-modal'
 import { DeleteAccountModal } from './delete-account-modal'
 import { BankAccount, ACCOUNT_TYPES } from '@/types/accounts'
 
@@ -56,9 +57,10 @@ const ICON_MAP: { [key: string]: React.ComponentType<any> } = {
 export function AccountsPage() {
   const { accounts, loading } = useAccounts()
   const [showBalances, setShowBalances] = useState(true)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  // Usar hook persistente para manter modal aberto ao trocar de aba
+  const { isOpen: isModalOpen, open: openModal, close: closeModal } = usePersistedModalState('account-modal')
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false)
+  const { isOpen: isTransferModalOpen, open: openTransferModal, close: closeTransferModal } = usePersistedModalState('transfer-modal')
   const [selectedAccount, setSelectedAccount] = useState<BankAccount | null>(null)
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add')
   const { toast } = useToast()
@@ -91,13 +93,13 @@ export function AccountsPage() {
   const handleAddAccount = () => {
     setSelectedAccount(null)
     setModalMode('add')
-    setIsModalOpen(true)
+    openModal()
   }
 
   const handleEditAccount = (account: BankAccount) => {
     setSelectedAccount(account)
     setModalMode('edit')
-    setIsModalOpen(true)
+    openModal()
   }
 
   const handleDeleteAccount = (account: BankAccount) => {
@@ -105,8 +107,8 @@ export function AccountsPage() {
     setIsDeleteModalOpen(true)
   }
 
-  const closeModal = () => {
-    setIsModalOpen(false)
+  const handleCloseModal = () => {
+    closeModal()
     setSelectedAccount(null)
   }
 
@@ -147,7 +149,7 @@ export function AccountsPage() {
           </Button>
           <Button
             variant="outline"
-            onClick={() => setIsTransferModalOpen(true)}
+            onClick={openTransferModal}
             className="gap-2"
           >
             <ArrowRightLeft className="h-4 w-4" />
@@ -313,14 +315,14 @@ export function AccountsPage() {
       {/* Modals */}
       <AccountModal
         isOpen={isModalOpen}
-        onClose={closeModal}
+        onClose={handleCloseModal}
         account={selectedAccount}
         mode={modalMode}
       />
 
       <TransferModal
         open={isTransferModalOpen}
-        onClose={() => setIsTransferModalOpen(false)}
+        onClose={closeTransferModal}
         onSuccess={() => {
           toast({
             title: 'Transferência realizada com sucesso!',

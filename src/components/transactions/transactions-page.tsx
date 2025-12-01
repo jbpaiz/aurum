@@ -20,6 +20,7 @@ import { TransactionModal, TransactionFormValues } from '@/components/modals/tra
 import { TransferModal } from '@/components/transfers/transfer-modal'
 import { useTransactions, TransactionRecord, type TransactionFormData } from '@/hooks/use-transactions'
 import { useToast } from '@/hooks/use-toast'
+import { usePersistedModalState } from '@/hooks/use-persisted-modal'
 
 export function TransactionsPage() {
   const { toast } = useToast()
@@ -31,8 +32,9 @@ export function TransactionsPage() {
     deleteTransaction,
     isSaving
   } = useTransactions()
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false)
+  // Usar hooks persistentes para manter modais abertos ao trocar de aba
+  const { isOpen: isModalOpen, open: openModal, close: closeModal } = usePersistedModalState('transaction-modal')
+  const { isOpen: isTransferModalOpen, open: openTransferModal, close: closeTransferModal } = usePersistedModalState('transaction-transfer-modal')
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all')
   const [editingTransaction, setEditingTransaction] = useState<TransactionFormValues | null>(null)
@@ -182,7 +184,7 @@ export function TransactionsPage() {
         </div>
         <div className="flex gap-2">
           <Button
-            onClick={() => setIsTransferModalOpen(true)}
+            onClick={openTransferModal}
             variant="outline"
             className="gap-2"
           >
@@ -192,7 +194,7 @@ export function TransactionsPage() {
           <Button
             onClick={() => {
               setEditingTransaction(null)
-              setIsModalOpen(true)
+              openModal()
             }}
             className="gap-2"
           >
@@ -372,7 +374,7 @@ export function TransactionsPage() {
                 }
               </p>
               {!searchTerm && filterType === 'all' && (
-                <Button onClick={() => setIsModalOpen(true)} className="gap-2">
+                <Button onClick={openModal} className="gap-2">
                   <Plus className="h-4 w-4" />
                   Adicionar Primeira Transação
                 </Button>
@@ -390,7 +392,7 @@ export function TransactionsPage() {
           onSave={handleSaveTransaction}
           onClose={() => {
             setEditingTransaction(null)
-            setIsModalOpen(false)
+            closeModal()
           }}
         />
       )}
@@ -399,7 +401,7 @@ export function TransactionsPage() {
       {isTransferModalOpen && (
         <TransferModal
           open={isTransferModalOpen}
-          onClose={() => setIsTransferModalOpen(false)}
+          onClose={closeTransferModal}
           onSuccess={() => {
             toast({
               title: 'Transferência realizada!',
