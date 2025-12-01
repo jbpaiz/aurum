@@ -327,7 +327,7 @@ export function CardsPage() {
             <p className="text-gray-500 mb-4">
               Comece adicionando seu primeiro cartão de crédito ou débito
             </p>
-            <Button onClick={() => setIsAddModalOpen(true)} className="gap-2">
+            <Button onClick={() => openAddModal()} className="gap-2">
               <Plus className="h-4 w-4" />
               Adicionar Primeiro Cartão
             </Button>
