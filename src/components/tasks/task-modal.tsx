@@ -57,47 +57,17 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
     return null
   }
 
-  // Inicializar com dados persistidos ou valores padrão
-  const [title, setTitle] = useState(() => {
-    const persisted = loadPersistedData()
-    return persisted?.title ?? ''
-  })
-  const [description, setDescription] = useState(() => {
-    const persisted = loadPersistedData()
-    return persisted?.description ?? ''
-  })
-  const [taskKey, setTaskKey] = useState(() => {
-    const persisted = loadPersistedData()
-    return persisted?.taskKey ?? ''
-  })
-  const [columnId, setColumnId] = useState<string>(() => {
-    const persisted = loadPersistedData()
-    return persisted?.columnId ?? ''
-  })
-  const [priority, setPriority] = useState<TaskPriority>(() => {
-    const persisted = loadPersistedData()
-    return persisted?.priority ?? 'medium'
-  })
-  const [type, setType] = useState<TaskType>(() => {
-    const persisted = loadPersistedData()
-    return persisted?.type ?? 'task'
-  })
-  const [startDate, setStartDate] = useState(() => {
-    const persisted = loadPersistedData()
-    return persisted?.startDate ?? ''
-  })
-  const [endDate, setEndDate] = useState(() => {
-    const persisted = loadPersistedData()
-    return persisted?.endDate ?? ''
-  })
-  const [labelsInput, setLabelsInput] = useState(() => {
-    const persisted = loadPersistedData()
-    return persisted?.labelsInput ?? ''
-  })
-  const [checklist, setChecklist] = useState<TaskChecklistItem[]>(() => {
-    const persisted = loadPersistedData()
-    return persisted?.checklist ?? []
-  })
+  // Inicializar com valores vazios/padrão
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [taskKey, setTaskKey] = useState('')
+  const [columnId, setColumnId] = useState<string>('')
+  const [priority, setPriority] = useState<TaskPriority>('medium')
+  const [type, setType] = useState<TaskType>('task')
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+  const [labelsInput, setLabelsInput] = useState('')
+  const [checklist, setChecklist] = useState<TaskChecklistItem[]>([])
   const [checklistItem, setChecklistItem] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -111,9 +81,9 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
   const resolvedColumnId = columnId || task?.columnId || defaultColumnId || columns[0]?.id || ''
   const selectedColumn = columns.find((column) => column.id === resolvedColumnId)
 
-  // Salvar dados no sessionStorage sempre que mudarem
+  // Salvar dados no sessionStorage sempre que mudarem (APENAS para novas tarefas)
   useEffect(() => {
-    if (typeof window === 'undefined' || !open) return
+    if (typeof window === 'undefined' || !open || task) return // Não persistir se estiver editando
     
     const formData = {
       title,
@@ -129,7 +99,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
     }
     
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(formData))
-  }, [title, description, taskKey, columnId, priority, type, startDate, endDate, labelsInput, checklist, open])
+  }, [title, description, taskKey, columnId, priority, type, startDate, endDate, labelsInput, checklist, open, task])
 
   // Limpar dados persistidos
   const clearPersistedData = () => {
@@ -140,8 +110,11 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
   useEffect(() => {
     if (!open) return
     
-    // Se estiver editando uma tarefa existente, carregar dados dela
+    // Se estiver editando uma tarefa existente, carregar dados dela e limpar persistência
     if (task) {
+      // Limpar dados persistidos para evitar conflito com edição
+      clearPersistedData()
+      
       setTitle(task.title ?? '')
       setDescription(task.description ?? '')
       setTaskKey(task.key ?? '')
@@ -158,19 +131,22 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
       // Se for nova tarefa, tentar carregar dados persistidos
       const persisted = loadPersistedData()
       if (persisted) {
-        // Já foram carregados no useState inicial
-        // Apenas garantir que columnId está correto se não foi salvo
-        if (!persisted.columnId && defaultColumnId) {
-          setColumnId(defaultColumnId)
-        }
+        setTitle(persisted.title ?? '')
+        setDescription(persisted.description ?? '')
+        setTaskKey(persisted.taskKey ?? '')
+        setColumnId(persisted.columnId ?? defaultColumnId ?? columns[0]?.id ?? '')
+        setPriority(persisted.priority ?? 'medium')
+        setType(persisted.type ?? 'task')
+        setStartDate(persisted.startDate ?? '')
+        setEndDate(persisted.endDate ?? '')
+        setLabelsInput(persisted.labelsInput ?? '')
+        setChecklist(persisted.checklist ?? [])
       } else {
-        // Se não há dados persistidos e não está editando, usar valores padrão
-        if (!title && !description) {
-          setColumnId(defaultColumnId ?? columns[0]?.id ?? '')
-        }
+        // Se não há dados persistidos, usar valores padrão
+        setColumnId(defaultColumnId ?? columns[0]?.id ?? '')
       }
     }
-  }, [open, task])
+  }, [open, task, defaultColumnId, columns])
 
   const labels = useMemo(
     () =>
@@ -246,9 +222,25 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
 
     // Validar título duplicado (exceto ao editar a própria tarefa)
     const allTasks = activeBoard?.columns.flatMap(col => col.tasks) ?? []
+    
+    console.log('🔍 DEBUG Validação:', {
+      'task prop': task,
+      'task.id': task?.id,
+      'title sendo validado': title,
+      'isEditing': isEditing,
+      'allTasks': allTasks.map(t => ({ id: t.id, title: t.title }))
+    })
+    
     const duplicateTitle = allTasks.find(
       t => t.title?.toLowerCase().trim() === title.toLowerCase().trim() && t.id !== task?.id
     )
+    
+    console.log('🔍 DEBUG Duplicate:', {
+      'duplicateTitle': duplicateTitle,
+      'comparação': duplicateTitle?.id + ' !== ' + task?.id,
+      'resultado': duplicateTitle?.id !== task?.id
+    })
+    
     if (duplicateTitle) {
       setFormError(`Já existe uma tarefa com o título "${title}". Use outro título.`)
       setIsSaving(false)
@@ -311,6 +303,15 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
     }
   }
 
+  const handleClose = () => {
+    // Só limpa dados persistidos se não estiver editando
+    // (ao editar, os dados já foram limpos no useEffect)
+    if (!task) {
+      clearPersistedData()
+    }
+    onClose()
+  }
+
   if (!open) return null
 
   return (
@@ -321,7 +322,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
       aria-label={isEditing ? 'Editar tarefa' : 'Nova tarefa'}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) {
-          onClose()
+          handleClose()
         }
       }}
     >
@@ -334,7 +335,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
             <h2 className="text-xl font-semibold text-gray-900">{isEditing ? 'Editar tarefa' : 'Nova tarefa'}</h2>
             <p className="text-sm text-gray-500">Defina título, prioridade, etiquetas e checklist</p>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose}>
+          <Button variant="ghost" size="icon" onClick={handleClose}>
             <X className="h-5 w-5" />
           </Button>
         </div>
@@ -470,7 +471,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
               </Button>
             ) : <span />}
             <div className="flex justify-end gap-3">
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button type="button" variant="outline" onClick={handleClose}>
                 Cancelar
               </Button>
               <Button type="submit" disabled={isSaving}>
