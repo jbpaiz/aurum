@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import { X, Plus, Trash2, Check, GripVertical } from 'lucide-react'
 import { DndContext, DragEndEvent, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
@@ -42,6 +42,7 @@ const STORAGE_KEY = 'task_modal_form_data'
 
 export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSave, onDeleteTask }: TaskModalProps) {
   const { activeBoard } = useTasks()
+  const isInitialized = useRef(false)
   
   // Função para carregar dados persistidos
   const loadPersistedData = () => {
@@ -81,9 +82,9 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
   const resolvedColumnId = columnId || task?.columnId || defaultColumnId || columns[0]?.id || ''
   const selectedColumn = columns.find((column) => column.id === resolvedColumnId)
 
-  // Salvar dados no sessionStorage sempre que mudarem
+  // Salvar dados no sessionStorage sempre que mudarem (mas só depois de inicializar)
   useEffect(() => {
-    if (typeof window === 'undefined' || !open) return
+    if (typeof window === 'undefined' || !open || !isInitialized.current) return
     
     const formData = {
       title,
@@ -110,7 +111,10 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
   }
 
   useEffect(() => {
-    if (!open) return
+    if (!open) {
+      isInitialized.current = false
+      return
+    }
     
     // Carregar dados persistidos primeiro (se existirem)
     const persisted = loadPersistedData()
@@ -175,6 +179,9 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
         setChecklist([])
       }
     }
+    
+    // Marcar como inicializado após carregar os dados
+    isInitialized.current = true
   }, [open, task, defaultColumnId, columns])
 
   const labels = useMemo(
