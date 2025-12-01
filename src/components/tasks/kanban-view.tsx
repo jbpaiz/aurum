@@ -15,6 +15,7 @@ import { TaskModal } from '@/components/tasks/task-modal'
 import { TaskListView } from '@/components/tasks/task-list-view'
 import { KanbanMetrics } from '@/components/tasks/kanban-metrics'
 import { BoardManagementView } from '@/components/tasks/board-management-view'
+import { FiltersModal } from '@/components/tasks/filters-modal'
 import type { CreateTaskInput, TaskCard, TaskColumn, TaskPriority } from '@/types/tasks'
 import { TASK_PRIORITY_COLORS, TASK_PRIORITY_LABELS } from '@/types/tasks'
 
@@ -40,6 +41,7 @@ export function KanbanView() {
   const [labelFilter, setLabelFilter] = useState('')
   const [priorityFilter, setPriorityFilter] = useState<TaskPriority | 'all'>('all')
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isFiltersModalOpen, setIsFiltersModalOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<TaskCard | null>(null)
   const [columnIdForModal, setColumnIdForModal] = useState<string | undefined>()
   const [viewMode, setViewMode] = useState<'kanban' | 'list' | 'metrics'>(() => {
@@ -127,6 +129,7 @@ export function KanbanView() {
   }
 
   const activeTasksCount = activeBoard?.columns.reduce((total, column) => total + column.tasks.length, 0) ?? 0
+  const hasActiveFilters = searchTerm || priorityFilter !== 'all' || labelFilter
 
   if (showManagerView) {
     return (
@@ -139,18 +142,19 @@ export function KanbanView() {
   return (
     <div className="flex flex-col gap-5 p-4 md:gap-6 md:p-6">
       <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        {/* Header com título e ações */}
+        <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">Módulo de tarefas</p>
-            <div className="mt-1 flex flex-wrap items-center gap-2 text-2xl font-bold text-gray-900">
+            <p className="text-xs font-semibold uppercase tracking-wide text-blue-600 mb-1">Módulo de tarefas</p>
+            <div className="flex items-center gap-2">
               <Kanban className="h-6 w-6 text-blue-500" />
-              {activeBoard?.name ?? 'Kanban'}
+              <h1 className="text-2xl font-bold text-gray-900">{activeBoard?.name ?? 'Kanban'}</h1>
               <Badge variant="outline" className="text-sm font-medium text-gray-600">
                 {activeTasksCount} tarefas ativas
               </Badge>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex gap-2">
             <Button onClick={() => openCreateTaskModal()} className="gap-2">
               Nova tarefa
             </Button>
@@ -177,12 +181,12 @@ export function KanbanView() {
           </div>
         </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-[1fr_1fr_200px]">
-          <div className="space-y-1">
-            <LabelSeamless>Quadro</LabelSeamless>
+        {/* Seletor de quadro e filtros */}
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex-1 max-w-md">
             <Select value={activeBoard?.id} onValueChange={setActiveBoardId}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecione" />
+                <SelectValue placeholder="Selecione o quadro" />
               </SelectTrigger>
               <SelectContent>
                 {activeProject?.boards.map((board) => (
@@ -193,74 +197,51 @@ export function KanbanView() {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1">
-            <LabelSeamless>Buscar</LabelSeamless>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <Input className="pl-9" placeholder="Título ou descrição" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <LabelSeamless>Prioridade</LabelSeamless>
-            <Select value={priorityFilter} onValueChange={(value) => setPriorityFilter(value as TaskPriority | 'all')}>
-              <SelectTrigger>
-                <SelectValue placeholder="Todas" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas</SelectItem>
-                {Object.entries(TASK_PRIORITY_COLORS).map(([value, color]) => (
-                  <SelectItem key={value} value={value}>
-                    <span className="inline-flex items-center gap-2">
-                      <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
-                      {TASK_PRIORITY_LABELS[value as TaskPriority]}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+
+          <Button 
+            variant={hasActiveFilters ? "default" : "outline"} 
+            onClick={() => setIsFiltersModalOpen(true)}
+            className="gap-2"
+          >
+            <Filter className="h-4 w-4" />
+            Filtros
+            {hasActiveFilters && (
+              <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                Ativos
+              </Badge>
+            )}
+          </Button>
         </div>
 
-        <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-2 rounded-xl bg-gray-100 p-1 text-sm font-medium">
-            <Button
-              variant={viewMode === 'kanban' ? 'default' : 'ghost'}
-              size="sm"
-              className={`rounded-lg ${viewMode === 'kanban' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'}`}
-              onClick={() => setViewMode('kanban')}
-            >
-              <Kanban className="mr-2 h-4 w-4" />
-              Quadro
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
-              size="sm"
-              className={`rounded-lg ${viewMode === 'list' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'}`}
-              onClick={() => setViewMode('list')}
-            >
-              <ListIcon className="mr-2 h-4 w-4" />
-              Lista
-            </Button>
-            <Button
-              variant={viewMode === 'metrics' ? 'default' : 'ghost'}
-              size="sm"
-              className={`rounded-lg ${viewMode === 'metrics' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'}`}
-              onClick={() => setViewMode('metrics')}
-            >
-              <BarChart3 className="mr-2 h-4 w-4" />
-              Métricas
-            </Button>
-          </div>
-          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
-            <Filter className="h-4 w-4" />
-            <span>Etiquetas:</span>
-            <Input
-              className="h-8 w-auto min-w-[180px]"
-              placeholder="Ex: backend"
-              value={labelFilter}
-              onChange={(event) => setLabelFilter(event.target.value)}
-            />
-          </div>
+        {/* Modos de visualização */}
+        <div className="mt-6 flex items-center gap-2 rounded-xl bg-gray-100 p-1">
+          <Button
+            variant={viewMode === 'kanban' ? 'default' : 'ghost'}
+            size="sm"
+            className={`flex-1 rounded-lg ${viewMode === 'kanban' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'}`}
+            onClick={() => setViewMode('kanban')}
+          >
+            <Kanban className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Quadro</span>
+          </Button>
+          <Button
+            variant={viewMode === 'list' ? 'default' : 'ghost'}
+            size="sm"
+            className={`flex-1 rounded-lg ${viewMode === 'list' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'}`}
+            onClick={() => setViewMode('list')}
+          >
+            <ListIcon className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Lista</span>
+          </Button>
+          <Button
+            variant={viewMode === 'metrics' ? 'default' : 'ghost'}
+            size="sm"
+            className={`flex-1 rounded-lg ${viewMode === 'metrics' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'}`}
+            onClick={() => setViewMode('metrics')}
+          >
+            <BarChart3 className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Métricas</span>
+          </Button>
         </div>
       </div>
 
@@ -308,6 +289,17 @@ export function KanbanView() {
         task={editingTask}
         onSave={handleSaveTask}
         onDeleteTask={deleteTask}
+      />
+
+      <FiltersModal
+        open={isFiltersModalOpen}
+        onClose={() => setIsFiltersModalOpen(false)}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        priorityFilter={priorityFilter}
+        onPriorityChange={setPriorityFilter}
+        labelFilter={labelFilter}
+        onLabelChange={setLabelFilter}
       />
     </div>
   )
