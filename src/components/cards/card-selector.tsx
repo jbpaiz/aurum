@@ -21,10 +21,11 @@ export function CardSelector({
   placeholder = "Selecione um cartão",
   className = ""
 }: CardSelectorProps) {
-  const { cards } = useCards()
+  const { cards, providers } = useCards()
   const [isOpen, setIsOpen] = useState(false)
 
   const selectedCard = cards.find(card => card.id === value)
+  const selectedProvider = selectedCard ? providers.find(p => p.id === selectedCard.providerId) : null
   const creditCards = cards.filter(card => card.type === 'credit')
 
   const handleSelect = (cardId: string) => {
@@ -45,14 +46,14 @@ export function CardSelector({
           <div className="flex items-center gap-3 flex-1">
             <div 
               className="w-8 h-8 rounded-full flex items-center justify-center text-white"
-              style={{ backgroundColor: selectedCard.provider?.color || '#8A05BE' }}
+              style={{ backgroundColor: selectedProvider?.color || '#8A05BE' }}
             >
               <CreditCard className="h-4 w-4" />
             </div>
             <div className="text-left flex-1">
               <div className="font-medium text-sm">{selectedCard.alias}</div>
               <div className="text-xs text-gray-500">
-                {selectedCard.provider?.name} •••• {selectedCard.lastFourDigits}
+                {selectedProvider?.name} •••• {selectedCard.lastFourDigits}
               </div>
             </div>
           </div>
@@ -68,30 +69,33 @@ export function CardSelector({
         <div className="absolute top-full left-0 right-0 z-50 mt-1">
           <Card className="shadow-lg">
             <CardContent className="p-2 max-h-60 overflow-y-auto">
-              {creditCards.map((card) => (
-                <button
-                  key={card.id}
-                  type="button"
-                  onClick={() => handleSelect(card.id)}
-                  className="w-full flex items-center gap-3 p-2 hover:bg-gray-50 rounded text-left"
-                >
-                  <div 
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-white"
-                    style={{ backgroundColor: card.provider?.color || '#8A05BE' }}
+              {creditCards.map((card) => {
+                const cardProvider = providers.find(p => p.id === card.providerId)
+                return (
+                  <button
+                    key={card.id}
+                    type="button"
+                    onClick={() => handleSelect(card.id)}
+                    className="w-full flex items-center gap-3 p-2 hover:bg-gray-50 rounded text-left"
                   >
-                    <CreditCard className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-medium text-sm">{card.alias}</div>
-                    <div className="text-xs text-gray-500">
-                      {card.provider?.name} •••• {card.lastFourDigits}
+                    <div 
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-white"
+                      style={{ backgroundColor: cardProvider?.color || '#8A05BE' }}
+                    >
+                      <CreditCard className="h-4 w-4" />
                     </div>
-                  </div>
-                  {value === card.id && (
-                    <Check className="h-4 w-4 text-blue-600" />
-                  )}
-                </button>
-              ))}
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">{card.alias}</div>
+                      <div className="text-xs text-gray-500">
+                        {cardProvider?.name} •••• {card.lastFourDigits}
+                      </div>
+                    </div>
+                    {value === card.id && (
+                      <Check className="h-4 w-4 text-blue-600" />
+                    )}
+                  </button>
+                )
+              })}
             </CardContent>
           </Card>
         </div>
