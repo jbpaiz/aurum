@@ -531,7 +531,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
 
   const createTask = useCallback(
     async (input: CreateTaskInput) => {
-      if (!user || !activeBoard) return
+      if (!user || !activeBoard || !activeProject) return
 
       const fallbackColumnId = input.columnId ?? activeBoard.columns[0]?.id
       if (!fallbackColumnId) {
@@ -557,6 +557,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
         : 0
       const nextSortOrder = highestSortOrder + 1000
 
+      // Nota: project_id, user_id, key e outros campos são preenchidos automaticamente pelo trigger
       const payload: Database['public']['Tables']['tasks']['Insert'] = {
         board_id: input.boardId ?? activeBoard.id,
         column_id: fallbackColumnId,
@@ -572,32 +573,23 @@ export function TasksProvider({ children }: TasksProviderProps) {
         attachments: attachments as unknown as Json,
         checklist: checklist as unknown as Json,
         sprint_id: input.sprintId ?? null,
-        assignee_id: input.assigneeId ?? user.id,
-        reporter_id: user.id,
+        assignee_id: input.assigneeId ?? null,
         story_points: input.storyPoints ?? null,
         estimate_hours: input.estimateHours ?? null,
         is_blocked: input.isBlocked ?? false,
         blocked_reason: input.blockedReason ?? null,
-        user_id: user.id,
         sort_order: nextSortOrder
       }
 
-      const { data, error } = await supabase.from('tasks').insert(payload).select('id').single()
+      const { error } = await supabase.from('tasks').insert(payload)
 
       if (error) {
-        console.error('Erro ao criar tarefa:', error.message)
+        console.error('Erro ao criar tarefa:', error.message, error)
       } else {
-        const customKey = input.key?.trim()
-        if (data?.id && customKey) {
-          const { error: keyError } = await supabase.from('tasks').update({ key: customKey }).eq('id', data.id)
-          if (keyError) {
-            console.error('Erro ao atualizar chave da tarefa:', keyError.message)
-          }
-        }
         await fetchWorkspace()
       }
     },
-    [user, activeBoard, fetchWorkspace]
+    [user, activeBoard, activeProject, fetchWorkspace]
   )
 
   const updateTask = useCallback(
