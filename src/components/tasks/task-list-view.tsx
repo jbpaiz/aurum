@@ -119,17 +119,18 @@ export function TaskListView({ columns, referenceColumns, onSelectTask, onCreate
   }
 
   return (
-    <div 
-      className={`w-full rounded-2xl border border-gray-200 bg-white overflow-x-scroll max-w-full md:max-w-[calc(100vw-280px)] max-h-[calc(100vh-360px)]`}
-      style={{
-        scrollbarWidth: 'thin',
-        scrollbarColor: '#CBD5E1 #F1F5F9'
-      }}
-    >
-      <div className={adaptiveWidth ? 'w-full' : 'min-w-[1200px]'}>
-        <table className="w-full table-auto divide-y divide-gray-200">
-          <thead className="bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-            <tr>
+    <div className={`w-full rounded-2xl border border-gray-200 bg-white max-w-full md:max-w-[calc(100vw-280px)] overflow-hidden`}>
+      <div 
+        className="overflow-x-scroll overflow-y-scroll max-h-[calc(100vh-360px)]"
+        style={{
+          scrollbarWidth: 'thin',
+          scrollbarColor: '#CBD5E1 #F1F5F9'
+        }}
+      >
+        <div className={adaptiveWidth ? 'w-full' : 'min-w-[1200px]'}>
+          <table className="w-full table-auto">
+            <thead className="bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 sticky top-0 z-10 border-b border-gray-200">
+              <tr>
               <th className="px-6 py-3 whitespace-nowrap">
                 <SortableHeader label="Chave" sortKey="key" sortConfig={sortConfig} onToggleSort={handleSort} />
               </th>
@@ -166,6 +167,7 @@ export function TaskListView({ columns, referenceColumns, onSelectTask, onCreate
             ))}
           </tbody>
         </table>
+      </div>
       </div>
     </div>
   )
