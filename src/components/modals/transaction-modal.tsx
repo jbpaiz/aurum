@@ -205,8 +205,8 @@ export function TransactionModal({ transaction, onSave, onClose, isSaving = fals
   const IconComponent = typeConfig.icon
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className={`w-full max-w-md max-h-[90vh] overflow-y-auto ${typeConfig.borderColor} border-2`}>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <Card className={`w-full max-w-4xl my-8 ${typeConfig.borderColor} border-2`}>
         <CardHeader className={typeConfig.bgColor}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -236,8 +236,8 @@ export function TransactionModal({ transaction, onSave, onClose, isSaving = fals
           </div>
         </CardHeader>
 
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <CardContent className="pt-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Tipo de Transação */}
             <div className="space-y-2">
               <Label>Tipo de Transação</Label>
@@ -269,152 +269,165 @@ export function TransactionModal({ transaction, onSave, onClose, isSaving = fals
               </div>
             </div>
 
-            {/* Descrição */}
-            <div className="space-y-2">
-              <Label htmlFor="description">Descrição</Label>
-              <div className="relative">
-                <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="description"
-                  type="text"
-                  placeholder="Ex: Supermercado, Salário, etc."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="pl-10"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Valor */}
-            <div className="space-y-2">
-              <Label htmlFor="amount">Valor (R$)</Label>
-              <div className="relative">
-                <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="amount"
-                  type="text"
-                  placeholder="0,00"
-                  value={amount}
-                  onChange={handleAmountChange}
-                  className="pl-10"
-                  required
-                />
-              </div>
-              {amountError && (
-                <p className="text-xs text-red-500">{amountError}</p>
-              )}
-            </div>
-
-            {/* Categoria */}
-            <div className="space-y-2">
-              <Label>Categoria</Label>
-              <Select value={category} onValueChange={setCategory} required>
-                <SelectTrigger>
-                  <div className="flex items-center gap-2">
-                    <Tag className="h-4 w-4 text-muted-foreground" />
-                    <SelectValue placeholder="Selecione uma categoria" />
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES[type].map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Data */}
-            <div className="space-y-2">
-              <Label htmlFor="date">Data</Label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="date"
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="pl-10"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Conta - Ocultar quando for cartão de crédito */}
-            {!(type === 'expense' && paymentMethod === 'credit_card') && (
-              <div className="space-y-2">
-                <Label>Conta</Label>
-                <AccountSelector
-                  value={accountId}
-                  onChange={(id) => handleAccountChange(id)}
-                  disabled={isSaving}
-                  placeholder="Selecione a conta"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Conta que será movimentada nesta transação
-                </p>
-                {accountError && (
-                  <p className="text-xs text-red-500">{accountError}</p>
-                )}
-              </div>
-            )}
-
-            {/* Método de Pagamento */}
-            <div className="space-y-2">
-              <Label>Forma de Pagamento</Label>
-              <SimplePaymentMethodSelector
-                value={paymentMethod}
-                onChange={setPaymentMethod}
-                placeholder="Como foi pago?"
-                disabled={isSaving}
-              />
-            </div>
-
-            {/* Seletor de Cartão (apenas se for cartão de crédito) */}
-            {paymentMethod === 'credit_card' && (
-              <div className="space-y-2">
-                <Label>Cartão de Crédito</Label>
-                <CardSelector
-                  value={cardId}
-                  onChange={setCardId}
-                  placeholder="Selecione o cartão"
-                  disabled={isSaving}
-                />
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-700">
-                  <div className="flex items-start gap-2">
-                    <CreditCard className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium">Compra no Cartão de Crédito</p>
-                      <p className="mt-1">
-                        Esta compra será lançada na fatura do cartão e NÃO será debitada imediatamente da sua conta.
-                        {parseInt(installments) > 1 && ` A compra será parcelada em ${installments}x nas próximas faturas.`}
-                      </p>
-                    </div>
+            {/* Grid de campos - 2 colunas em telas grandes */}
+            <div className="grid md:grid-cols-2 gap-4">
+              {/* Coluna Esquerda */}
+              <div className="space-y-4">
+                {/* Descrição */}
+                <div className="space-y-2">
+                  <Label htmlFor="description">Descrição</Label>
+                  <div className="relative">
+                    <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="description"
+                      type="text"
+                      placeholder="Ex: Supermercado, Salário, etc."
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      className="pl-10"
+                      required
+                    />
                   </div>
                 </div>
-              </div>
-            )}
 
-            {/* Parcelas (apenas para despesas) */}
-            {type === 'expense' && (
-              <div className="space-y-2">
-                <Label htmlFor="installments">Número de Parcelas</Label>
-                <div className="relative">
-                  <Hash className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Select value={installments} onValueChange={setInstallments}>
-                    <SelectTrigger className="pl-10">
-                      <SelectValue />
+                {/* Valor */}
+                <div className="space-y-2">
+                  <Label htmlFor="amount">Valor (R$)</Label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="amount"
+                      type="text"
+                      placeholder="0,00"
+                      value={amount}
+                      onChange={handleAmountChange}
+                      className="pl-10"
+                      required
+                    />
+                  </div>
+                  {amountError && (
+                    <p className="text-xs text-red-500">{amountError}</p>
+                  )}
+                </div>
+
+                {/* Categoria */}
+                <div className="space-y-2">
+                  <Label>Categoria</Label>
+                  <Select value={category} onValueChange={setCategory} required>
+                    <SelectTrigger>
+                      <div className="flex items-center gap-2">
+                        <Tag className="h-4 w-4 text-muted-foreground" />
+                        <SelectValue placeholder="Selecione uma categoria" />
+                      </div>
                     </SelectTrigger>
                     <SelectContent>
-                      {Array.from({ length: 12 }, (_, i) => i + 1).map((num) => (
-                        <SelectItem key={num} value={num.toString()}>
-                          {num}x {num === 1 ? '(À vista)' : ''}
+                      {CATEGORIES[type].map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {cat}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+
+                {/* Data */}
+                <div className="space-y-2">
+                  <Label htmlFor="date">Data</Label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="date"
+                      type="date"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      className="pl-10"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Coluna Direita */}
+              <div className="space-y-4">
+                {/* Conta - Ocultar quando for cartão de crédito */}
+                {!(type === 'expense' && paymentMethod === 'credit_card') && (
+                  <div className="space-y-2">
+                    <Label>Conta</Label>
+                    <AccountSelector
+                      value={accountId}
+                      onChange={(id) => handleAccountChange(id)}
+                      disabled={isSaving}
+                      placeholder="Selecione a conta"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Conta que será movimentada nesta transação
+                    </p>
+                    {accountError && (
+                      <p className="text-xs text-red-500">{accountError}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Método de Pagamento */}
+                <div className="space-y-2">
+                  <Label>Forma de Pagamento</Label>
+                  <SimplePaymentMethodSelector
+                    value={paymentMethod}
+                    onChange={setPaymentMethod}
+                    placeholder="Como foi pago?"
+                    disabled={isSaving}
+                  />
+                </div>
+
+                {/* Seletor de Cartão (apenas se for cartão de crédito) */}
+                {paymentMethod === 'credit_card' && (
+                  <div className="space-y-2">
+                    <Label>Cartão de Crédito</Label>
+                    <CardSelector
+                      value={cardId}
+                      onChange={setCardId}
+                      placeholder="Selecione o cartão"
+                      disabled={isSaving}
+                    />
+                  </div>
+                )}
+
+                {/* Parcelas (apenas para despesas) */}
+                {type === 'expense' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="installments">Parcelas</Label>
+                    <div className="relative">
+                      <Hash className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Select value={installments} onValueChange={setInstallments}>
+                        <SelectTrigger className="pl-10">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 12 }, (_, i) => i + 1).map((num) => (
+                            <SelectItem key={num} value={num.toString()}>
+                              {num}x {num === 1 ? '(À vista)' : ''}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Alerta de Cartão de Crédito (largura total) */}
+            {paymentMethod === 'credit_card' && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-700">
+                <div className="flex items-start gap-2">
+                  <CreditCard className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium">Compra no Cartão de Crédito</p>
+                    <p className="mt-1">
+                      Esta compra será lançada na fatura do cartão e NÃO será debitada imediatamente da sua conta.
+                      {parseInt(installments) > 1 && ` A compra será parcelada em ${installments}x nas próximas faturas.`}
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
