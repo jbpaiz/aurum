@@ -162,7 +162,7 @@ export function KanbanView() {
   }
 
   return (
-    <div className="flex flex-col gap-5 p-4 md:gap-6 md:p-6">
+    <div className="flex flex-col gap-3 p-4 md:gap-3 md:p-3">
       <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6">
         {/* Header com título e ações */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -309,8 +309,14 @@ export function KanbanView() {
           <Button onClick={() => openCreateTaskModal()}>Adicionar tarefa</Button>
         </div>
       ) : viewMode === 'kanban' ? (
-        <div className="w-full rounded-2xl border border-gray-200 bg-white">
-          <div className="overflow-auto p-3 sm:p-4">
+        <div 
+          className="rounded-2xl border border-gray-200 bg-white overflow-x-scroll max-w-full md:max-w-[calc(100vw-280px)] max-h-[calc(100vh-360px)]"
+          style={{
+            scrollbarWidth: 'thin',
+            scrollbarColor: '#CBD5E1 #F1F5F9'
+          }}
+        >
+          <div className="p-3 sm:p-4 min-w-min">
             <KanbanBoard
               columns={filteredColumns}
               onSelectTask={openEditTaskModal}

@@ -119,7 +119,13 @@ export function TaskListView({ columns, referenceColumns, onSelectTask, onCreate
   }
 
   return (
-    <div className={`w-full rounded-2xl border border-gray-200 bg-white ${adaptiveWidth ? '' : 'overflow-x-auto'}`}>
+    <div 
+      className={`w-full rounded-2xl border border-gray-200 bg-white overflow-x-scroll max-w-full md:max-w-[calc(100vw-280px)] max-h-[calc(100vh-360px)]`}
+      style={{
+        scrollbarWidth: 'thin',
+        scrollbarColor: '#CBD5E1 #F1F5F9'
+      }}
+    >
       <div className={adaptiveWidth ? 'w-full' : 'min-w-[1200px]'}>
         <table className="w-full table-auto divide-y divide-gray-200">
           <thead className="bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
