@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/auth-context'
-import type { Database } from '@/lib/database.types'
+import { Database } from '@/lib/database.types'
+import { registerCreditCardPurchase } from '@/lib/credit-card-service'
 
 export type TransactionType = 'income' | 'expense' | 'transfer'
 type IncomeExpenseType = 'income' | 'expense'
@@ -32,8 +33,9 @@ export interface TransactionFormData {
   amount: number
   category: string
   date: string
-  accountId: string
+  accountId?: string // Opcional agora (obrigatório só quando NÃO for cartão de crédito)
   paymentMethod?: string
+  cardId?: string // ID do cartão quando for compra no crédito
   installments?: number
 }
 
@@ -151,13 +153,41 @@ export function useTransactions() {
       throw new Error('Usuário não autenticado')
     }
 
-    if (!transactionData.accountId) {
-      throw new Error('Selecione uma conta para registrar a transação')
-    }
-
     setIsSaving(true)
 
     try {
+      // SE FOR COMPRA NO CARTÃO DE CRÉDITO, usar sistema de faturas
+      if (transactionData.type === 'expense' && 
+          transactionData.paymentMethod === 'credit_card' && 
+          transactionData.cardId) {
+        
+        const categoryId = await getOrCreateCategoryId(transactionData.category, 'expense')
+        
+        const result = await registerCreditCardPurchase({
+          userId: user.id,
+          cardId: transactionData.cardId,
+          amount: transactionData.amount,
+          description: transactionData.description,
+          categoryId: categoryId || undefined,
+          purchaseDate: transactionData.date,
+          installments: transactionData.installments ?? 1,
+          notes: `Método: Cartão de Crédito`
+        })
+
+        if (!result.success) {
+          throw new Error(result.error || 'Falha ao registrar compra no cartão')
+        }
+
+        // Recarregar transações para mostrar a nova compra
+        await fetchTransactions()
+        return
+      }
+
+      // FLUXO NORMAL para outras transações
+      if (!transactionData.accountId) {
+        throw new Error('Selecione uma conta para registrar a transação')
+      }
+
       const categoryId = await getOrCreateCategoryId(transactionData.category, transactionData.type)
       const installments = transactionData.installments ?? 1
       const notes = transactionData.paymentMethod
@@ -197,7 +227,7 @@ export function useTransactions() {
     } finally {
       setIsSaving(false)
     }
-  }, [getOrCreateCategoryId, mapTransactionRow, user])
+  }, [getOrCreateCategoryId, mapTransactionRow, user, fetchTransactions])
 
   const updateTransaction = useCallback(async (id: string, updates: Partial<TransactionFormData>) => {
     if (!user) {

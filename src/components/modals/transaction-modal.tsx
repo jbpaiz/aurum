@@ -118,8 +118,17 @@ export function TransactionModal({ transaction, onSave, onClose, isSaving = fals
       return
     }
 
-    if (!accountId) {
+    // Conta é obrigatória EXCETO quando for compra no cartão de crédito
+    const isCreditCardPurchase = type === 'expense' && paymentMethod === 'credit_card' && cardId
+    
+    if (!isCreditCardPurchase && !accountId) {
       setAccountError('Selecione a conta relacionada à transação')
+      return
+    }
+
+    // Se for cartão de crédito, validar se tem cartão selecionado
+    if (type === 'expense' && paymentMethod === 'credit_card' && !cardId) {
+      setAccountError('Selecione o cartão de crédito')
       return
     }
 
@@ -132,7 +141,7 @@ export function TransactionModal({ transaction, onSave, onClose, isSaving = fals
       amount: Number(numericAmount.toFixed(2)),
       category,
       date,
-      accountId,
+      ...(accountId && { accountId }), // Só adiciona se tiver
       ...(paymentMethod && { paymentMethod }),
       ...(paymentMethod === 'credit_card' && cardId && { cardId }),
       ...(type === 'expense' && installmentsNumber > 1 && { installments: installmentsNumber })
@@ -333,22 +342,24 @@ export function TransactionModal({ transaction, onSave, onClose, isSaving = fals
               </div>
             </div>
 
-            {/* Conta */}
-            <div className="space-y-2">
-              <Label>Conta</Label>
-              <AccountSelector
-                value={accountId}
-                onChange={(id) => handleAccountChange(id)}
-                disabled={isSaving}
-                placeholder="Selecione a conta"
-              />
-              <p className="text-xs text-muted-foreground">
-                Conta que será movimentada nesta transação
-              </p>
-              {accountError && (
-                <p className="text-xs text-red-500">{accountError}</p>
-              )}
-            </div>
+            {/* Conta - Ocultar quando for cartão de crédito */}
+            {!(type === 'expense' && paymentMethod === 'credit_card') && (
+              <div className="space-y-2">
+                <Label>Conta</Label>
+                <AccountSelector
+                  value={accountId}
+                  onChange={(id) => handleAccountChange(id)}
+                  disabled={isSaving}
+                  placeholder="Selecione a conta"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Conta que será movimentada nesta transação
+                </p>
+                {accountError && (
+                  <p className="text-xs text-red-500">{accountError}</p>
+                )}
+              </div>
+            )}
 
             {/* Método de Pagamento */}
             <div className="space-y-2">
@@ -371,9 +382,18 @@ export function TransactionModal({ transaction, onSave, onClose, isSaving = fals
                   placeholder="Selecione o cartão"
                   disabled={isSaving}
                 />
-                <p className="text-xs text-muted-foreground">
-                  A despesa será lançada no cartão selecionado
-                </p>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-700">
+                  <div className="flex items-start gap-2">
+                    <CreditCard className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium">Compra no Cartão de Crédito</p>
+                      <p className="mt-1">
+                        Esta compra será lançada na fatura do cartão e NÃO será debitada imediatamente da sua conta.
+                        {parseInt(installments) > 1 && ` A compra será parcelada em ${installments}x nas próximas faturas.`}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
