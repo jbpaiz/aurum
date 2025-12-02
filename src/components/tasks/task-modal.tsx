@@ -360,7 +360,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
       }}
     >
       <div
-        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl"
+        className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
@@ -379,7 +379,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
               {formError}
             </div>
           )}
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-2">
               <Label>Título</Label>
               <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Ex: Implementar fluxo de onboarding" />
@@ -408,7 +408,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-2">
               <Label>Prioridade</Label>
               <select
