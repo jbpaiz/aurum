@@ -355,7 +355,7 @@ export function Dashboard() {
               setIsSaving(true)
               
               if ('id' in transaction && transaction.id) {
-                await updateTransaction(transaction as TransactionFormValues)
+                await updateTransaction(transaction.id, transaction as TransactionFormValues)
                 toast({
                   title: 'Transação atualizada!',
                   description: 'A transação foi atualizada com sucesso.'
