@@ -5,11 +5,35 @@ CREATE TABLE IF NOT EXISTS public.budgets (
   category TEXT NOT NULL,
   description TEXT,
   amount DECIMAL(15, 2) NOT NULL CHECK (amount > 0),
-  month TEXT NOT NULL, -- Format: YYYY-MM
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(user_id, category, month)
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Add month column if it doesn't exist
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema = 'public' 
+    AND table_name = 'budgets' 
+    AND column_name = 'month'
+  ) THEN
+    ALTER TABLE public.budgets ADD COLUMN month TEXT NOT NULL DEFAULT '2024-01';
+    -- Update default after column creation
+    ALTER TABLE public.budgets ALTER COLUMN month DROP DEFAULT;
+  END IF;
+END $$;
+
+-- Add unique constraint if it doesn't exist
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint 
+    WHERE conname = 'budgets_user_id_category_month_key'
+  ) THEN
+    ALTER TABLE public.budgets ADD CONSTRAINT budgets_user_id_category_month_key UNIQUE(user_id, category, month);
+  END IF;
+END $$;
 
 -- Enable RLS
 ALTER TABLE public.budgets ENABLE ROW LEVEL SECURITY;
