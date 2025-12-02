@@ -303,10 +303,27 @@ interface TasksProviderProps {
 export function TasksProvider({ children }: TasksProviderProps) {
   const { user } = useAuth()
   const [projects, setProjects] = useState<TaskProject[]>([])
-  const [activeProjectId, setActiveProjectId] = useState<string | null>(null)
-  const [activeBoardId, setActiveBoardId] = useState<string | null>(null)
+  const [activeProjectId, setActiveProjectId] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null
+    return window.localStorage.getItem('aurum.tasks.activeProjectId')
+  })
+  const [activeBoardId, setActiveBoardId] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null
+    return window.localStorage.getItem('aurum.tasks.activeBoardId')
+  })
   const [loading, setLoading] = useState(false)
   const creatingDefaultRef = useRef(false)
+
+  // Salvar no localStorage quando mudar
+  useEffect(() => {
+    if (typeof window === 'undefined' || !activeProjectId) return
+    window.localStorage.setItem('aurum.tasks.activeProjectId', activeProjectId)
+  }, [activeProjectId])
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !activeBoardId) return
+    window.localStorage.setItem('aurum.tasks.activeBoardId', activeBoardId)
+  }, [activeBoardId])
 
   const updateBoardState = useCallback(
     (boardId: string, updater: (board: TaskBoard) => TaskBoard) => {

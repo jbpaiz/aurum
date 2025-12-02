@@ -3,11 +3,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { Kanban, Columns2, Search, Filter, List as ListIcon, BarChart3, MoreHorizontal } from 'lucide-react'
+import { Kanban, Columns2, Search, Filter, List as ListIcon, BarChart3, MoreHorizontal, Maximize2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { useTasks } from '@/contexts/tasks-context'
 import { KanbanBoard } from '@/components/tasks/kanban-board'
@@ -49,12 +51,32 @@ export function KanbanView() {
     const stored = window.localStorage.getItem('aurum.tasks.viewMode') as 'kanban' | 'list' | 'metrics' | null
     return stored === 'list' || stored === 'metrics' ? stored : 'kanban'
   })
+  const [adaptiveWidth, setAdaptiveWidth] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false
+    const stored = window.localStorage.getItem('aurum.tasks.adaptiveWidth')
+    return stored === 'true'
+  })
+  const [adaptiveWidthList, setAdaptiveWidthList] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false
+    const stored = window.localStorage.getItem('aurum.tasks.adaptiveWidthList')
+    return stored === 'true'
+  })
   const managerParam = searchParams.get('manager')
 
   useEffect(() => {
     if (typeof window === 'undefined') return
     window.localStorage.setItem('aurum.tasks.viewMode', viewMode)
   }, [viewMode])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    window.localStorage.setItem('aurum.tasks.adaptiveWidth', String(adaptiveWidth))
+  }, [adaptiveWidth])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    window.localStorage.setItem('aurum.tasks.adaptiveWidthList', String(adaptiveWidthList))
+  }, [adaptiveWidthList])
 
   const showManagerView = managerParam === '1'
 
@@ -213,14 +235,40 @@ export function KanbanView() {
               </Badge>
             )}
           </Button>
+
+          {viewMode === 'kanban' && (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-white">
+              <Label htmlFor="adaptive-width-kanban" className="text-xs text-gray-600 cursor-pointer whitespace-nowrap">
+                Largura adaptável
+              </Label>
+              <Switch
+                id="adaptive-width-kanban"
+                checked={adaptiveWidth}
+                onCheckedChange={setAdaptiveWidth}
+              />
+            </div>
+          )}
+
+          {viewMode === 'list' && (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-white">
+              <Label htmlFor="adaptive-width-list" className="text-xs text-gray-600 cursor-pointer whitespace-nowrap">
+                Largura adaptável
+              </Label>
+              <Switch
+                id="adaptive-width-list"
+                checked={adaptiveWidthList}
+                onCheckedChange={setAdaptiveWidthList}
+              />
+            </div>
+          )}
         </div>
 
         {/* Modos de visualização */}
-        <div className="mt-4 sm:mt-6 flex items-center gap-1 sm:gap-2 rounded-xl bg-gray-100 p-1">
+        <div className="mt-4 sm:mt-6 inline-flex items-center gap-1 sm:gap-2 rounded-xl bg-gray-100 p-1">
           <Button
             variant={viewMode === 'kanban' ? 'default' : 'ghost'}
             size="sm"
-            className={`flex-1 rounded-lg text-xs sm:text-sm ${viewMode === 'kanban' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'}`}
+            className={`rounded-lg text-xs sm:text-sm ${viewMode === 'kanban' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'}`}
             onClick={() => setViewMode('kanban')}
           >
             <Kanban className="h-4 w-4 sm:mr-2" />
@@ -229,7 +277,7 @@ export function KanbanView() {
           <Button
             variant={viewMode === 'list' ? 'default' : 'ghost'}
             size="sm"
-            className={`flex-1 rounded-lg text-xs sm:text-sm ${viewMode === 'list' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'}`}
+            className={`rounded-lg text-xs sm:text-sm ${viewMode === 'list' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'}`}
             onClick={() => setViewMode('list')}
           >
             <ListIcon className="h-4 w-4 sm:mr-2" />
@@ -238,7 +286,7 @@ export function KanbanView() {
           <Button
             variant={viewMode === 'metrics' ? 'default' : 'ghost'}
             size="sm"
-            className={`flex-1 rounded-lg text-xs sm:text-sm ${viewMode === 'metrics' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'}`}
+            className={`rounded-lg text-xs sm:text-sm ${viewMode === 'metrics' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'}`}
             onClick={() => setViewMode('metrics')}
           >
             <BarChart3 className="h-4 w-4 sm:mr-2" />
@@ -265,6 +313,7 @@ export function KanbanView() {
               onCreateTask={openCreateTaskModal}
               onToggleChecklistItem={toggleTaskChecklistItem}
               moveTask={moveTask}
+              adaptiveWidth={adaptiveWidth}
             />
           </div>
         </div>
@@ -275,6 +324,7 @@ export function KanbanView() {
           onSelectTask={openEditTaskModal}
           onCreateTask={() => openCreateTaskModal()}
           onChangeTaskColumn={handleChangeTaskColumn}
+          adaptiveWidth={adaptiveWidthList}
         />
       ) : (
         <KanbanMetrics columns={filteredColumns} />

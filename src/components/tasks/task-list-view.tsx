@@ -26,9 +26,10 @@ interface TaskListViewProps {
   onSelectTask: (task: TaskCard) => void
   onCreateTask: () => void
   onChangeTaskColumn?: (taskId: string, columnId: string) => Promise<void> | void
+  adaptiveWidth?: boolean
 }
 
-export function TaskListView({ columns, referenceColumns, onSelectTask, onCreateTask, onChangeTaskColumn }: TaskListViewProps) {
+export function TaskListView({ columns, referenceColumns, onSelectTask, onCreateTask, onChangeTaskColumn, adaptiveWidth = false }: TaskListViewProps) {
   const tasks = useMemo<TaskWithMeta[]>(() => {
     return columns.flatMap((column) =>
       column.tasks.map((task) => ({
@@ -118,8 +119,8 @@ export function TaskListView({ columns, referenceColumns, onSelectTask, onCreate
   }
 
   return (
-    <div className="w-full rounded-2xl border border-gray-200 bg-white overflow-hidden">
-      <div className="w-full">
+    <div className={`w-full rounded-2xl border border-gray-200 bg-white ${adaptiveWidth ? '' : 'overflow-x-auto'}`}>
+      <div className={adaptiveWidth ? 'w-full' : 'min-w-[1200px]'}>
         <table className="w-full table-auto divide-y divide-gray-200">
           <thead className="bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
             <tr>
