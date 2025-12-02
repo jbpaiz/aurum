@@ -18,12 +18,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useDashboardData } from '@/hooks/use-dashboard-data'
-import { UnifiedTransactionModal } from '@/components/modals/unified-transaction-modal'
+import { TransactionModal, TransactionFormValues } from '@/components/modals/transaction-modal'
+import { useTransactions } from '@/hooks/use-transactions'
+import { useToast } from '@/hooks/use-toast'
 
 export function Dashboard() {
-  const { data, loading } = useDashboardData()
+  const { data, loading, refresh } = useDashboardData()
+  const { addTransaction, updateTransaction } = useTransactions()
+  const { toast } = useToast()
   const [showBalance, setShowBalance] = useState(true)
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false)
+  const [editingTransaction, setEditingTransaction] = useState<TransactionFormValues | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -339,15 +345,48 @@ export function Dashboard() {
         </CardContent>
       </Card>
 
-      {/* Unified Transaction Modal */}
+      {/* Transaction Modal */}
       {isTransactionModalOpen && (
-        <UnifiedTransactionModal
-          isOpen={isTransactionModalOpen}
-          onClose={() => setIsTransactionModalOpen(false)}
-          onSave={(transaction) => {
-            console.log('Transaction saved:', transaction)
+        <TransactionModal
+          transaction={editingTransaction}
+          isSaving={isSaving}
+          onSave={async (transaction) => {
+            try {
+              setIsSaving(true)
+              
+              if ('id' in transaction && transaction.id) {
+                await updateTransaction(transaction as TransactionFormValues)
+                toast({
+                  title: 'Transação atualizada!',
+                  description: 'A transação foi atualizada com sucesso.'
+                })
+              } else {
+                await addTransaction(transaction)
+                toast({
+                  title: 'Transação adicionada!',
+                  description: 'A nova transação foi criada com sucesso.'
+                })
+              }
+              
+              // Atualizar dados do dashboard
+              refresh()
+              
+              setEditingTransaction(null)
+              setIsTransactionModalOpen(false)
+            } catch (error) {
+              console.error('Erro ao salvar transação:', error)
+              toast({
+                title: 'Erro ao salvar',
+                description: 'Não foi possível salvar a transação. Tente novamente.',
+                variant: 'destructive'
+              })
+            } finally {
+              setIsSaving(false)
+            }
+          }}
+          onClose={() => {
+            setEditingTransaction(null)
             setIsTransactionModalOpen(false)
-            // Aqui você pode adicionar lógica para salvar a transação
           }}
         />
       )}

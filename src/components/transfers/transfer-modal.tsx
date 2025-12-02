@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
 import { useAccounts } from '@/contexts/accounts-context'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/auth-context'
@@ -247,11 +246,11 @@ export function TransferModal({ open, onClose, onSuccess }: TransferModalProps) 
             <Label htmlFor="description">Descrição (opcional)</Label>
             <div className="relative">
               <MessageSquare className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Textarea
+              <Input
                 id="description"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="pl-10 min-h-[60px]"
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDescription(e.target.value)}
+                className="pl-10"
                 placeholder="Ex: Ajuste de saldo"
               />
             </div>

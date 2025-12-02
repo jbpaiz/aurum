@@ -36,21 +36,20 @@ export function useDashboardData() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    async function loadData() {
-      if (!user) {
-        setLoading(false)
-        return
-      }
+  const loadData = async () => {
+    if (!user) {
+      setLoading(false)
+      return
+    }
 
-      try {
-        setLoading(true)
+    try {
+      setLoading(true)
 
-        // Carregar contas
-        const { data: accounts } = await supabase
-          .from('bank_accounts')
-          .select('*')
-          .eq('user_id', user.id)
+      // Carregar contas
+      const { data: accounts } = await supabase
+        .from('bank_accounts')
+        .select('*')
+        .eq('user_id', user.id)
 
         // Carregar transações do mês atual
         const currentMonth = new Date().toISOString().slice(0, 7) + '-01'
@@ -117,15 +116,20 @@ export function useDashboardData() {
           categoryExpenses
         })
 
-      } catch (error) {
-        console.error('Erro ao carregar dados do dashboard:', error)
-      } finally {
-        setLoading(false)
-      }
+    } catch (error) {
+      console.error('Erro ao carregar dados do dashboard:', error)
+    } finally {
+      setLoading(false)
     }
+  }
 
+  useEffect(() => {
     loadData()
   }, [user])
 
-  return { data, loading }
+  const refresh = () => {
+    loadData()
+  }
+
+  return { data, loading, refresh }
 }

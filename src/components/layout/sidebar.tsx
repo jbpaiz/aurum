@@ -18,7 +18,6 @@ import {
   Target,
   Calendar,
   Bell,
-  Banknote,
   Kanban,
   ChevronDown,
   Columns2
@@ -52,11 +51,6 @@ const financeMenuItems: NavigationItem[] = [
     title: 'Contas',
     icon: Wallet,
     href: '/accounts'
-  },
-  {
-    title: 'Formas de Pagamento',
-    icon: Banknote,
-    href: '/payment-methods'
   },
   {
     title: 'Cartões',
