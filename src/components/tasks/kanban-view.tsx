@@ -198,6 +198,36 @@ export function KanbanView() {
                   >
                     Gerenciar quadros
                   </DropdownMenuItem>
+                  {viewMode === 'kanban' && (
+                    <DropdownMenuItem
+                      onSelect={(event) => {
+                        event.preventDefault()
+                      }}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <span>Largura adaptável</span>
+                        <Switch
+                          checked={adaptiveWidth}
+                          onCheckedChange={setAdaptiveWidth}
+                        />
+                      </div>
+                    </DropdownMenuItem>
+                  )}
+                  {viewMode === 'list' && (
+                    <DropdownMenuItem
+                      onSelect={(event) => {
+                        event.preventDefault()
+                      }}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <span>Largura adaptável</span>
+                        <Switch
+                          checked={adaptiveWidthList}
+                          onCheckedChange={setAdaptiveWidthList}
+                        />
+                      </div>
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
@@ -235,32 +265,6 @@ export function KanbanView() {
               </Badge>
             )}
           </Button>
-
-          {viewMode === 'kanban' && (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-white">
-              <Label htmlFor="adaptive-width-kanban" className="text-xs text-gray-600 cursor-pointer whitespace-nowrap">
-                Largura adaptável
-              </Label>
-              <Switch
-                id="adaptive-width-kanban"
-                checked={adaptiveWidth}
-                onCheckedChange={setAdaptiveWidth}
-              />
-            </div>
-          )}
-
-          {viewMode === 'list' && (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-white">
-              <Label htmlFor="adaptive-width-list" className="text-xs text-gray-600 cursor-pointer whitespace-nowrap">
-                Largura adaptável
-              </Label>
-              <Switch
-                id="adaptive-width-list"
-                checked={adaptiveWidthList}
-                onCheckedChange={setAdaptiveWidthList}
-              />
-            </div>
-          )}
         </div>
 
         {/* Modos de visualização */}
