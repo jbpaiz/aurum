@@ -32,8 +32,8 @@ export function KanbanBoard({ columns, onSelectTask, onCreateTask, moveTask, onT
   )
 
   const [activeCard, setActiveCard] = useState<TaskCard | null>(null)
-  const columnCount = columns.length
-  const columnWidthClass = columnCount <= 4 ? 'w-80' : columnCount === 5 ? 'w-[272px]' : 'w-[256px]'
+  // Largura fixa das colunas: 368px (15% maior que 320px/w-80)
+  const columnWidthClass = 'w-[368px]'
 
   const findTaskById = (taskId: UniqueIdentifier): TaskCard | null => {
     for (const column of columns) {

@@ -349,6 +349,17 @@ export function TransactionModal({ transaction, onSave, onClose, isSaving = fals
 
               {/* Coluna Direita */}
               <div className="space-y-4">
+                {/* Método de Pagamento */}
+                <div className="space-y-2">
+                  <Label>Forma de Pagamento</Label>
+                  <SimplePaymentMethodSelector
+                    value={paymentMethod}
+                    onChange={setPaymentMethod}
+                    placeholder="Como foi pago?"
+                    disabled={isSaving}
+                  />
+                </div>
+
                 {/* Conta - Ocultar quando for cartão de crédito */}
                 {!(type === 'expense' && paymentMethod === 'credit_card') && (
                   <div className="space-y-2">
@@ -367,17 +378,6 @@ export function TransactionModal({ transaction, onSave, onClose, isSaving = fals
                     )}
                   </div>
                 )}
-
-                {/* Método de Pagamento */}
-                <div className="space-y-2">
-                  <Label>Forma de Pagamento</Label>
-                  <SimplePaymentMethodSelector
-                    value={paymentMethod}
-                    onChange={setPaymentMethod}
-                    placeholder="Como foi pago?"
-                    disabled={isSaving}
-                  />
-                </div>
 
                 {/* Seletor de Cartão (apenas se for cartão de crédito) */}
                 {paymentMethod === 'credit_card' && (
