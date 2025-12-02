@@ -193,14 +193,16 @@ export async function registerCreditCardPurchase(params: {
       return { success: false, error: 'Cartão não encontrado' }
     }
     
+    const cardData: any = card
+    
     // Verificar limite
-    const newBalance = (card.current_balance || 0) + amount
-    if (card.credit_limit && newBalance > card.credit_limit) {
+    const newBalance = (cardData.current_balance || 0) + amount
+    if (cardData.credit_limit && newBalance > cardData.credit_limit) {
       return { success: false, error: 'Limite do cartão excedido' }
     }
     
-    const closingDay = card.closing_day || 5
-    const dueDay = card.due_day || 10
+    const closingDay = cardData.closing_day || 5
+    const dueDay = cardData.due_day || 10
     const purchaseDateObj = new Date(purchaseDate)
     
     // Se for parcelado, criar múltiplas compras
@@ -253,10 +255,12 @@ export async function registerCreditCardPurchase(params: {
         return { success: false, error: firstError.message }
       }
       
+      const firstPurchaseData: any = firstPurchase
+      
       // Inserir demais parcelas referenciando a primeira
       const remainingPurchases = purchases.slice(1).map(p => ({
         ...p,
-        parent_purchase_id: firstPurchase.id
+        parent_purchase_id: firstPurchaseData.id
       }))
       
       const { error: remainingError } = await supabase
@@ -268,7 +272,7 @@ export async function registerCreditCardPurchase(params: {
         await supabase
           .from('credit_card_purchases' as any)
           .delete()
-          .eq('id', firstPurchase.id)
+          .eq('id', firstPurchaseData.id)
         return { success: false, error: remainingError.message }
       }
       
@@ -287,7 +291,7 @@ export async function registerCreditCardPurchase(params: {
         await updateInvoiceTotal(userId, cardId, refMonth)
       }
       
-      return { success: true, purchaseId: firstPurchase.id }
+      return { success: true, purchaseId: firstPurchaseData.id }
       
     } else {
       // Compra única (à vista)
@@ -326,6 +330,8 @@ export async function registerCreditCardPurchase(params: {
         return { success: false, error: purchaseError.message }
       }
       
+      const purchaseData: any = purchase
+      
       // Atualizar saldo do cartão
       await supabase
         .from('cards' as any)
@@ -338,7 +344,7 @@ export async function registerCreditCardPurchase(params: {
       // Atualizar total da fatura
       await updateInvoiceTotal(userId, cardId, refMonth)
       
-      return { success: true, purchaseId: purchase.id }
+      return { success: true, purchaseId: purchaseData.id }
     }
     
   } catch (error) {
@@ -364,19 +370,21 @@ async function updateInvoiceTotal(userId: string, cardId: string, referenceMonth
   
   if (!invoice) return
   
+  const invoiceData: any = invoice
+  
   // Somar todas as compras
   const { data: purchases } = await supabase
     .from('credit_card_purchases' as any)
     .select('amount')
-    .eq('invoice_id', invoice.id)
+    .eq('invoice_id', invoiceData.id)
   
-  const total = purchases?.reduce((sum, p) => sum + Number(p.amount), 0) || 0
+  const total = (purchases as any[])?.reduce((sum: number, p: any) => sum + Number(p.amount), 0) || 0
   
   // Atualizar fatura
   await supabase
     .from('credit_card_invoices' as any)
     .update({ total_amount: total } as any)
-    .eq('id', invoice.id)
+    .eq('id', invoiceData.id)
 }
 
 /**
@@ -409,6 +417,8 @@ export async function payCreditCardInvoice(params: {
     if (invoiceError || !invoice) {
       return { success: false, error: 'Fatura não encontrada' }
     }
+    
+    const invoiceData: any = invoice
     
     // Buscar conta
     const { data: account, error: accountError } = await supabase
@@ -445,8 +455,10 @@ export async function payCreditCardInvoice(params: {
       return { success: false, error: paymentError.message }
     }
     
+    const paymentData: any = payment
+    
     // Atualizar fatura
-    const newPaidAmount = Number(invoice.paid_amount) + amount
+    const newPaidAmount = Number(invoiceData.paid_amount) + amount
     await supabase
       .from('credit_card_invoices' as any)
       .update({ 
@@ -466,7 +478,7 @@ export async function payCreditCardInvoice(params: {
       .eq('id', accountId)
     
     // Atualizar saldo do cartão
-    const card = (invoice as any).cards
+    const card = invoiceData.cards
     const newCardBalance = Math.max(0, Number(card.current_balance) - amount)
     await supabase
       .from('cards' as any)
@@ -476,7 +488,7 @@ export async function payCreditCardInvoice(params: {
       } as any)
       .eq('id', card.id)
     
-    return { success: true, paymentId: payment.id }
+    return { success: true, paymentId: paymentData.id }
     
   } catch (error) {
     return {
