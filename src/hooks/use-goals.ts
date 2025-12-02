@@ -33,7 +33,7 @@ export function useGoals() {
     setError(null)
 
     const { data, error } = await supabase
-      .from('financial_goals')
+      .from('financial_goals' as any)
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
@@ -43,7 +43,7 @@ export function useGoals() {
       setError(error.message)
       setGoals([])
     } else {
-      setGoals((data || []).map(row => ({
+      setGoals((data || []).map((row: any) => ({
         id: row.id,
         name: row.name,
         description: row.description || '',
@@ -69,7 +69,7 @@ export function useGoals() {
     }
 
     const { data, error } = await supabase
-      .from('financial_goals')
+      .from('financial_goals' as any)
       .insert({
         user_id: user.id,
         name: goalData.name,
@@ -86,16 +86,17 @@ export function useGoals() {
       throw new Error(error?.message || 'Falha ao criar meta')
     }
 
+    const row: any = data
     setGoals(prev => [{
-      id: data.id,
-      name: data.name,
-      description: data.description || '',
-      targetAmount: Number(data.target_amount),
-      currentAmount: Number(data.current_amount),
-      targetDate: data.target_date,
-      status: data.status as 'active' | 'completed' | 'cancelled',
-      createdAt: data.created_at,
-      userId: data.user_id
+      id: row.id,
+      name: row.name,
+      description: row.description || '',
+      targetAmount: Number(row.target_amount),
+      currentAmount: Number(row.current_amount),
+      targetDate: row.target_date,
+      status: row.status as 'active' | 'completed' | 'cancelled',
+      createdAt: row.created_at,
+      userId: row.user_id
     }, ...prev])
   }, [user])
 
@@ -113,7 +114,7 @@ export function useGoals() {
     if (updates.status !== undefined) dbUpdates.status = updates.status
 
     const { data, error } = await supabase
-      .from('financial_goals')
+      .from('financial_goals' as any)
       .update(dbUpdates)
       .eq('id', id)
       .eq('user_id', user.id)
@@ -124,16 +125,17 @@ export function useGoals() {
       throw new Error(error?.message || 'Falha ao atualizar meta')
     }
 
+    const row: any = data
     setGoals(prev => prev.map(goal => goal.id === id ? {
-      id: data.id,
-      name: data.name,
-      description: data.description || '',
-      targetAmount: Number(data.target_amount),
-      currentAmount: Number(data.current_amount),
-      targetDate: data.target_date,
-      status: data.status as 'active' | 'completed' | 'cancelled',
-      createdAt: data.created_at,
-      userId: data.user_id
+      id: row.id,
+      name: row.name,
+      description: row.description || '',
+      targetAmount: Number(row.target_amount),
+      currentAmount: Number(row.current_amount),
+      targetDate: row.target_date,
+      status: row.status as 'active' | 'completed' | 'cancelled',
+      createdAt: row.created_at,
+      userId: row.user_id
     } : goal))
   }, [user])
 
@@ -143,7 +145,7 @@ export function useGoals() {
     }
 
     const { error } = await supabase
-      .from('financial_goals')
+      .from('financial_goals' as any)
       .delete()
       .eq('id', id)
       .eq('user_id', user.id)

@@ -73,7 +73,7 @@ export function useBudgets() {
         description: budgetData.description,
         amount: budgetData.amount,
         month: budgetData.month
-      })
+      } as any)
       .select()
       .single()
 
@@ -81,14 +81,15 @@ export function useBudgets() {
       throw new Error(error?.message || 'Falha ao criar orçamento')
     }
 
+    const row: any = data
     setBudgets(prev => [{
-      id: data.id,
-      category: data.category,
-      description: data.description || '',
-      amount: Number(data.amount),
-      month: data.month,
-      createdAt: data.created_at,
-      userId: data.user_id
+      id: row.id,
+      category: row.category,
+      description: row.description || '',
+      amount: Number(row.amount),
+      month: row.month,
+      createdAt: row.created_at,
+      userId: row.user_id
     }, ...prev])
   }, [user])
 
@@ -115,14 +116,15 @@ export function useBudgets() {
       throw new Error(error?.message || 'Falha ao atualizar orçamento')
     }
 
+    const row: any = data
     setBudgets(prev => prev.map(budget => budget.id === id ? {
-      id: data.id,
-      category: data.category,
-      description: data.description || '',
-      amount: Number(data.amount),
-      month: data.month,
-      createdAt: data.created_at,
-      userId: data.user_id
+      id: row.id,
+      category: row.category,
+      description: row.description || '',
+      amount: Number(row.amount),
+      month: row.month,
+      createdAt: row.created_at,
+      userId: row.user_id
     } : budget))
   }, [user])
 
