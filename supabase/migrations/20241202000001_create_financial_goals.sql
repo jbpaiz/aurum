@@ -15,6 +15,12 @@ CREATE TABLE IF NOT EXISTS public.financial_goals (
 -- Enable RLS
 ALTER TABLE public.financial_goals ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Users can view their own goals" ON public.financial_goals;
+DROP POLICY IF EXISTS "Users can insert their own goals" ON public.financial_goals;
+DROP POLICY IF EXISTS "Users can update their own goals" ON public.financial_goals;
+DROP POLICY IF EXISTS "Users can delete their own goals" ON public.financial_goals;
+
 -- Create RLS policies
 CREATE POLICY "Users can view their own goals"
   ON public.financial_goals
