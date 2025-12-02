@@ -361,7 +361,7 @@ export function Dashboard() {
                   description: 'A transação foi atualizada com sucesso.'
                 })
               } else {
-                await addTransaction(transaction)
+                await addTransaction(transaction as any)
                 toast({
                   title: 'Transação adicionada!',
                   description: 'A nova transação foi criada com sucesso.'
