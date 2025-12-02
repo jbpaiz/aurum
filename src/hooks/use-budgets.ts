@@ -42,7 +42,7 @@ export function useBudgets() {
       setError(error.message)
       setBudgets([])
     } else {
-      setBudgets((data || []).map(row => ({
+      setBudgets((data || []).map((row: any) => ({
         id: row.id,
         category: row.category,
         description: row.description || '',
