@@ -36,8 +36,22 @@ export function KanbanBoard({ columns, onSelectTask, onCreateTask, moveTask, onT
   const [activeCard, setActiveCard] = useState<TaskCard | null>(null)
   const [overId, setOverId] = useState<UniqueIdentifier | null>(null)
   const columnCount = columns.length
-  // Largura fixa: 368px (15% maior que 320px) ou adaptativa (flex-1 para se ajustar ao espaço disponível)
-  const columnWidthClass = adaptiveWidth ? 'flex-1 min-w-[280px]' : 'w-[368px]'
+  
+  // Calcular largura das colunas baseado na quantidade e modo adaptativo
+  const getColumnWidthClass = () => {
+    if (!adaptiveWidth) {
+      return 'w-[368px]'
+    }
+    
+    // No modo adaptativo, distribuir igualmente o espaço disponível
+    // Mantém um mínimo de 280px e máximo de 400px por coluna
+    if (columnCount === 1) return 'flex-1 max-w-[600px]'
+    if (columnCount === 2) return 'flex-1 max-w-[500px]'
+    if (columnCount === 3) return 'flex-1 max-w-[450px]'
+    return 'flex-1 min-w-[280px] max-w-[400px]'
+  }
+  
+  const columnWidthClass = getColumnWidthClass()
 
   const findTaskById = (taskId: UniqueIdentifier): TaskCard | null => {
     for (const column of columns) {
@@ -107,7 +121,7 @@ export function KanbanBoard({ columns, onSelectTask, onCreateTask, moveTask, onT
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
-      <div className="flex gap-4 pb-4">
+      <div className={`flex gap-4 pb-4 ${adaptiveWidth ? 'w-full' : ''}`}>
         {columns.map((column) => {
           // Determinar se esta coluna está com hover (considerando se o mouse está sobre ela ou sobre um card dela)
           const isColumnOver = overId === column.id || 
