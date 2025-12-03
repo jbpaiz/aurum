@@ -8,6 +8,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { ConfirmDialog } from '@/components/modals/confirm-dialog'
 import type {
   CreateTaskInput,
   TaskCard,
@@ -76,6 +77,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
   const [isDeleting, setIsDeleting] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [showMoveModal, setShowMoveModal] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   const isEditing = Boolean(task)
   const sensors = useSensors(
@@ -249,7 +251,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
       return
     }
     if (!resolvedColumnId) {
-      setFormError('Selecione a coluna antes de salvar.')
+      setFormError('Selecione a situação antes de salvar.')
       return
     }
     setFormError(null)
@@ -275,7 +277,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
       )
       
       setFormError(
-        `Já existe outra tarefa com o título "${title}" na coluna "${duplicateColumn?.name || 'desconhecida'}". ` +
+        `Já existe outra tarefa com o título "${title}" na situação "${duplicateColumn?.name || 'desconhecida'}". ` +
         `${task?.id ? `(Esta tarefa: ${task.id.slice(0, 8)}... | Duplicata: ${duplicateTitle.id.slice(0, 8)}...)` : ''} ` +
         `Delete a tarefa duplicada ou use outro título.`
       )
@@ -326,8 +328,6 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
 
   const handleDeleteTask = async () => {
     if (!task?.id || !onDeleteTask) return
-    const confirmed = window.confirm('Deseja realmente excluir esta tarefa? Esta ação não pode ser desfeita.')
-    if (!confirmed) return
     try {
       setIsDeleting(true)
       await onDeleteTask(task.id)
@@ -392,10 +392,10 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
               <Input value={taskKey} onChange={(event) => setTaskKey(event.target.value)} placeholder={task?.key ?? 'AUR-123'} />
             </div>
             <div className="space-y-2">
-              <Label>Coluna</Label>
+              <Label>Situação</Label>
               <Select value={resolvedColumnId} onValueChange={setColumnId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione a coluna" />
+                  <SelectValue placeholder="Selecione a situação" />
                 </SelectTrigger>
                 <SelectContent>
                   {columns.map((column) => (
@@ -503,7 +503,12 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="flex gap-2 flex-wrap">
               {isEditing && onDeleteTask && (
-                <Button type="button" variant="destructive" onClick={handleDeleteTask} disabled={isDeleting}>
+                <Button 
+                  type="button" 
+                  variant="destructive" 
+                  onClick={() => setShowDeleteDialog(true)} 
+                  disabled={isDeleting}
+                >
                   {isDeleting ? 'Excluindo...' : 'Excluir tarefa'}
                 </Button>
               )}
@@ -557,6 +562,19 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
             task={task}
           />
         )}
+
+        {/* Dialog de confirmação de exclusão */}
+        <ConfirmDialog
+          open={showDeleteDialog}
+          onClose={() => setShowDeleteDialog(false)}
+          onConfirm={handleDeleteTask}
+          title="Excluir tarefa"
+          description="Deseja realmente excluir esta tarefa? Esta ação não pode ser desfeita."
+          confirmText="Excluir"
+          cancelText="Cancelar"
+          variant="danger"
+          isLoading={isDeleting}
+        />
       </div>
     </div>
   )
