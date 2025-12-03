@@ -18,6 +18,7 @@ import { TaskListView } from '@/components/tasks/task-list-view'
 import { KanbanMetrics } from '@/components/tasks/kanban-metrics'
 import { BoardManagementView } from '@/components/tasks/board-management-view'
 import { FiltersModal } from '@/components/tasks/filters-modal'
+import { CloneTaskModal } from '@/components/tasks/clone-task-modal'
 import type { CreateTaskInput, TaskCard, TaskColumn, TaskPriority } from '@/types/tasks'
 import { TASK_PRIORITY_COLORS, TASK_PRIORITY_LABELS } from '@/types/tasks'
 import { useUserPreferences } from '@/hooks/use-user-preferences'
@@ -47,7 +48,9 @@ export function KanbanView() {
   const [priorityFilter, setPriorityFilter] = useState<TaskPriority | 'all'>('all')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isFiltersModalOpen, setIsFiltersModalOpen] = useState(false)
+  const [isCloneModalOpen, setIsCloneModalOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<TaskCard | null>(null)
+  const [taskToClone, setTaskToClone] = useState<TaskCard | null>(null)
   const [columnIdForModal, setColumnIdForModal] = useState<string | undefined>()
   const [preferencesLoaded, setPreferencesLoaded] = useState(false)
   
@@ -155,17 +158,19 @@ export function KanbanView() {
   }
 
   const openCloneTaskModal = (task: TaskCard) => {
-    // Cria um objeto de tarefa sem o ID para forçar criação de uma nova
-    const clonedTask = {
-      ...task,
-      id: undefined, // Remove o ID para criar uma nova tarefa
-      key: '', // Limpa a key para o usuário digitar uma nova
-      title: '' // Limpa o título para o usuário digitar
-    }
-    setEditingTask(clonedTask as any)
-    setColumnIdForModal(task.columnId)
-    setIsModalOpen(true)
+    setTaskToClone(task)
+    setIsCloneModalOpen(true)
   }
+
+  const handleConfirmClone = async (payload: CreateTaskInput) => {
+    await createTask(payload)
+  }
+
+  // Obter todas as keys existentes para validação
+  const existingKeys = useMemo(() => {
+    if (!activeBoard) return []
+    return activeBoard.columns.flatMap(col => col.tasks.map(task => task.key))
+  }, [activeBoard])
 
   const handleSaveTask = async (payload: CreateTaskInput & { id?: string }) => {
     const { id, ...taskPayload } = payload
@@ -408,6 +413,19 @@ export function KanbanView() {
         labelFilter={labelFilter}
         onLabelChange={setLabelFilter}
       />
+
+      {taskToClone && (
+        <CloneTaskModal
+          open={isCloneModalOpen}
+          onClose={() => {
+            setIsCloneModalOpen(false)
+            setTaskToClone(null)
+          }}
+          task={taskToClone}
+          onConfirm={handleConfirmClone}
+          existingKeys={existingKeys}
+        />
+      )}
     </div>
   )
 }
