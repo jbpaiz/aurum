@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { supabase } from '@/lib/supabase'
 import type { Database, Json } from '@/lib/database.types'
 import { useAuth } from '@/contexts/auth-context'
+import { useUserPreferences } from '@/hooks/use-user-preferences'
 import type {
   CreateTaskInput,
   MoveTaskPayload,
@@ -303,28 +304,45 @@ interface TasksProviderProps {
 
 export function TasksProvider({ children }: TasksProviderProps) {
   const { user } = useAuth()
+  const { preferences, updatePreferences, loading: preferencesLoading } = useUserPreferences()
   const [projects, setProjects] = useState<TaskProject[]>([])
-  const [activeProjectId, setActiveProjectId] = useState<string | null>(() => {
-    if (typeof window === 'undefined') return null
-    return window.localStorage.getItem('aurum.tasks.activeProjectId')
-  })
-  const [activeBoardId, setActiveBoardId] = useState<string | null>(() => {
-    if (typeof window === 'undefined') return null
-    return window.localStorage.getItem('aurum.tasks.activeBoardId')
-  })
+  const [activeProjectId, setActiveProjectId] = useState<string | null>(null)
+  const [activeBoardId, setActiveBoardId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const creatingDefaultRef = useRef(false)
+  const [preferencesInitialized, setPreferencesInitialized] = useState(false)
 
-  // Salvar no localStorage quando mudar
+  // Inicializar IDs das preferências do usuário uma única vez
   useEffect(() => {
-    if (typeof window === 'undefined' || !activeProjectId) return
-    window.localStorage.setItem('aurum.tasks.activeProjectId', activeProjectId)
-  }, [activeProjectId])
+    if (!preferencesLoading && preferences && !preferencesInitialized) {
+      if (preferences.activeProjectId) {
+        setActiveProjectId(preferences.activeProjectId)
+      }
+      if (preferences.activeBoardId) {
+        setActiveBoardId(preferences.activeBoardId)
+      }
+      setPreferencesInitialized(true)
+    }
+  }, [preferences, preferencesLoading, preferencesInitialized])
+
+  // Salvar nas preferências quando mudar (apenas após inicialização)
+  useEffect(() => {
+    if (!preferencesInitialized || preferencesLoading || !preferences) return
+    if (!activeProjectId) return
+    
+    if (preferences.activeProjectId !== activeProjectId) {
+      updatePreferences({ activeProjectId })
+    }
+  }, [activeProjectId, preferencesInitialized, preferencesLoading, preferences, updatePreferences])
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !activeBoardId) return
-    window.localStorage.setItem('aurum.tasks.activeBoardId', activeBoardId)
-  }, [activeBoardId])
+    if (!preferencesInitialized || preferencesLoading || !preferences) return
+    if (!activeBoardId) return
+    
+    if (preferences.activeBoardId !== activeBoardId) {
+      updatePreferences({ activeBoardId })
+    }
+  }, [activeBoardId, preferencesInitialized, preferencesLoading, preferences, updatePreferences])
 
   const updateBoardState = useCallback(
     (boardId: string, updater: (board: TaskBoard) => TaskBoard) => {
