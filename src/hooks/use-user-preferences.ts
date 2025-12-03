@@ -96,8 +96,6 @@ export function useUserPreferences() {
       return
     }
 
-    console.log('🔵 [PREFERENCES] Carregando preferências do usuário:', user.id)
-
     try {
       setLoading(true)
       const { data, error } = await (supabase as any)
@@ -107,27 +105,19 @@ export function useUserPreferences() {
         .maybeSingle() // Use maybeSingle em vez de single para não dar erro se não existir
 
       if (error && error.code !== 'PGRST116') {
-        console.error('❌ [PREFERENCES] Erro ao carregar:', error)
+        console.error('Erro ao carregar preferências:', error)
         setLoading(false)
         return
       }
 
       if (!data) {
-        console.log('🟡 [PREFERENCES] Preferências não encontradas, criando...')
         // Se não existir preferências, criar automaticamente
         await createDefaultPreferences()
       } else {
-        const mapped = mapDbToPreferences(data)
-        console.log('✅ [PREFERENCES] Carregadas com sucesso:', {
-          activeBoardId: mapped.activeBoardId,
-          activeProjectId: mapped.activeProjectId,
-          lastActiveHub: mapped.lastActiveHub,
-          tasksViewMode: mapped.tasksViewMode
-        })
-        setPreferences(mapped)
+        setPreferences(mapDbToPreferences(data))
       }
     } catch (error) {
-      console.error('❌ [PREFERENCES] Exceção ao carregar:', error)
+      console.error('Erro ao carregar preferências:', error)
     } finally {
       setLoading(false)
     }
@@ -138,11 +128,8 @@ export function useUserPreferences() {
     async (updates: UserPreferencesInput) => {
       if (!user) return
 
-      console.log('💾 [PREFERENCES] Atualizando preferências:', updates)
-
       try {
         const dbUpdates = mapPreferencesToDb(updates)
-        console.log('💾 [PREFERENCES] Dados mapeados para DB:', dbUpdates)
 
         const { data, error } = await (supabase as any)
           .from(PREFERENCES_TABLE)
@@ -152,16 +139,15 @@ export function useUserPreferences() {
           .single()
 
         if (error) {
-          console.error('❌ [PREFERENCES] Erro ao atualizar:', error)
+          console.error('Erro ao atualizar preferências:', error)
           return
         }
 
         if (data) {
-          console.log('✅ [PREFERENCES] Atualizado com sucesso:', mapDbToPreferences(data))
           setPreferences(mapDbToPreferences(data))
         }
       } catch (error) {
-        console.error('❌ [PREFERENCES] Exceção ao atualizar:', error)
+        console.error('Erro ao atualizar preferências:', error)
       }
     },
     [user]

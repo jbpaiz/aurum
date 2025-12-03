@@ -64,14 +64,6 @@ export function KanbanView() {
   // Carregar preferências iniciais APENAS UMA VEZ quando carregarem
   useEffect(() => {
     if (!preferencesLoading && preferences && !preferencesLoaded) {
-      console.log('🔵 [KANBAN] Carregando preferências:', {
-        activeBoardId: preferences.activeBoardId,
-        activeProjectId: preferences.activeProjectId,
-        currentBoardId: activeBoard?.id,
-        hasActiveProject: !!activeProject,
-        boards: activeProject?.boards.map(b => ({ id: b.id, name: b.name }))
-      })
-      
       setViewMode(preferences.tasksViewMode)
       setAdaptiveWidth(preferences.tasksAdaptiveWidth)
       setAdaptiveWidthList(preferences.tasksAdaptiveWidthList)
@@ -79,13 +71,7 @@ export function KanbanView() {
       // Restaurar último quadro acessado
       if (preferences.activeBoardId && activeProject) {
         const boardExists = activeProject.boards.some(b => b.id === preferences.activeBoardId)
-        console.log('🔵 [KANBAN] Verificando se quadro existe:', {
-          activeBoardId: preferences.activeBoardId,
-          boardExists,
-          willRestore: boardExists && activeBoard?.id !== preferences.activeBoardId
-        })
         if (boardExists && activeBoard?.id !== preferences.activeBoardId) {
-          console.log('✅ [KANBAN] Restaurando quadro:', preferences.activeBoardId)
           setActiveBoardId(preferences.activeBoardId)
         }
       }
@@ -106,12 +92,6 @@ export function KanbanView() {
     if (preferences.activeBoardId === activeBoard.id) {
       return
     }
-
-    console.log('💾 [KANBAN] Salvando quadro após mudança:', {
-      oldBoardId: preferences.activeBoardId,
-      newBoardId: activeBoard.id,
-      projectId: activeProject?.id
-    })
 
     // Debounce de 300ms para evitar salvamentos múltiplos
     const timer = setTimeout(() => {
