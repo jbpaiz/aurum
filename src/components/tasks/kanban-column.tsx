@@ -30,8 +30,8 @@ export function KanbanColumn({ column, onSelectTask, onCreateTask, onToggleCheck
   const isOver = isOverProp !== undefined ? isOverProp : isOverDroppable
 
   return (
-    <div className={`flex ${widthClass} flex-shrink-0 flex-col`}>
-      <div className="mb-3 flex items-center justify-between">
+    <div className={`flex ${widthClass} flex-shrink-0 flex-col h-full`}>
+      <div className="mb-3 flex items-center justify-between flex-shrink-0">
         <div>
           <p className="text-sm font-semibold text-gray-900 dark:text-white">{column.name}</p>
           <p className="text-xs text-gray-500 dark:text-gray-400">{column.tasks.length} itens</p>
