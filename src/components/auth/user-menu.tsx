@@ -31,15 +31,19 @@ export function UserMenu() {
   const handleSignOut = async () => {
     setLoading(true)
     
-    // Limpar estado imediatamente
     try {
+      // Fazer logout
       await signOut()
+      
+      // Aguardar um pouco para garantir que o estado foi limpo
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      // Forçar reload completo da página
+      window.location.replace('/')
     } catch (error) {
-      // Ignora erros silenciosamente
+      // Em caso de erro, ainda força reload
+      window.location.replace('/')
     }
-    
-    // Redireciona para home independente do resultado
-    window.location.href = '/'
   }
 
   const getInitials = (name: string) => {

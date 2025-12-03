@@ -79,16 +79,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut()
-      
-      // Limpar estado local mesmo se houver erro
-      setSession(null)
-      setUser(null)
-      
-      // Limpar localStorage
+      // Limpar localStorage primeiro
       if (typeof window !== 'undefined') {
         localStorage.removeItem('aurum.lastActiveHub')
+        localStorage.clear()
       }
+      
+      // Fazer logout no Supabase (scope: 'local' para limpar apenas este dispositivo)
+      const { error } = await supabase.auth.signOut({ scope: 'local' })
+      
+      // Limpar estado local
+      setSession(null)
+      setUser(null)
       
       return { error }
     } catch (err) {
@@ -97,7 +99,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(null)
       
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('aurum.lastActiveHub')
+        localStorage.clear()
       }
       
       return { error: err }
