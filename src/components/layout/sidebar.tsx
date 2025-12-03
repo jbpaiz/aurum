@@ -357,33 +357,31 @@ export function Sidebar({ children }: SidebarProps) {
                     )
                   })}
                 </nav>
-              </div>
 
-              <nav className="space-y-1 pb-4">
-                {bottomMenuItems.map((item) => {
-                  const Icon = item.icon
-                  const active = isActive(item)
-                  return (
-                    <Link
-                      key={item.title}
-                      href={item.href}
+                {/* User controls no mobile */}
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                  <div className="flex items-center justify-between px-3">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-10 w-10 p-0"
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className={cn(
-                        'group flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200',
-                        active
-                          ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 border-r-2 border-blue-600 dark:from-blue-900/30 dark:to-purple-900/30 dark:text-blue-300 dark:border-blue-400'
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200'
-                      )}
                     >
-                      <Icon className={cn(
-                        'h-5 w-5 transition-colors',
-                        active ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300'
-                      )} />
-                      {item.title}
-                    </Link>
-                  )
-                })}
-              </nav>
+                      <Bell className="h-5 w-5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-10 w-10 p-0"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Settings className="h-5 w-5" />
+                    </Button>
+                    <ThemeToggle />
+                    <UserMenu />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
