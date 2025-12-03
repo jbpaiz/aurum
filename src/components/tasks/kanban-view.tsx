@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { Kanban, Columns2, Search, Filter, List as ListIcon, BarChart3, MoreHorizontal, Maximize2 } from 'lucide-react'
+import { Kanban, Columns2, Search, Filter, List as ListIcon, BarChart3, MoreHorizontal, Maximize2, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -195,32 +195,33 @@ export function KanbanView() {
       <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 sm:p-6">
         {/* Header compacto em 2 linhas */}
         <div className="space-y-3">
-          {/* Linha 1: Título, Seletor de Quadro e Ações */}
+          {/* Linha 1: Título com dropdown de quadros e Ações */}
           <div className="flex items-center justify-between gap-4">
-            {/* Título e Badge */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <Kanban className="h-5 w-5 text-blue-500 dark:text-blue-400" />
-              <h1 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">{activeBoard?.name ?? 'Kanban'}</h1>
-              <Badge variant="outline" className="text-xs font-medium text-gray-600 dark:text-gray-300 dark:border-gray-600">
-                {activeTasksCount}
-              </Badge>
-            </div>
-            
-            {/* Seletor de quadro */}
-            <div className="flex-1 max-w-xs">
-              <Select value={activeBoard?.id || ''} onValueChange={setActiveBoardId}>
-                <SelectTrigger className="h-9">
-                  <SelectValue placeholder="Selecione o quadro" />
-                </SelectTrigger>
-                <SelectContent>
-                  {activeProject?.boards.map((board) => (
-                    <SelectItem key={board.id} value={board.id}>
-                      {board.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Título clicável com dropdown de quadros */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 flex-shrink-0 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg px-2 py-1 -ml-2 transition-colors group">
+                  <Kanban className="h-5 w-5 text-blue-500 dark:text-blue-400" />
+                  <h1 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">{activeBoard?.name ?? 'Kanban'}</h1>
+                  <Badge variant="outline" className="text-xs font-medium text-gray-600 dark:text-gray-300 dark:border-gray-600">
+                    {activeTasksCount}
+                  </Badge>
+                  <ChevronDown className="h-4 w-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                {activeProject?.boards.map((board) => (
+                  <DropdownMenuItem
+                    key={board.id}
+                    onSelect={() => setActiveBoardId(board.id)}
+                    className={board.id === activeBoard?.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''}
+                  >
+                    <Kanban className="h-4 w-4 mr-2" />
+                    {board.name}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* Botões de ação */}
             <div className="flex gap-2 flex-shrink-0">
@@ -344,7 +345,7 @@ export function KanbanView() {
         </div>
       ) : viewMode === 'kanban' ? (
         <div 
-          className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-x-scroll max-w-full md:max-w-[calc(100vw-280px)] max-h-[calc(100vh-360px)] [scrollbar-width:thin] [scrollbar-color:#CBD5E1_#F1F5F9] dark:[scrollbar-color:#4B5563_#1F2937]"
+          className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-x-scroll max-w-full md:max-w-[calc(100vw-280px)] max-h-[calc(100vh-265px)] [scrollbar-width:thin] [scrollbar-color:#CBD5E1_#F1F5F9] dark:[scrollbar-color:#4B5563_#1F2937]"
         >
           <div className="p-3 sm:p-4 min-w-min">
             <KanbanBoard
