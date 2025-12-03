@@ -78,8 +78,30 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut()
-    return { error }
+    try {
+      const { error } = await supabase.auth.signOut()
+      
+      // Limpar estado local mesmo se houver erro
+      setSession(null)
+      setUser(null)
+      
+      // Limpar localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('aurum.lastActiveHub')
+      }
+      
+      return { error }
+    } catch (err) {
+      // Em caso de erro, ainda assim limpa o estado local
+      setSession(null)
+      setUser(null)
+      
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('aurum.lastActiveHub')
+      }
+      
+      return { error: err }
+    }
   }
 
   const signInWithGoogle = async () => {

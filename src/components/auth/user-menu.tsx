@@ -32,25 +32,22 @@ export function UserMenu() {
     setLoading(true)
     try {
       const { error } = await signOut()
-      if (error) {
+      
+      // Mesmo com erro de sessão, consideramos logout bem-sucedido
+      // se o estado local foi limpo
+      if (error && error.message !== 'Auth session missing!') {
         toast({
           variant: "destructive",
           title: "Erro ao sair",
           description: error.message
         })
       } else {
-        toast({
-          variant: "success",
-          title: "Logout realizado",
-          description: "Você foi desconectado com sucesso"
-        })
+        // Redireciona para a home após logout
+        window.location.href = '/'
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Erro inesperado",
-        description: "Tente novamente mais tarde"
-      })
+      // Força redirecionamento mesmo em caso de erro
+      window.location.href = '/'
     } finally {
       setLoading(false)
     }
