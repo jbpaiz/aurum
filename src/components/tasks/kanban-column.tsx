@@ -44,8 +44,10 @@ export function KanbanColumn({ column, onSelectTask, onCreateTask, onToggleCheck
 
       <div
         ref={setNodeRef}
-        className={`flex flex-1 flex-col gap-3 rounded-xl border border-dashed border-gray-200 dark:border-gray-700 bg-gray-50/70 dark:bg-gray-900/50 p-3 ${
-          isOver ? 'border-blue-400 dark:border-blue-500 bg-blue-50/60 dark:bg-blue-900/30' : ''
+        className={`flex flex-1 flex-col gap-3 rounded-xl border-2 p-3 transition-all duration-200 ${
+          isOver 
+            ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/40 shadow-lg scale-[1.02]' 
+            : 'border-dashed border-gray-200 dark:border-gray-700 bg-gray-50/70 dark:bg-gray-900/50'
         }`}
       >
         <SortableContext items={column.tasks.map((task) => task.id)} strategy={verticalListSortingStrategy}>
