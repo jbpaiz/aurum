@@ -29,7 +29,10 @@ export function MainLayout({ children }: MainLayoutProps) {
       
       // Fallback para localStorage se não houver preferências no banco
       if (!lastHub) {
-        lastHub = localStorage.getItem('aurum.lastActiveHub') as 'finance' | 'tasks' | null
+        const stored = localStorage.getItem('aurum.lastActiveHub')
+        if (stored && (stored === 'finance' || stored === 'tasks')) {
+          lastHub = stored
+        }
       }
       
       if (lastHub && lastHub !== 'finance' && HUB_META[lastHub]) {
