@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import Link from 'next/link'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { usePathname, useSearchParams, useRouter } from 'next/navigation'
 import type { ReadonlyURLSearchParams } from 'next/navigation'
 import type { LucideIcon } from 'lucide-react'
 import {
@@ -25,6 +25,9 @@ import {
 import { cn } from '@/lib/utils'
 import { HUB_META, resolveHubId, type HubId } from '@/components/layout/hub-config'
 import { useUserPreferences } from '@/hooks/use-user-preferences'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { UserMenu } from '@/components/auth/user-menu'
+import { Button } from '@/components/ui/button'
 
 interface SidebarProps {
   children: React.ReactNode
@@ -101,29 +104,13 @@ const hubNavigation = {
   }
 } as const
 
-const bottomMenuItems: NavigationItem[] = [
-  {
-    title: 'Notificações',
-    icon: Bell,
-    href: '/notifications'
-  },
-  {
-    title: 'Configurações',
-    icon: Settings,
-    href: '/settings'
-  },
-  {
-    title: 'Perfil',
-    icon: User,
-    href: '/profile'
-  }
-]
-
 export function Sidebar({ children }: SidebarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isHubSwitcherOpen, setIsHubSwitcherOpen] = useState(false)
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const router = useRouter()
+  const isManualNavigation = useRef(false)
   const currentHub: HubId = resolveHubId(pathname)
   const activeHub = hubNavigation[currentHub]
   const hubEntries = Object.values(hubNavigation)
@@ -131,19 +118,25 @@ export function Sidebar({ children }: SidebarProps) {
   const HubIcon = activeHub.icon
   const { preferences, updatePreferences } = useUserPreferences()
 
-  // Salvar último hub acessado no banco ou localStorage
+  // Salvar último hub acessado no banco com debounce
   useEffect(() => {
     if (typeof window === 'undefined') return
     
-    if (preferences) {
-      // Atualizar no banco se houver preferências
-      if (preferences.lastActiveHub !== currentHub) {
+    // Debounce de 500ms para evitar race conditions
+    const timer = setTimeout(() => {
+      if (preferences && preferences.lastActiveHub !== currentHub) {
         updatePreferences({ lastActiveHub: currentHub })
       }
-    } else {
-      // Fallback para localStorage se não houver usuário logado
+      // Sempre mantém localStorage sincronizado como backup
       localStorage.setItem('aurum.lastActiveHub', currentHub)
-    }
+      
+      // Limpa flag de navegação manual
+      if (isManualNavigation.current) {
+        isManualNavigation.current = false
+      }
+    }, 500)
+    
+    return () => clearTimeout(timer)
   }, [currentHub, preferences, updatePreferences])
 
   const isActive = (item: NavigationItem) => {
@@ -166,16 +159,16 @@ export function Sidebar({ children }: SidebarProps) {
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950">
       {/* Desktop Sidebar */}
       <div className="hidden md:flex md:w-64 md:flex-col">
-        <div className="flex flex-col flex-grow pt-5 bg-white shadow-sm dark:bg-gray-900 dark:shadow-gray-800/50">
+        <div className="flex flex-col flex-grow bg-white shadow-sm dark:bg-gray-900 dark:shadow-gray-800/50">
           {/* Brand + Hub selector */}
-          <div className="relative px-4 pb-4">
+          <div className="relative px-4 pt-5 pb-4">
             <button
               type="button"
               onClick={() => setIsHubSwitcherOpen((prev) => !prev)}
               className="flex w-full items-center justify-between rounded-2xl border border-gray-200 bg-white px-4 py-3 text-left shadow-sm transition hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600"
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 text-white">
+                <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${activeHub.accent} text-white`}>
                   <HubIcon className="h-5 w-5" />
                 </div>
                 <div className="leading-tight">
@@ -196,12 +189,20 @@ export function Sidebar({ children }: SidebarProps) {
                     const Icon = hub.icon
                     const isCurrent = hub.id === currentHub
                     return (
-                      <Link
+                      <button
                         key={hub.id}
-                        href={hub.entryHref}
-                        onClick={() => setIsHubSwitcherOpen(false)}
+                        onClick={(e) => {
+                          e.preventDefault()
+                          setIsHubSwitcherOpen(false)
+                          if (!isCurrent) {
+                            isManualNavigation.current = true
+                            // Marca como navegação interna para evitar redirecionamento automático
+                            sessionStorage.setItem('aurum.internalNavigation', 'true')
+                            router.push(hub.entryHref)
+                          }
+                        }}
                         className={cn(
-                          'flex items-center gap-3 px-4 py-3 text-sm transition hover:bg-slate-50 dark:hover:bg-gray-700',
+                          'flex items-center gap-3 px-4 py-3 text-sm transition hover:bg-slate-50 dark:hover:bg-gray-700 w-full text-left',
                           isCurrent ? 'bg-blue-50 text-blue-900 dark:bg-blue-900/30 dark:text-blue-300' : 'text-slate-700 dark:text-gray-300'
                         )}
                       >
@@ -217,7 +218,7 @@ export function Sidebar({ children }: SidebarProps) {
                           <span className="font-semibold">{hub.name}</span>
                           <span className="text-xs text-slate-500 dark:text-gray-400">{hub.description}</span>
                         </div>
-                      </Link>
+                      </button>
                     );
                   })}
                 </div>
@@ -253,30 +254,24 @@ export function Sidebar({ children }: SidebarProps) {
               })}
             </nav>
 
-            <nav className="space-y-1 pb-4">
-              {bottomMenuItems.map((item) => {
-                const Icon = item.icon
-                const active = isActive(item)
-                return (
-                  <Link
-                    key={item.title}
-                    href={item.href}
-                    className={cn(
-                      'group flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200',
-                      active
-                        ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 border-r-2 border-blue-600 dark:from-blue-900/30 dark:to-purple-900/30 dark:text-blue-300 dark:border-blue-400'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200'
-                    )}
-                  >
-                    <Icon className={cn(
-                      'h-5 w-5 transition-colors',
-                      active ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300'
-                    )} />
-                    {item.title}
-                  </Link>
-                )
-              })}
-            </nav>
+            {/* User Controls Section */}
+            <div className="border-t border-gray-200 dark:border-gray-800 px-3 py-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <Link href="/notifications">
+                  <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-500 dark:text-gray-400">
+                    <Bell className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link href="/settings">
+                  <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-500 dark:text-gray-400">
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <ThemeToggle />
+                <div className="flex-1" />
+                <UserMenu />
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -1,13 +1,8 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
 import { Sidebar } from '@/components/layout/sidebar'
-import { Header } from '@/components/layout/header'
 import { useAuth } from '@/contexts/auth-context'
 import { AuthModal } from '@/components/auth/auth-modal'
-import { useUserPreferences } from '@/hooks/use-user-preferences'
-import { HUB_META } from '@/components/layout/hub-config'
 
 interface MainLayoutProps {
   children: React.ReactNode
@@ -15,31 +10,6 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
   const { user, loading: authLoading } = useAuth()
-  const { preferences, loading: preferencesLoading } = useUserPreferences()
-  const router = useRouter()
-  const pathname = usePathname()
-
-  // Redirecionar para o último hub acessado após login
-  useEffect(() => {
-    if (!user || authLoading || preferencesLoading) return
-    
-    // Só redireciona se estiver na página inicial (/)
-    if (pathname === '/') {
-      let lastHub = preferences?.lastActiveHub
-      
-      // Fallback para localStorage se não houver preferências no banco
-      if (!lastHub) {
-        const stored = localStorage.getItem('aurum.lastActiveHub')
-        if (stored && (stored === 'finance' || stored === 'tasks')) {
-          lastHub = stored
-        }
-      }
-      
-      if (lastHub && lastHub !== 'finance' && HUB_META[lastHub]) {
-        router.replace(HUB_META[lastHub].entryHref)
-      }
-    }
-  }, [user, authLoading, preferences, preferencesLoading, pathname, router])
 
   if (authLoading) {
     return (
@@ -62,7 +32,6 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   return (
     <Sidebar>
-      <Header />
       <main className="flex-1">
         {children}
       </main>
