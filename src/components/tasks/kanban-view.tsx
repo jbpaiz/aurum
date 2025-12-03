@@ -154,6 +154,19 @@ export function KanbanView() {
     setIsModalOpen(true)
   }
 
+  const openCloneTaskModal = (task: TaskCard) => {
+    // Cria um objeto de tarefa sem o ID para forçar criação de uma nova
+    const clonedTask = {
+      ...task,
+      id: undefined, // Remove o ID para criar uma nova tarefa
+      key: '', // Limpa a key para o usuário digitar uma nova
+      title: '' // Limpa o título para o usuário digitar
+    }
+    setEditingTask(clonedTask as any)
+    setColumnIdForModal(task.columnId)
+    setIsModalOpen(true)
+  }
+
   const handleSaveTask = async (payload: CreateTaskInput & { id?: string }) => {
     const { id, ...taskPayload } = payload
     if (id) {
@@ -382,6 +395,7 @@ export function KanbanView() {
         task={editingTask}
         onSave={handleSaveTask}
         onDeleteTask={deleteTask}
+        onCloneTask={openCloneTaskModal}
       />
 
       <FiltersModal

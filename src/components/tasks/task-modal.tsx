@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState, useRef } from 'react'
-import { X, Plus, Trash2, Check, GripVertical, MoveRight } from 'lucide-react'
+import { X, Plus, Trash2, Check, GripVertical, MoveRight, Copy } from 'lucide-react'
 import { DndContext, DragEndEvent, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -29,6 +29,7 @@ interface TaskModalProps {
   task?: TaskCard | null
   onSave: (payload: CreateTaskInput & { id?: string }) => Promise<void>
   onDeleteTask?: (taskId: string) => Promise<void>
+  onCloneTask?: (task: TaskCard) => void
 }
 
 const TASK_TYPES: { value: TaskType; label: string }[] = [
@@ -41,7 +42,7 @@ const TASK_TYPES: { value: TaskType; label: string }[] = [
 // Chaves para persistir dados do formulário
 const STORAGE_KEY = 'task_modal_form_data'
 
-export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSave, onDeleteTask }: TaskModalProps) {
+export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSave, onDeleteTask, onCloneTask }: TaskModalProps) {
   const { activeBoard } = useTasks()
   const isInitialized = useRef(false)
   
@@ -500,22 +501,38 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
           </div>
 
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               {isEditing && onDeleteTask && (
                 <Button type="button" variant="destructive" onClick={handleDeleteTask} disabled={isDeleting}>
                   {isDeleting ? 'Excluindo...' : 'Excluir tarefa'}
                 </Button>
               )}
               {isEditing && task && (
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setShowMoveModal(true)}
-                  className="gap-2"
-                >
-                  <MoveRight className="h-4 w-4" />
-                  Mover para outro quadro
-                </Button>
+                <>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setShowMoveModal(true)}
+                    className="gap-2"
+                  >
+                    <MoveRight className="h-4 w-4" />
+                    Mover para outro quadro
+                  </Button>
+                  {onCloneTask && (
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => {
+                        onCloneTask(task)
+                        onClose()
+                      }}
+                      className="gap-2"
+                    >
+                      <Copy className="h-4 w-4" />
+                      Clonar tarefa
+                    </Button>
+                  )}
+                </>
               )}
             </div>
             <div className="flex justify-end gap-3">
