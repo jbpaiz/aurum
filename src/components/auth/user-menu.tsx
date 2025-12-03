@@ -30,27 +30,16 @@ export function UserMenu() {
 
   const handleSignOut = async () => {
     setLoading(true)
+    
+    // Limpar estado imediatamente
     try {
-      const { error } = await signOut()
-      
-      // Mesmo com erro de sessão, consideramos logout bem-sucedido
-      // se o estado local foi limpo
-      if (error && error.message !== 'Auth session missing!') {
-        toast({
-          variant: "destructive",
-          title: "Erro ao sair",
-          description: error.message
-        })
-      } else {
-        // Redireciona para a home após logout
-        window.location.href = '/'
-      }
+      await signOut()
     } catch (error) {
-      // Força redirecionamento mesmo em caso de erro
-      window.location.href = '/'
-    } finally {
-      setLoading(false)
+      // Ignora erros silenciosamente
     }
+    
+    // Redireciona para home independente do resultado
+    window.location.href = '/'
   }
 
   const getInitials = (name: string) => {
