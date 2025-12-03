@@ -459,20 +459,32 @@ export function TasksProvider({ children }: TasksProviderProps) {
         const projectList = data.map(mapProject)
         setProjects(projectList)
 
+        // Manter o projeto ativo se ainda existir, senão seleciona o primeiro
         const nextProjectId = projectList.some((project) => project.id === activeProjectId)
           ? activeProjectId
           : projectList[0]?.id ?? null
-        setActiveProjectId(nextProjectId)
+        
+        // Só atualiza se realmente mudou
+        if (nextProjectId !== activeProjectId) {
+          setActiveProjectId(nextProjectId)
+        }
 
         const currentProject = projectList.find((project) => project.id === nextProjectId)
 
         if (currentProject) {
+          // Manter o board ativo se ainda existir no projeto atual, senão seleciona o primeiro
           const nextBoardId = currentProject.boards.some((board) => board.id === activeBoardId)
             ? activeBoardId
             : currentProject.boards[0]?.id ?? null
-          setActiveBoardId(nextBoardId ?? null)
+          
+          // Só atualiza se realmente mudou
+          if (nextBoardId !== activeBoardId) {
+            setActiveBoardId(nextBoardId ?? null)
+          }
         } else {
-          setActiveBoardId(null)
+          if (activeBoardId !== null) {
+            setActiveBoardId(null)
+          }
         }
 
         return
