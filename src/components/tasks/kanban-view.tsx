@@ -193,138 +193,143 @@ export function KanbanView() {
   return (
     <div className="flex flex-col gap-3 p-4 md:gap-3 md:p-3">
       <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 sm:p-6">
-        {/* Header com título e ações */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400 mb-1">Módulo de tarefas</p>
-            <div className="flex items-center gap-2 flex-wrap">
-              <Kanban className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500 dark:text-blue-400 flex-shrink-0" />
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white truncate">{activeBoard?.name ?? 'Kanban'}</h1>
-              <Badge variant="outline" className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300 dark:border-gray-600">
+        {/* Header compacto em 2 linhas */}
+        <div className="space-y-3">
+          {/* Linha 1: Título, Seletor de Quadro e Ações */}
+          <div className="flex items-center justify-between gap-4">
+            {/* Título e Badge */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Kanban className="h-5 w-5 text-blue-500 dark:text-blue-400" />
+              <h1 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">{activeBoard?.name ?? 'Kanban'}</h1>
+              <Badge variant="outline" className="text-xs font-medium text-gray-600 dark:text-gray-300 dark:border-gray-600">
                 {activeTasksCount}
               </Badge>
             </div>
+            
+            {/* Seletor de quadro */}
+            <div className="flex-1 max-w-xs">
+              <Select value={activeBoard?.id || ''} onValueChange={setActiveBoardId}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Selecione o quadro" />
+                </SelectTrigger>
+                <SelectContent>
+                  {activeProject?.boards.map((board) => (
+                    <SelectItem key={board.id} value={board.id}>
+                      {board.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Botões de ação */}
+            <div className="flex gap-2 flex-shrink-0">
+              <Button onClick={() => openCreateTaskModal()} size="sm" className="gap-2 h-9">
+                <span className="hidden sm:inline">Nova tarefa</span>
+                <span className="sm:hidden">Nova</span>
+              </Button>
+              {activeBoard && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-9 w-9 p-0">
+                      <MoreHorizontal className="h-4 w-4" />
+                      <span className="sr-only">Opções do quadro</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem
+                      onSelect={(event) => {
+                        event.preventDefault()
+                        updateManagerVisibility(true)
+                      }}
+                    >
+                      Gerenciar quadros
+                    </DropdownMenuItem>
+                    {viewMode === 'kanban' && (
+                      <DropdownMenuItem
+                        onSelect={(event) => {
+                          event.preventDefault()
+                        }}
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <span>Largura adaptável</span>
+                          <Switch
+                            checked={adaptiveWidth}
+                            onCheckedChange={setAdaptiveWidth}
+                          />
+                        </div>
+                      </DropdownMenuItem>
+                    )}
+                    {viewMode === 'list' && (
+                      <DropdownMenuItem
+                        onSelect={(event) => {
+                          event.preventDefault()
+                        }}
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <span>Largura adaptável</span>
+                          <Switch
+                            checked={adaptiveWidthList}
+                            onCheckedChange={setAdaptiveWidthList}
+                          />
+                        </div>
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
           </div>
-          <div className="flex gap-2 flex-shrink-0">
-            <Button onClick={() => openCreateTaskModal()} size="sm" className="gap-2">
-              <span className="hidden sm:inline">Nova tarefa</span>
-              <span className="sm:hidden">Nova</span>
+
+          {/* Linha 2: Modos de Visualização e Filtros */}
+          <div className="flex items-center justify-between gap-4">
+            {/* Modos de visualização */}
+            <div className="inline-flex items-center gap-1 sm:gap-2 rounded-xl bg-gray-100 dark:bg-gray-900 p-1">
+              <Button
+                variant={viewMode === 'kanban' ? 'default' : 'ghost'}
+                size="sm"
+                className={`rounded-lg text-xs sm:text-sm ${viewMode === 'kanban' ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow' : 'text-gray-600 dark:text-gray-400'}`}
+                onClick={() => setViewMode('kanban')}
+              >
+                <Kanban className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Quadro</span>
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                size="sm"
+                className={`rounded-lg text-xs sm:text-sm ${viewMode === 'list' ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow' : 'text-gray-600 dark:text-gray-400'}`}
+                onClick={() => setViewMode('list')}
+              >
+                <ListIcon className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Lista</span>
+              </Button>
+              <Button
+                variant={viewMode === 'metrics' ? 'default' : 'ghost'}
+                size="sm"
+                className={`rounded-lg text-xs sm:text-sm ${viewMode === 'metrics' ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow' : 'text-gray-600 dark:text-gray-400'}`}
+                onClick={() => setViewMode('metrics')}
+              >
+                <BarChart3 className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Métricas</span>
+              </Button>
+            </div>
+
+            {/* Botão de filtros */}
+            <Button 
+              variant={hasActiveFilters ? "default" : "outline"} 
+              onClick={() => setIsFiltersModalOpen(true)}
+              size="sm"
+              className="gap-2 h-9"
+            >
+              <Filter className="h-4 w-4" />
+              <span className="hidden sm:inline">Filtros</span>
+              {hasActiveFilters && (
+                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                  Ativos
+                </Badge>
+              )}
             </Button>
-            {activeBoard && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-9 w-9 p-0">
-                    <MoreHorizontal className="h-4 w-4" />
-                    <span className="sr-only">Opções do quadro</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem
-                    onSelect={(event) => {
-                      event.preventDefault()
-                      updateManagerVisibility(true)
-                    }}
-                  >
-                    Gerenciar quadros
-                  </DropdownMenuItem>
-                  {viewMode === 'kanban' && (
-                    <DropdownMenuItem
-                      onSelect={(event) => {
-                        event.preventDefault()
-                      }}
-                    >
-                      <div className="flex items-center justify-between w-full">
-                        <span>Largura adaptável</span>
-                        <Switch
-                          checked={adaptiveWidth}
-                          onCheckedChange={setAdaptiveWidth}
-                        />
-                      </div>
-                    </DropdownMenuItem>
-                  )}
-                  {viewMode === 'list' && (
-                    <DropdownMenuItem
-                      onSelect={(event) => {
-                        event.preventDefault()
-                      }}
-                    >
-                      <div className="flex items-center justify-between w-full">
-                        <span>Largura adaptável</span>
-                        <Switch
-                          checked={adaptiveWidthList}
-                          onCheckedChange={setAdaptiveWidthList}
-                        />
-                      </div>
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
           </div>
-        </div>
-
-        {/* Seletor de quadro e filtros */}
-        <div className="mt-4 sm:mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="flex-1 w-full sm:max-w-md">
-            <Select value={activeBoard?.id || ''} onValueChange={setActiveBoardId}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione o quadro" />
-              </SelectTrigger>
-              <SelectContent>
-                {activeProject?.boards.map((board) => (
-                  <SelectItem key={board.id} value={board.id}>
-                    {board.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <Button 
-            variant={hasActiveFilters ? "default" : "outline"} 
-            onClick={() => setIsFiltersModalOpen(true)}
-            size="sm"
-            className="gap-2 w-full sm:w-auto"
-          >
-            <Filter className="h-4 w-4" />
-            Filtros
-            {hasActiveFilters && (
-              <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
-                Ativos
-              </Badge>
-            )}
-          </Button>
-        </div>
-
-        {/* Modos de visualização */}
-        <div className="mt-4 sm:mt-6 inline-flex items-center gap-1 sm:gap-2 rounded-xl bg-gray-100 dark:bg-gray-900 p-1">
-          <Button
-            variant={viewMode === 'kanban' ? 'default' : 'ghost'}
-            size="sm"
-            className={`rounded-lg text-xs sm:text-sm ${viewMode === 'kanban' ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow' : 'text-gray-600 dark:text-gray-400'}`}
-            onClick={() => setViewMode('kanban')}
-          >
-            <Kanban className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">Quadro</span>
-          </Button>
-          <Button
-            variant={viewMode === 'list' ? 'default' : 'ghost'}
-            size="sm"
-            className={`rounded-lg text-xs sm:text-sm ${viewMode === 'list' ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow' : 'text-gray-600 dark:text-gray-400'}`}
-            onClick={() => setViewMode('list')}
-          >
-            <ListIcon className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">Lista</span>
-          </Button>
-          <Button
-            variant={viewMode === 'metrics' ? 'default' : 'ghost'}
-            size="sm"
-            className={`rounded-lg text-xs sm:text-sm ${viewMode === 'metrics' ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow' : 'text-gray-600 dark:text-gray-400'}`}
-            onClick={() => setViewMode('metrics')}
-          >
-            <BarChart3 className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">Métricas</span>
-          </Button>
         </div>
       </div>
 
