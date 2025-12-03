@@ -49,41 +49,31 @@ export function KanbanView() {
   const [isFiltersModalOpen, setIsFiltersModalOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<TaskCard | null>(null)
   const [columnIdForModal, setColumnIdForModal] = useState<string | undefined>()
+  const [preferencesLoaded, setPreferencesLoaded] = useState(false)
   
   // Inicializar estados com preferências do banco ou localStorage
-  const [viewMode, setViewMode] = useState<'kanban' | 'list' | 'metrics'>(() => {
-    if (typeof window === 'undefined') return 'kanban'
-    const stored = window.localStorage.getItem('aurum.tasks.viewMode') as 'kanban' | 'list' | 'metrics' | null
-    return stored === 'list' || stored === 'metrics' ? stored : 'kanban'
-  })
-  const [adaptiveWidth, setAdaptiveWidth] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false
-    const stored = window.localStorage.getItem('aurum.tasks.adaptiveWidth')
-    return stored === 'true'
-  })
-  const [adaptiveWidthList, setAdaptiveWidthList] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false
-    const stored = window.localStorage.getItem('aurum.tasks.adaptiveWidthList')
-    return stored === 'true'
-  })
+  const [viewMode, setViewMode] = useState<'kanban' | 'list' | 'metrics'>('kanban')
+  const [adaptiveWidth, setAdaptiveWidth] = useState<boolean>(false)
+  const [adaptiveWidthList, setAdaptiveWidthList] = useState<boolean>(false)
   
   const managerParam = searchParams.get('manager')
 
-  // Sincronizar estados com preferências do banco quando carregarem
+  // Carregar preferências iniciais APENAS UMA VEZ quando carregarem
   useEffect(() => {
-    if (!preferencesLoading && preferences) {
+    if (!preferencesLoading && preferences && !preferencesLoaded) {
       setViewMode(preferences.tasksViewMode)
       setAdaptiveWidth(preferences.tasksAdaptiveWidth)
       setAdaptiveWidthList(preferences.tasksAdaptiveWidthList)
+      setPreferencesLoaded(true)
     }
-  }, [preferences, preferencesLoading])
+  }, [preferences, preferencesLoading, preferencesLoaded])
 
-  // Atualizar preferências quando mudarem
+  // Atualizar preferências APENAS quando o USUÁRIO mudar (não durante carregamento)
   useEffect(() => {
-    if (typeof window === 'undefined') return
+    if (typeof window === 'undefined' || !preferencesLoaded || preferencesLoading) return
     
     if (preferences) {
-      // Atualizar no banco
+      // Só atualiza se o valor for diferente
       if (preferences.tasksViewMode !== viewMode) {
         updatePreferences({ tasksViewMode: viewMode })
       }
@@ -91,35 +81,31 @@ export function KanbanView() {
       // Fallback para localStorage
       window.localStorage.setItem('aurum.tasks.viewMode', viewMode)
     }
-  }, [viewMode, preferences, updatePreferences])
+  }, [viewMode])
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
+    if (typeof window === 'undefined' || !preferencesLoaded || preferencesLoading) return
     
     if (preferences) {
-      // Atualizar no banco
       if (preferences.tasksAdaptiveWidth !== adaptiveWidth) {
         updatePreferences({ tasksAdaptiveWidth: adaptiveWidth })
       }
     } else {
-      // Fallback para localStorage
       window.localStorage.setItem('aurum.tasks.adaptiveWidth', String(adaptiveWidth))
     }
-  }, [adaptiveWidth, preferences, updatePreferences])
+  }, [adaptiveWidth])
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
+    if (typeof window === 'undefined' || !preferencesLoaded || preferencesLoading) return
     
     if (preferences) {
-      // Atualizar no banco
       if (preferences.tasksAdaptiveWidthList !== adaptiveWidthList) {
         updatePreferences({ tasksAdaptiveWidthList: adaptiveWidthList })
       }
     } else {
-      // Fallback para localStorage
       window.localStorage.setItem('aurum.tasks.adaptiveWidthList', String(adaptiveWidthList))
     }
-  }, [adaptiveWidthList, preferences, updatePreferences])
+  }, [adaptiveWidthList])
 
   const showManagerView = managerParam === '1'
 

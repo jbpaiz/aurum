@@ -102,16 +102,18 @@ export function useUserPreferences() {
         .from(PREFERENCES_TABLE)
         .select('*')
         .eq('user_id', user.id)
-        .single()
+        .maybeSingle() // Use maybeSingle em vez de single para não dar erro se não existir
 
-      if (error) {
-        // Se não existir preferências, criar com valores padrão (migrando do localStorage se existir)
-        if (error.code === 'PGRST116') {
-          await createDefaultPreferences()
-        } else {
-          console.error('Erro ao carregar preferências:', error)
-        }
-      } else if (data) {
+      if (error && error.code !== 'PGRST116') {
+        console.error('Erro ao carregar preferências:', error)
+        setLoading(false)
+        return
+      }
+
+      if (!data) {
+        // Se não existir preferências, criar automaticamente
+        await createDefaultPreferences()
+      } else {
         setPreferences(mapDbToPreferences(data))
       }
     } catch (error) {
