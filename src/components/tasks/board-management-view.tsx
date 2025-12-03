@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { ConfirmDialog } from '@/components/modals/confirm-dialog'
 import { useTasks } from '@/contexts/tasks-context'
 import { TASK_COLUMN_COLOR_PALETTE } from '@/types/tasks'
 import type { TaskColumn } from '@/types/tasks'
@@ -51,6 +52,13 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
   const [savingColumns, setSavingColumns] = useState<Record<string, boolean>>({})
   const [columnCards, setColumnCards] = useState<TaskColumn[]>(columns)
   const [isSavingOrder, setIsSavingOrder] = useState(false)
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean
+    title: string
+    description: string
+    onConfirm: () => void | Promise<void>
+    variant?: 'danger' | 'warning' | 'info'
+  }>({ open: false, title: '', description: '', onConfirm: () => {} })
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -161,18 +169,30 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
 
   const handleDeleteBoard = async (boardId: string) => {
     if (boards.length <= 1) {
-      window.alert('Mantenha pelo menos um quadro por projeto.')
+      setConfirmDialog({
+        open: true,
+        title: 'Não é possível excluir',
+        description: 'Mantenha pelo menos um quadro por projeto.',
+        onConfirm: () => {},
+        variant: 'warning'
+      })
       return
     }
     const boardName = boardNames[boardId] ?? 'este quadro'
-    const confirmed = window.confirm(`Excluir "${boardName}"? Essa ação não pode ser desfeita.`)
-    if (!confirmed) return
-    setDeletingBoardId(boardId)
-    try {
-      await deleteBoard(boardId)
-    } finally {
-      setDeletingBoardId(null)
-    }
+    setConfirmDialog({
+      open: true,
+      title: 'Excluir quadro',
+      description: `Excluir "${boardName}"? Essa ação não pode ser desfeita.`,
+      onConfirm: async () => {
+        setDeletingBoardId(boardId)
+        try {
+          await deleteBoard(boardId)
+        } finally {
+          setDeletingBoardId(null)
+        }
+      },
+      variant: 'danger'
+    })
   }
 
   const handleCreateColumn = async (event: React.FormEvent) => {
@@ -192,24 +212,41 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
   const handleDeleteColumn = async (column: TaskColumn) => {
     if (!activeBoard) return
     if (columns.length <= 1) {
-      window.alert('Mantenha pelo menos uma coluna no quadro.')
+      setConfirmDialog({
+        open: true,
+        title: 'Não é possível excluir',
+        description: 'Mantenha pelo menos uma coluna no quadro.',
+        onConfirm: () => {},
+        variant: 'warning'
+      })
       return
     }
 
     if (column.tasks.length > 0) {
-      window.alert('Mova ou conclua as tarefas desta coluna antes de removê-la.')
+      setConfirmDialog({
+        open: true,
+        title: 'Não é possível excluir',
+        description: 'Mova ou conclua as tarefas desta coluna antes de removê-la.',
+        onConfirm: () => {},
+        variant: 'warning'
+      })
       return
     }
 
-    const confirmed = window.confirm(`Excluir a coluna "${column.name}"? Essa ação não pode ser desfeita.`)
-    if (!confirmed) return
-
-    setDeletingColumnId(column.id)
-    try {
-      await deleteColumn(column.id)
-    } finally {
-      setDeletingColumnId(null)
-    }
+    setConfirmDialog({
+      open: true,
+      title: 'Excluir coluna',
+      description: `Excluir a coluna "${column.name}"? Essa ação não pode ser desfeita.`,
+      onConfirm: async () => {
+        setDeletingColumnId(column.id)
+        try {
+          await deleteColumn(column.id)
+        } finally {
+          setDeletingColumnId(null)
+        }
+      },
+      variant: 'danger'
+    })
   }
 
   const persistColumnOrder = useCallback(
@@ -429,6 +466,17 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
           )}
         </section>
       </div>
+
+      <ConfirmDialog
+        open={confirmDialog.open}
+        onClose={() => setConfirmDialog({ ...confirmDialog, open: false })}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        description={confirmDialog.description}
+        confirmText={confirmDialog.variant === 'warning' ? 'OK' : 'Confirmar'}
+        cancelText="Cancelar"
+        variant={confirmDialog.variant || 'danger'}
+      />
     </div>
   )
 }
