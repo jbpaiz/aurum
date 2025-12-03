@@ -358,9 +358,9 @@ export function KanbanView() {
         </div>
       ) : viewMode === 'kanban' ? (
         <div 
-          className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-x-scroll max-w-full md:max-w-[calc(100vw-280px)] max-h-[calc(100vh-265px)] [scrollbar-width:thin] [scrollbar-color:#CBD5E1_#F1F5F9] dark:[scrollbar-color:#4B5563_#1F2937]"
+          className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-x-scroll max-w-full md:max-w-[calc(100vw-280px)] h-[calc(100vh-265px)] [scrollbar-width:thin] [scrollbar-color:#CBD5E1_#F1F5F9] dark:[scrollbar-color:#4B5563_#1F2937]"
         >
-          <div className="p-3 sm:p-4 min-w-min">
+          <div className="p-3 sm:p-4 min-w-min h-full">
             <KanbanBoard
               columns={filteredColumns}
               onSelectTask={openEditTaskModal}

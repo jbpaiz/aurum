@@ -119,9 +119,9 @@ export function TaskListView({ columns, referenceColumns, onSelectTask, onCreate
   }
 
   return (
-    <div className={`w-full rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 max-w-full md:max-w-[calc(100vw-280px)] overflow-hidden`}>
+    <div className={`w-full rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 max-w-full md:max-w-[calc(100vw-280px)] overflow-hidden h-[calc(100vh-265px)]`}>
       <div 
-        className="overflow-x-scroll overflow-y-scroll max-h-[calc(100vh-360px)] [scrollbar-width:thin] [scrollbar-color:#CBD5E1_#F1F5F9] dark:[scrollbar-color:#4B5563_#1F2937]"
+        className="overflow-x-scroll overflow-y-scroll h-full [scrollbar-width:thin] [scrollbar-color:#CBD5E1_#F1F5F9] dark:[scrollbar-color:#4B5563_#1F2937]"
       >
         <div className={adaptiveWidth ? 'w-full' : 'min-w-[1200px]'}>
           <table className="w-full table-auto">
