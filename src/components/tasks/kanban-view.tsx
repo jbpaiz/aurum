@@ -20,6 +20,7 @@ import { BoardManagementView } from '@/components/tasks/board-management-view'
 import { FiltersModal } from '@/components/tasks/filters-modal'
 import type { CreateTaskInput, TaskCard, TaskColumn, TaskPriority } from '@/types/tasks'
 import { TASK_PRIORITY_COLORS, TASK_PRIORITY_LABELS } from '@/types/tasks'
+import { useUserPreferences } from '@/hooks/use-user-preferences'
 
 export function KanbanView() {
   const {
@@ -39,6 +40,8 @@ export function KanbanView() {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const { preferences, updatePreferences, loading: preferencesLoading } = useUserPreferences()
+  
   const [searchTerm, setSearchTerm] = useState('')
   const [labelFilter, setLabelFilter] = useState('')
   const [priorityFilter, setPriorityFilter] = useState<TaskPriority | 'all'>('all')
@@ -46,6 +49,8 @@ export function KanbanView() {
   const [isFiltersModalOpen, setIsFiltersModalOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<TaskCard | null>(null)
   const [columnIdForModal, setColumnIdForModal] = useState<string | undefined>()
+  
+  // Inicializar estados com preferências do banco ou localStorage
   const [viewMode, setViewMode] = useState<'kanban' | 'list' | 'metrics'>(() => {
     if (typeof window === 'undefined') return 'kanban'
     const stored = window.localStorage.getItem('aurum.tasks.viewMode') as 'kanban' | 'list' | 'metrics' | null
@@ -61,22 +66,60 @@ export function KanbanView() {
     const stored = window.localStorage.getItem('aurum.tasks.adaptiveWidthList')
     return stored === 'true'
   })
+  
   const managerParam = searchParams.get('manager')
 
+  // Sincronizar estados com preferências do banco quando carregarem
+  useEffect(() => {
+    if (!preferencesLoading && preferences) {
+      setViewMode(preferences.tasksViewMode)
+      setAdaptiveWidth(preferences.tasksAdaptiveWidth)
+      setAdaptiveWidthList(preferences.tasksAdaptiveWidthList)
+    }
+  }, [preferences, preferencesLoading])
+
+  // Atualizar preferências quando mudarem
   useEffect(() => {
     if (typeof window === 'undefined') return
-    window.localStorage.setItem('aurum.tasks.viewMode', viewMode)
-  }, [viewMode])
+    
+    if (preferences) {
+      // Atualizar no banco
+      if (preferences.tasksViewMode !== viewMode) {
+        updatePreferences({ tasksViewMode: viewMode })
+      }
+    } else {
+      // Fallback para localStorage
+      window.localStorage.setItem('aurum.tasks.viewMode', viewMode)
+    }
+  }, [viewMode, preferences, updatePreferences])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    window.localStorage.setItem('aurum.tasks.adaptiveWidth', String(adaptiveWidth))
-  }, [adaptiveWidth])
+    
+    if (preferences) {
+      // Atualizar no banco
+      if (preferences.tasksAdaptiveWidth !== adaptiveWidth) {
+        updatePreferences({ tasksAdaptiveWidth: adaptiveWidth })
+      }
+    } else {
+      // Fallback para localStorage
+      window.localStorage.setItem('aurum.tasks.adaptiveWidth', String(adaptiveWidth))
+    }
+  }, [adaptiveWidth, preferences, updatePreferences])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    window.localStorage.setItem('aurum.tasks.adaptiveWidthList', String(adaptiveWidthList))
-  }, [adaptiveWidthList])
+    
+    if (preferences) {
+      // Atualizar no banco
+      if (preferences.tasksAdaptiveWidthList !== adaptiveWidthList) {
+        updatePreferences({ tasksAdaptiveWidthList: adaptiveWidthList })
+      }
+    } else {
+      // Fallback para localStorage
+      window.localStorage.setItem('aurum.tasks.adaptiveWidthList', String(adaptiveWidthList))
+    }
+  }, [adaptiveWidthList, preferences, updatePreferences])
 
   const showManagerView = managerParam === '1'
 

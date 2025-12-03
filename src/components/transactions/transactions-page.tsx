@@ -163,11 +163,11 @@ export function TransactionsPage() {
 
   if (loading) {
     return (
-      <div className="flex-1 p-6 space-y-6 bg-gray-50">
+      <div className="flex-1 p-6 space-y-6 bg-gray-50 dark:bg-gray-900">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Carregando transações...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto"></div>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">Carregando transações...</p>
           </div>
         </div>
       </div>
@@ -175,12 +175,12 @@ export function TransactionsPage() {
   }
 
   return (
-    <div className="flex-1 p-6 space-y-6 bg-gray-50">
+    <div className="flex-1 p-6 space-y-6 bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Transações</h1>
-          <p className="text-gray-600">Gerencie todas as suas movimentações financeiras</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Transações</h1>
+          <p className="text-gray-600 dark:text-gray-400">Gerencie todas as suas movimentações financeiras</p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -206,46 +206,46 @@ export function TransactionsPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Total de Receitas</CardTitle>
-            <TrendingUp className="h-5 w-5 text-green-600" />
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Total de Receitas</CardTitle>
+            <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
               {formatCurrency(totalIncome)}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
               Este mês
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Total de Despesas</CardTitle>
-            <TrendingDown className="h-5 w-5 text-red-600" />
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Total de Despesas</CardTitle>
+            <TrendingDown className="h-5 w-5 text-red-600 dark:text-red-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-2xl font-bold text-red-600 dark:text-red-400">
               {formatCurrency(totalExpenses)}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
               Este mês
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Saldo do Mês</CardTitle>
-            <DollarSign className="h-5 w-5 text-blue-600" />
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Saldo do Mês</CardTitle>
+            <DollarSign className="h-5 w-5 text-blue-600 dark:text-blue-400" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${totalIncome - totalExpenses >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+            <div className={`text-2xl font-bold ${totalIncome - totalExpenses >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}`}>
               {formatCurrency(totalIncome - totalExpenses)}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
               Resultado mensal
             </p>
           </CardContent>
@@ -253,12 +253,12 @@ export function TransactionsPage() {
       </div>
 
       {/* Filters and Search */}
-      <Card>
+      <Card className="dark:bg-gray-800 dark:border-gray-700">
         <CardHeader>
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
             <div>
-              <CardTitle>Lista de Transações</CardTitle>
-              <CardDescription>
+              <CardTitle className="dark:text-white">Lista de Transações</CardTitle>
+              <CardDescription className="dark:text-gray-400">
                 Visualize e gerencie todas as suas transações
               </CardDescription>
             </div>
@@ -304,12 +304,12 @@ export function TransactionsPage() {
           {filteredTransactions.length > 0 ? (
             <div className="space-y-3">
               {filteredTransactions.map((transaction) => (
-                <div key={transaction.id} className="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-lg hover:border-gray-200 transition-colors">
+                <div key={transaction.id} className="flex items-center justify-between p-4 bg-white dark:bg-gray-700 border border-gray-100 dark:border-gray-600 rounded-lg hover:border-gray-200 dark:hover:border-gray-500 transition-colors">
                   <div className="flex items-center gap-4">
                     <div className={`p-3 rounded-full ${
                       transaction.type === 'income' 
-                        ? 'bg-green-100 text-green-600' 
-                        : 'bg-red-100 text-red-600'
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' 
+                        : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
                     }`}>
                       {transaction.type === 'income' ? (
                         <TrendingUp className="h-5 w-5" />
@@ -318,12 +318,12 @@ export function TransactionsPage() {
                       )}
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900 text-lg">{transaction.description}</p>
+                      <p className="font-medium text-gray-900 dark:text-white text-lg">{transaction.description}</p>
                       <div className="flex items-center gap-3 mt-1">
-                        <Badge variant="secondary" className="text-xs">
+                        <Badge variant="secondary" className="text-xs dark:bg-gray-600 dark:text-gray-200">
                           {transaction.category}
                         </Badge>
-                        <span className="text-sm text-gray-500 flex items-center gap-1">
+                        <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
                           {formatDate(transaction.date)}
                         </span>
@@ -332,7 +332,7 @@ export function TransactionsPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <div className={`text-right ${
-                      transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                      transaction.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                     }`}>
                       <p className="font-semibold text-lg">
                         {transaction.type === 'income' ? '+' : '-'}
@@ -363,11 +363,11 @@ export function TransactionsPage() {
             </div>
           ) : (
             <div className="text-center py-12">
-              <Calendar className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <Calendar className="h-16 w-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                 {searchTerm || filterType !== 'all' ? 'Nenhuma transação encontrada' : 'Nenhuma transação cadastrada'}
               </h3>
-              <p className="text-gray-500 mb-4">
+              <p className="text-gray-500 dark:text-gray-400 mb-4">
                 {searchTerm || filterType !== 'all' 
                   ? 'Tente ajustar os filtros ou termo de busca'
                   : 'Comece adicionando sua primeira transação'

@@ -77,11 +77,11 @@ export function CardsPage() {
 
   if (loading) {
     return (
-      <div className="flex-1 p-6 space-y-6 bg-gray-50">
+      <div className="flex-1 p-6 space-y-6 bg-gray-50 dark:bg-gray-900">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Carregando cartões...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto"></div>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">Carregando cartões...</p>
           </div>
         </div>
       </div>
@@ -89,12 +89,12 @@ export function CardsPage() {
   }
 
   return (
-    <div className="flex-1 p-6 space-y-6 bg-gray-50">
+    <div className="flex-1 p-6 space-y-6 bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Cartões</h1>
-          <p className="text-gray-600">Gerencie seus cartões de crédito e débito</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Cartões</h1>
+          <p className="text-gray-600 dark:text-gray-400">Gerencie seus cartões de crédito e débito</p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -114,61 +114,61 @@ export function CardsPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Limite Total</CardTitle>
-            <CreditCard className="h-5 w-5 text-blue-600" />
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Limite Total</CardTitle>
+            <CreditCard className="h-5 w-5 text-blue-600 dark:text-blue-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
               {formatCurrency(getTotalLimit())}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
               Cartões de crédito
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Fatura Total</CardTitle>
-            <AlertTriangle className="h-5 w-5 text-orange-600" />
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Fatura Total</CardTitle>
+            <AlertTriangle className="h-5 w-5 text-orange-600 dark:text-orange-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
+            <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
               {formatCurrency(getTotalUsed())}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
               {getTotalLimit() > 0 ? Math.round((getTotalUsed() / getTotalLimit()) * 100) : 0}% do limite
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Limite Disponível</CardTitle>
-            <CheckCircle className="h-5 w-5 text-green-600" />
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Limite Disponível</CardTitle>
+            <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
               {formatCurrency(getTotalLimit() - getTotalUsed())}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
               Disponível para uso
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Cartões Ativos</CardTitle>
-            <Shield className="h-5 w-5 text-purple-600" />
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Cartões Ativos</CardTitle>
+            <Shield className="h-5 w-5 text-purple-600 dark:text-purple-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
+            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
               {getActiveCards()}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
               Total cadastrado
             </p>
           </CardContent>
@@ -184,7 +184,7 @@ export function CardsPage() {
             : 0
 
           return (
-            <Card key={card.id} className="overflow-hidden">
+            <Card key={card.id} className="overflow-hidden dark:bg-gray-800 dark:border-gray-700">
               <div
                 className="h-2"
                 style={{ backgroundColor: provider?.color || '#6B7280' }}
@@ -199,8 +199,8 @@ export function CardsPage() {
                       {provider?.icon}
                     </div>
                     <div>
-                      <CardTitle className="text-lg">{card.alias}</CardTitle>
-                      <CardDescription>
+                      <CardTitle className="text-lg dark:text-white">{card.alias}</CardTitle>
+                      <CardDescription className="dark:text-gray-400">
                         {provider?.name} • {card.type === 'credit' ? 'Crédito' : 'Débito'}
                       </CardDescription>
                     </div>
@@ -236,8 +236,8 @@ export function CardsPage() {
               <CardContent className="space-y-4">
                 {/* Card Number */}
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Número do Cartão</p>
-                  <p className="font-mono text-lg font-medium">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Número do Cartão</p>
+                  <p className="font-mono text-lg font-medium dark:text-white">
                     {formatCardNumber(card.lastFourDigits)}
                   </p>
                 </div>
@@ -247,14 +247,14 @@ export function CardsPage() {
                   <>
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="text-sm text-gray-600">Limite</p>
-                        <p className="font-semibold">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Limite</p>
+                        <p className="font-semibold dark:text-white">
                           {card.creditLimit ? formatCurrency(card.creditLimit) : 'Não definido'}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm text-gray-600">Fatura</p>
-                        <p className="font-semibold text-orange-600">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Fatura</p>
+                        <p className="font-semibold text-orange-600 dark:text-orange-400">
                           {formatCurrency(card.currentBalance || 0)}
                         </p>
                       </div>
@@ -264,10 +264,10 @@ export function CardsPage() {
                     {card.creditLimit && card.creditLimit > 0 && (
                       <div>
                         <div className="flex justify-between items-center mb-2">
-                          <span className="text-sm text-gray-600">Uso do limite</span>
-                          <span className="text-sm font-medium">{usagePercentage}%</span>
+                          <span className="text-sm text-gray-600 dark:text-gray-400">Uso do limite</span>
+                          <span className="text-sm font-medium dark:text-white">{usagePercentage}%</span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                           <div
                             className={`h-2 rounded-full transition-all ${
                               usagePercentage > 80
@@ -284,7 +284,7 @@ export function CardsPage() {
 
                     {/* Due Date */}
                     {card.dueDay && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                         <Calendar className="h-4 w-4" />
                         <span>Vencimento dia {card.dueDay}</span>
                       </div>
@@ -306,7 +306,7 @@ export function CardsPage() {
                 )}
 
                 {card.type === 'debit' && (
-                  <p className="text-sm text-gray-500 italic">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 italic">
                     Cartão de débito vinculado à conta
                   </p>
                 )}
@@ -318,13 +318,13 @@ export function CardsPage() {
 
       {/* Empty State */}
       {cards.length === 0 && (
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardContent className="text-center py-12">
-            <CreditCard className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <CreditCard className="h-16 w-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
               Nenhum cartão cadastrado
             </h3>
-            <p className="text-gray-500 mb-4">
+            <p className="text-gray-500 dark:text-gray-400 mb-4">
               Comece adicionando seu primeiro cartão de crédito ou débito
             </p>
             <Button onClick={() => openAddModal()} className="gap-2">

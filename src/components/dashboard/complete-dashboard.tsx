@@ -83,11 +83,11 @@ export function CompleteDashboard() {
 
   if (loading) {
     return (
-      <div className="flex-1 p-6 space-y-6 bg-gray-50">
+      <div className="flex-1 p-6 space-y-6 bg-gray-50 dark:bg-gray-900">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <RefreshCw className="h-12 w-12 animate-spin text-blue-600 mx-auto" />
-            <p className="mt-4 text-gray-600">Carregando dashboard...</p>
+            <RefreshCw className="h-12 w-12 animate-spin text-blue-600 dark:text-blue-400 mx-auto" />
+            <p className="mt-4 text-gray-600 dark:text-gray-400">Carregando dashboard...</p>
           </div>
         </div>
       </div>
@@ -214,7 +214,7 @@ export function CompleteDashboard() {
                       <span className="text-green-600 dark:text-green-400">
                         {showValues ? formatCurrency(trend.income) : '••••'}
                       </span>
-                      <span className="text-red-600">
+                      <span className="text-red-600 dark:text-red-400">
                         {showValues ? formatCurrency(trend.expenses) : '••••'}
                       </span>
                     </div>
@@ -237,7 +237,7 @@ export function CompleteDashboard() {
                   </div>
                 </div>
               ))}
-              <div className="flex justify-between text-xs text-gray-500 pt-2">
+              <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 pt-2">
                 <span className="flex items-center gap-1">
                   <div className="w-3 h-3 bg-green-500 rounded"></div>
                   Receitas
@@ -277,14 +277,14 @@ export function CompleteDashboard() {
                     <div className="text-sm font-semibold dark:text-white">
                       {showValues ? formatCurrency(category.amount) : '••••'}
                     </div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
                       {category.percentage.toFixed(1)}%
                     </div>
                   </div>
                 </div>
               ))}
               {analytics?.topCategories.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                   <PieChart className="h-12 w-12 mx-auto mb-2 opacity-50" />
                   <p>Nenhuma despesa categorizada ainda</p>
                 </div>
@@ -327,7 +327,7 @@ export function CompleteDashboard() {
                 </div>
               ))}
               {(!data?.accounts || data.accounts.length === 0) && (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                   <Building2 className="h-12 w-12 mx-auto mb-2 opacity-50" />
                   <p>Nenhuma conta cadastrada</p>
                 </div>
@@ -359,7 +359,7 @@ export function CompleteDashboard() {
                     style={{ width: `${Math.min((analytics?.savingsRate || 0), 100)}%` }}
                   ></div>
                 </div>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-gray-500 dark:text-gray-400">
                   Atual: {analytics?.savingsRate.toFixed(1) || 0}%
                 </div>
               </div>
@@ -367,10 +367,10 @@ export function CompleteDashboard() {
               {/* Meta de gastos */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Controle de Gastos</span>
-                  <span className="text-sm text-gray-500">80% da renda</span>
+                  <span className="text-sm font-medium dark:text-white">Controle de Gastos</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">80% da renda</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                   <div 
                     className={`h-2 rounded-full transition-all ${
                       ((analytics?.monthlyExpenses || 0) / (analytics?.monthlyIncome || 1)) > 0.8 
@@ -382,7 +382,7 @@ export function CompleteDashboard() {
                     }}
                   ></div>
                 </div>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-gray-500 dark:text-gray-400">
                   Atual: {(((analytics?.monthlyExpenses || 0) / (analytics?.monthlyIncome || 1)) * 100).toFixed(1)}%
                 </div>
               </div>
@@ -390,10 +390,10 @@ export function CompleteDashboard() {
               {/* Meta de emergência */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Reserva de Emergência</span>
-                  <span className="text-sm text-gray-500">6x gastos mensais</span>
+                  <span className="text-sm font-medium dark:text-white">Reserva de Emergência</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">6x gastos mensais</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                   <div 
                     className="bg-purple-500 h-2 rounded-full transition-all"
                     style={{ 
@@ -401,7 +401,7 @@ export function CompleteDashboard() {
                     }}
                   ></div>
                 </div>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-gray-500 dark:text-gray-400">
                   Atual: {((analytics?.totalBalance || 0) / ((analytics?.monthlyExpenses || 1) * 6)).toFixed(1)}x
                 </div>
               </div>
@@ -436,19 +436,19 @@ export function CompleteDashboard() {
                     )}
                   </div>
                   <div>
-                    <p className="font-medium text-sm">{transaction.description}</p>
+                    <p className="font-medium text-sm dark:text-white">{transaction.description}</p>
                     <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="text-xs">
+                      <Badge variant="secondary" className="text-xs dark:bg-gray-800 dark:text-gray-300">
                         {transaction.category}
                       </Badge>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
                         {new Date(transaction.date).toLocaleDateString('pt-BR')}
                       </span>
                     </div>
                   </div>
                 </div>
                 <div className={`font-semibold ${
-                  transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                  transaction.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                 }`}>
                   {transaction.type === 'income' ? '+' : '-'}
                   {showValues ? formatCurrency(transaction.amount) : '••••'}
@@ -456,7 +456,7 @@ export function CompleteDashboard() {
               </div>
             ))}
             {(!data?.recentTransactions || data.recentTransactions.length === 0) && (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                 <Calendar className="h-12 w-12 mx-auto mb-2 opacity-50" />
                 <p>Nenhuma transação encontrada</p>
               </div>

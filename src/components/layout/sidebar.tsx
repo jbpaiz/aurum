@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { HUB_META, resolveHubId, type HubId } from '@/components/layout/hub-config'
+import { useUserPreferences } from '@/hooks/use-user-preferences'
 
 interface SidebarProps {
   children: React.ReactNode
@@ -128,12 +129,22 @@ export function Sidebar({ children }: SidebarProps) {
   const hubEntries = Object.values(hubNavigation)
   const currentMenuItems = activeHub.menu
   const HubIcon = activeHub.icon
+  const { preferences, updatePreferences } = useUserPreferences()
 
-  // Salvar último hub acessado no localStorage
+  // Salvar último hub acessado no banco ou localStorage
   useEffect(() => {
     if (typeof window === 'undefined') return
-    localStorage.setItem('aurum.lastActiveHub', currentHub)
-  }, [currentHub])
+    
+    if (preferences) {
+      // Atualizar no banco se houver preferências
+      if (preferences.lastActiveHub !== currentHub) {
+        updatePreferences({ lastActiveHub: currentHub })
+      }
+    } else {
+      // Fallback para localStorage se não houver usuário logado
+      localStorage.setItem('aurum.lastActiveHub', currentHub)
+    }
+  }, [currentHub, preferences, updatePreferences])
 
   const isActive = (item: NavigationItem) => {
     if (item.isActive) {

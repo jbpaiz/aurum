@@ -119,11 +119,11 @@ export function AccountsPage() {
 
   if (loading) {
     return (
-      <div className="flex-1 p-6 space-y-6 bg-gray-50">
+      <div className="flex-1 p-6 space-y-6 bg-gray-50 dark:bg-gray-900">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Carregando contas...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto"></div>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">Carregando contas...</p>
           </div>
         </div>
       </div>
@@ -131,12 +131,12 @@ export function AccountsPage() {
   }
 
   return (
-    <div className="flex-1 p-6 space-y-6 bg-gray-50">
+    <div className="flex-1 p-6 space-y-6 bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Contas</h1>
-          <p className="text-gray-600">Gerencie suas contas bancárias e carteiras</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Contas</h1>
+          <p className="text-gray-600 dark:text-gray-400">Gerencie suas contas bancárias e carteiras</p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -164,61 +164,61 @@ export function AccountsPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Saldo Total</CardTitle>
-            <Wallet className="h-5 w-5 text-blue-600" />
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Saldo Total</CardTitle>
+            <Wallet className="h-5 w-5 text-blue-600 dark:text-blue-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
               {showBalances ? formatCurrency(getTotalBalance()) : '••••••'}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
               Todas as contas
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Total de Contas</CardTitle>
-            <Building2 className="h-5 w-5 text-green-600" />
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Total de Contas</CardTitle>
+            <Building2 className="h-5 w-5 text-green-600 dark:text-green-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
               {accounts.length}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
               Contas ativas
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Saldos Positivos</CardTitle>
-            <TrendingUp className="h-5 w-5 text-green-600" />
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Saldos Positivos</CardTitle>
+            <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
               {getPositiveBalanceAccounts()}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
               Com recursos disponíveis
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Atividade Recente</CardTitle>
-            <TrendingDown className="h-5 w-5 text-orange-600" />
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Atividade Recente</CardTitle>
+            <TrendingDown className="h-5 w-5 text-orange-600 dark:text-orange-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
+            <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
               {getAccountsWithActivity()}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
               Com movimentação
             </p>
           </CardContent>
@@ -226,10 +226,10 @@ export function AccountsPage() {
       </div>
 
       {/* Accounts List */}
-      <Card>
+      <Card className="dark:bg-gray-800 dark:border-gray-700">
         <CardHeader>
-          <CardTitle>Suas Contas</CardTitle>
-          <CardDescription>
+          <CardTitle className="dark:text-white">Suas Contas</CardTitle>
+          <CardDescription className="dark:text-gray-400">
             Visualize e gerencie todas as suas contas bancárias e carteiras
           </CardDescription>
         </CardHeader>
@@ -237,7 +237,7 @@ export function AccountsPage() {
           {accounts.length > 0 ? (
             <div className="space-y-4">
               {accounts.map((account) => (
-                <div key={account.id} className="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-lg hover:border-gray-200 transition-colors">
+                <div key={account.id} className="flex items-center justify-between p-4 bg-white dark:bg-gray-700 border border-gray-100 dark:border-gray-600 rounded-lg hover:border-gray-200 dark:hover:border-gray-500 transition-colors">
                   <div className="flex items-center gap-4">
                     <div 
                       className="p-3 rounded-full text-white flex items-center justify-center"
@@ -246,13 +246,13 @@ export function AccountsPage() {
                       {renderAccountIcon(account.icon)}
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900 text-lg">{account.name}</h3>
+                      <h3 className="font-semibold text-gray-900 dark:text-white text-lg">{account.name}</h3>
                       <div className="flex items-center gap-3 mt-1">
-                        <Badge variant="secondary" className="text-xs">
+                        <Badge variant="secondary" className="text-xs dark:bg-gray-600 dark:text-gray-200">
                           {ACCOUNT_TYPES[account.type]?.label || account.type}
                         </Badge>
                         {account.bank && (
-                          <span className="text-sm text-gray-500">
+                          <span className="text-sm text-gray-500 dark:text-gray-400">
                             {account.bank}
                           </span>
                         )}
@@ -263,11 +263,11 @@ export function AccountsPage() {
                   <div className="flex items-center gap-4">
                     <div className="text-right">
                       <p className={`font-semibold text-lg ${
-                        account.balance >= 0 ? 'text-green-600' : 'text-red-600'
+                        account.balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                       }`}>
                         {showBalances ? formatCurrency(account.balance) : '••••••'}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
                         Saldo atual
                       </p>
                     </div>
@@ -296,11 +296,11 @@ export function AccountsPage() {
             </div>
           ) : (
             <div className="text-center py-12">
-              <Building2 className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <Building2 className="h-16 w-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                 Nenhuma conta cadastrada
               </h3>
-              <p className="text-gray-500 mb-4">
+              <p className="text-gray-500 dark:text-gray-400 mb-4">
                 Comece adicionando sua primeira conta bancária ou carteira
               </p>
               <Button onClick={handleAddAccount} className="gap-2">

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useUserPreferences } from '@/hooks/use-user-preferences';
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -13,16 +14,22 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const { preferences, updatePreferences, loading } = useUserPreferences();
   const [theme, setThemeState] = useState<Theme>('system');
   const [effectiveTheme, setEffectiveTheme] = useState<'light' | 'dark'>('light');
 
-  // Initialize theme from localStorage
+  // Sincronizar com preferências do banco
   useEffect(() => {
-    const storedTheme = localStorage.getItem('theme') as Theme | null;
-    if (storedTheme) {
-      setThemeState(storedTheme);
+    if (!loading && preferences) {
+      setThemeState(preferences.theme);
+    } else if (!loading && !preferences) {
+      // Fallback para localStorage se não houver preferências no banco (usuário não logado)
+      const storedTheme = localStorage.getItem('theme') as Theme | null;
+      if (storedTheme) {
+        setThemeState(storedTheme);
+      }
     }
-  }, []);
+  }, [preferences, loading]);
 
   // Update effective theme and apply to document
   useEffect(() => {
@@ -66,7 +73,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
-    localStorage.setItem('theme', newTheme);
+    
+    // Atualizar no banco se houver preferências
+    if (preferences) {
+      updatePreferences({ theme: newTheme });
+    } else {
+      // Fallback para localStorage se não houver usuário logado
+      localStorage.setItem('theme', newTheme);
+    }
   };
 
   return (

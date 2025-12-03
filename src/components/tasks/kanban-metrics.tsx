@@ -128,68 +128,68 @@ export function KanbanMetrics({ columns }: KanbanMetricsProps) {
 
   if (!columns.length) {
     return (
-      <div className="flex flex-1 items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white p-10 text-center">
-        <p className="text-gray-500">Crie um quadro e tarefas para visualizar métricas.</p>
+      <div className="flex flex-1 items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white p-10 text-center dark:border-gray-700 dark:bg-gray-800">
+        <p className="text-gray-500 dark:text-gray-400">Crie um quadro e tarefas para visualizar métricas.</p>
       </div>
     )
   }
 
   return (
-    <div className="flex-1 overflow-auto rounded-2xl border border-gray-200 bg-white p-6">
+    <div className="flex-1 overflow-auto rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
+        <Card className="dark:bg-gray-900 dark:border-gray-700">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Tarefas ativas</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">Tarefas ativas</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-semibold text-gray-900">{metrics.totalTasks}</p>
-            <p className="text-xs text-gray-500">{metrics.completedTasks} concluidas</p>
+            <p className="text-3xl font-semibold text-gray-900 dark:text-white">{metrics.totalTasks}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{metrics.completedTasks} concluidas</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="dark:bg-gray-900 dark:border-gray-700">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Tempo médio</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">Tempo médio</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-semibold text-gray-900">{formatDays(metrics.avgLeadTime)}</p>
-            <p className="text-xs text-gray-500">desde a criação</p>
+            <p className="text-3xl font-semibold text-gray-900 dark:text-white">{formatDays(metrics.avgLeadTime)}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">desde a criação</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="dark:bg-gray-900 dark:border-gray-700">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Iniciadas (7 dias)</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">Iniciadas (7 dias)</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-semibold text-gray-900">{metrics.startedLast7Count}</p>
-            <p className="text-xs text-gray-500">datas de início recentes</p>
+            <p className="text-3xl font-semibold text-gray-900 dark:text-white">{metrics.startedLast7Count}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">datas de início recentes</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="dark:bg-gray-900 dark:border-gray-700">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Concluídas (7 dias)</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">Concluídas (7 dias)</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-semibold text-gray-900">{metrics.completedLast7Count}</p>
-            <p className="text-xs text-gray-500">datas de fim registradas</p>
+            <p className="text-3xl font-semibold text-gray-900 dark:text-white">{metrics.completedLast7Count}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">datas de fim registradas</p>
           </CardContent>
         </Card>
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
-        <Card>
+        <Card className="dark:bg-gray-900 dark:border-gray-700">
           <CardHeader>
-            <CardTitle className="text-base font-semibold text-gray-900">Tempo médio por coluna</CardTitle>
+            <CardTitle className="text-base font-semibold text-gray-900 dark:text-white">Tempo médio por coluna</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {metrics.columnThroughput.map((column) => (
               <div key={column.name}>
-                <div className="flex items-center justify-between text-sm font-medium text-gray-600">
+                <div className="flex items-center justify-between text-sm font-medium text-gray-600 dark:text-gray-300">
                   <span>{column.name}</span>
                   <span>{column.count} cards · {formatDays(column.averageDays)}</span>
                 </div>
-                <div className="mt-2 h-2 rounded-full bg-gray-100">
+                <div className="mt-2 h-2 rounded-full bg-gray-100 dark:bg-gray-700">
                   <div
-                    className="h-full rounded-full bg-blue-500"
+                    className="h-full rounded-full bg-blue-500 dark:bg-blue-600"
                     style={{ width: metrics.maxColumnAverage ? `${(column.averageDays / metrics.maxColumnAverage) * 100}%` : '0%' }}
                   />
                 </div>
@@ -198,20 +198,20 @@ export function KanbanMetrics({ columns }: KanbanMetricsProps) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-gray-900 dark:border-gray-700">
           <CardHeader>
-            <CardTitle className="text-base font-semibold text-gray-900">Distribuição por prioridade</CardTitle>
+            <CardTitle className="text-base font-semibold text-gray-900 dark:text-white">Distribuição por prioridade</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {metrics.priorityDistribution.map((item) => (
               <div key={item.priority}>
-                <div className="flex items-center justify-between text-sm font-medium text-gray-600">
+                <div className="flex items-center justify-between text-sm font-medium text-gray-600 dark:text-gray-300">
                   <span>{item.label}</span>
                   <span>{item.count} tarefas</span>
                 </div>
-                <div className="mt-2 h-2 rounded-full bg-gray-100">
+                <div className="mt-2 h-2 rounded-full bg-gray-100 dark:bg-gray-700">
                   <div
-                    className="h-full rounded-full bg-orange-500"
+                    className="h-full rounded-full bg-orange-500 dark:bg-orange-600"
                     style={{ width: metrics.maxPriorityCount ? `${(item.count / metrics.maxPriorityCount) * 100}%` : '0%' }}
                   />
                 </div>
@@ -222,21 +222,21 @@ export function KanbanMetrics({ columns }: KanbanMetricsProps) {
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
-        <Card>
+        <Card className="dark:bg-gray-900 dark:border-gray-700">
           <CardHeader>
-            <CardTitle className="text-base font-semibold text-gray-900">Datas pendentes</CardTitle>
+            <CardTitle className="text-base font-semibold text-gray-900 dark:text-white">Datas pendentes</CardTitle>
           </CardHeader>
           <CardContent className="space-y-5">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Início em aberto</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Início em aberto</p>
               {metrics.inProgressNoStart.length === 0 ? (
-                <p className="text-sm text-gray-500 mt-2">Todas as tarefas em andamento possuem data inicial.</p>
+                <p className="text-sm text-gray-500 mt-2 dark:text-gray-400">Todas as tarefas em andamento possuem data inicial.</p>
               ) : (
                 <div className="mt-3 space-y-2">
                   {metrics.inProgressNoStart.slice(0, 4).map((task) => (
-                    <div key={`start-${task.id}`} className="rounded-lg border border-amber-100 bg-amber-50/60 p-3 text-sm text-amber-700">
+                    <div key={`start-${task.id}`} className="rounded-lg border border-amber-100 bg-amber-50/60 p-3 text-sm text-amber-700 dark:border-amber-900/30 dark:bg-amber-900/20 dark:text-amber-400">
                       <p className="font-medium">{task.title}</p>
-                      <p className="text-xs text-amber-600">{task.columnName}</p>
+                      <p className="text-xs text-amber-600 dark:text-amber-500">{task.columnName}</p>
                     </div>
                   ))}
                 </div>
@@ -244,15 +244,15 @@ export function KanbanMetrics({ columns }: KanbanMetricsProps) {
             </div>
 
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Fim em aberto</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Fim em aberto</p>
               {metrics.doneWithoutEnd.length === 0 ? (
-                <p className="text-sm text-gray-500 mt-2">Nenhuma tarefa concluída está sem data final.</p>
+                <p className="text-sm text-gray-500 mt-2 dark:text-gray-400">Nenhuma tarefa concluída está sem data final.</p>
               ) : (
                 <div className="mt-3 space-y-2">
                   {metrics.doneWithoutEnd.slice(0, 4).map((task) => (
-                    <div key={`end-${task.id}`} className="rounded-lg border border-blue-100 bg-blue-50/70 p-3 text-sm text-blue-700">
+                    <div key={`end-${task.id}`} className="rounded-lg border border-blue-100 bg-blue-50/70 p-3 text-sm text-blue-700 dark:border-blue-900/30 dark:bg-blue-900/20 dark:text-blue-400">
                       <p className="font-medium">{task.title}</p>
-                      <p className="text-xs text-blue-600">{task.columnName}</p>
+                      <p className="text-xs text-blue-600 dark:text-blue-500">{task.columnName}</p>
                     </div>
                   ))}
                 </div>
@@ -261,21 +261,21 @@ export function KanbanMetrics({ columns }: KanbanMetricsProps) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-gray-900 dark:border-gray-700">
           <CardHeader>
-            <CardTitle className="text-base font-semibold text-gray-900">Linha do tempo recente</CardTitle>
+            <CardTitle className="text-base font-semibold text-gray-900 dark:text-white">Linha do tempo recente</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {metrics.timeline.length === 0 ? (
-              <p className="text-sm text-gray-500">Sem registros de início ou fim ainda.</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Sem registros de início ou fim ainda.</p>
             ) : (
               metrics.timeline.map((item) => (
-                <div key={item.id} className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 p-3">
+                <div key={item.id} className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800">
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">{item.title}</p>
-                    <p className="text-xs text-gray-500">{item.columnName}</p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{item.title}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{item.columnName}</p>
                   </div>
-                  <div className="text-right text-xs text-gray-500">
+                  <div className="text-right text-xs text-gray-500 dark:text-gray-400">
                     <p>Início {item.startLabel}</p>
                     <p>Fim {item.endLabel}</p>
                   </div>
