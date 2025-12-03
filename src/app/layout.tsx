@@ -12,6 +12,11 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'Aurum - Controle Financeiro',
   description: 'Sistema completo de controle financeiro para gerenciar receitas e despesas',
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
 }
 
 export default function RootLayout({

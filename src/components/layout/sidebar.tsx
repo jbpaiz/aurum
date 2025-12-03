@@ -156,12 +156,12 @@ export function Sidebar({ children }: SidebarProps) {
   }, [pathname])
 
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-950">
       {/* Desktop Sidebar */}
-      <div className="hidden md:flex md:w-64 md:flex-col">
-        <div className="flex flex-col flex-grow bg-white shadow-sm dark:bg-gray-900 dark:shadow-gray-800/50">
+      <div className="hidden md:flex md:w-64 md:flex-col h-screen">
+        <div className="flex flex-col h-full bg-white shadow-sm dark:bg-gray-900 dark:shadow-gray-800/50">
           {/* Brand + Hub selector */}
-          <div className="relative px-4 pt-5 pb-4">
+          <div className="flex-shrink-0 relative px-4 pt-5 pb-4 border-b border-gray-100 dark:border-gray-800">
             <button
               type="button"
               onClick={() => setIsHubSwitcherOpen((prev) => !prev)}
@@ -226,8 +226,8 @@ export function Sidebar({ children }: SidebarProps) {
             )}
           </div>
 
-          {/* Navigation */}
-          <div className="flex-1 flex flex-col justify-between px-3">
+          {/* Navigation - com scroll */}
+          <div className="flex-1 overflow-y-auto px-3 py-4">
             <nav className="space-y-1">
               <p className="px-3 pb-2 text-xs font-semibold uppercase text-gray-400 dark:text-gray-500">{activeHub.name}</p>
               {currentMenuItems.map((item) => {
@@ -253,10 +253,11 @@ export function Sidebar({ children }: SidebarProps) {
                 )
               })}
             </nav>
+          </div>
 
-            {/* User Controls Section */}
-            <div className="border-t border-gray-200 dark:border-gray-800 px-3 py-4 space-y-3">
-              <div className="flex items-center gap-2">
+          {/* User Controls Section */}
+          <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-800 px-3 py-4">
+            <div className="flex items-center gap-2">
                 <Link href="/notifications">
                   <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-500 dark:text-gray-400">
                     <Bell className="h-4 w-4" />
@@ -270,7 +271,6 @@ export function Sidebar({ children }: SidebarProps) {
                 <ThemeToggle />
                 <div className="flex-1" />
                 <UserMenu />
-              </div>
             </div>
           </div>
         </div>
@@ -388,8 +388,8 @@ export function Sidebar({ children }: SidebarProps) {
       )}
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col bg-gray-50 dark:bg-gray-950">
-        <div className="md:hidden border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-900">
+      <div className="flex-1 flex flex-col h-screen overflow-hidden bg-gray-50 dark:bg-gray-950">
+        <div className="flex-shrink-0 md:hidden border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-900">
           <div className="flex items-center justify-between">
             <button
               type="button"
@@ -411,7 +411,9 @@ export function Sidebar({ children }: SidebarProps) {
           </div>
         </div>
 
-        {children}
+        <div className="flex-1 overflow-y-auto">
+          {children}
+        </div>
       </div>
     </div>
   )
