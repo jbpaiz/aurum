@@ -121,7 +121,7 @@ export function KanbanBoard({ columns, onSelectTask, onCreateTask, moveTask, onT
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
-      <div className={`flex gap-4 pb-4 h-full ${adaptiveWidth ? 'w-full' : ''}`}>
+      <div className={`flex gap-4 pb-4 min-h-full items-stretch ${adaptiveWidth ? 'w-full' : ''}`}>
         {columns.map((column) => {
           // Determinar se esta coluna está com hover (considerando se o mouse está sobre ela ou sobre um card dela)
           const isColumnOver = overId === column.id || 
