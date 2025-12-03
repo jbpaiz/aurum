@@ -210,20 +210,29 @@ export function KanbanView() {
 
   return (
     <div className="flex flex-col gap-3 p-4 md:gap-3 md:p-3">
-      <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 sm:p-6">
-        {/* Header compacto em 2 linhas */}
-        <div className="space-y-3">
+      {/* Header moderno com gradiente sutil */}
+      <div className="relative overflow-hidden rounded-2xl border border-gray-200/80 dark:border-gray-700/50 bg-gradient-to-br from-white via-white to-gray-50/30 dark:from-gray-800 dark:via-gray-800 dark:to-gray-900/50 shadow-sm backdrop-blur-sm">
+        {/* Decoração de fundo sutil */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-transparent dark:from-blue-500/10 dark:via-purple-500/10 pointer-events-none" />
+        
+        <div className="relative p-4 sm:p-6 space-y-4">
           {/* Linha 1: Título com dropdown de quadros e Ações */}
           <div className="flex items-center justify-between gap-4">
             {/* Título clicável com dropdown de quadros */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 flex-shrink-0 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg px-2 py-1 -ml-2 transition-colors group">
-                  <Kanban className="h-5 w-5 text-blue-500 dark:text-blue-400" />
-                  <h1 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">{activeBoard?.name ?? 'Kanban'}</h1>
-                  <Badge variant="outline" className="text-xs font-medium text-gray-600 dark:text-gray-300 dark:border-gray-600">
-                    {activeTasksCount}
-                  </Badge>
+                <button className="flex items-center gap-3 flex-shrink-0 hover:bg-white/60 dark:hover:bg-gray-700/50 rounded-xl px-3 py-2 -ml-2 transition-all duration-200 group ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                  <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 shadow-md">
+                    <Kanban className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+                      {activeBoard?.name ?? 'Kanban'}
+                    </h1>
+                    <Badge variant="outline" className="text-xs font-semibold bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700/50">
+                      {activeTasksCount}
+                    </Badge>
+                  </div>
                   <ChevronDown className="h-4 w-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
                 </button>
               </DropdownMenuTrigger>
@@ -243,14 +252,14 @@ export function KanbanView() {
 
             {/* Botões de ação */}
             <div className="flex gap-2 flex-shrink-0">
-              <Button onClick={() => openCreateTaskModal()} size="sm" className="gap-2 h-9">
-                <span className="hidden sm:inline">Nova tarefa</span>
-                <span className="sm:hidden">Nova</span>
+              <Button onClick={() => openCreateTaskModal()} size="sm" className="gap-2 h-10 px-4 shadow-sm hover:shadow-md transition-shadow bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                <span className="hidden sm:inline font-semibold">Nova tarefa</span>
+                <span className="sm:hidden font-semibold">Nova</span>
               </Button>
               {activeBoard && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-9 w-9 p-0">
+                    <Button variant="outline" size="sm" className="h-10 w-10 p-0 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm">
                       <MoreHorizontal className="h-4 w-4" />
                       <span className="sr-only">Opções do quadro</span>
                     </Button>
@@ -302,12 +311,16 @@ export function KanbanView() {
 
           {/* Linha 2: Modos de Visualização e Filtros */}
           <div className="flex items-center justify-between gap-4">
-            {/* Modos de visualização */}
-            <div className="inline-flex items-center gap-1 sm:gap-2 rounded-xl bg-gray-100 dark:bg-gray-900 p-1">
+            {/* Modos de visualização com design pill moderno */}
+            <div className="inline-flex items-center gap-1 rounded-xl bg-gray-100/80 dark:bg-gray-900/50 p-1.5 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 shadow-inner">
               <Button
                 variant={viewMode === 'kanban' ? 'default' : 'ghost'}
                 size="sm"
-                className={`rounded-lg text-xs sm:text-sm ${viewMode === 'kanban' ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow' : 'text-gray-600 dark:text-gray-400'}`}
+                className={`relative rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 ${
+                  viewMode === 'kanban' 
+                    ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-md hover:shadow-lg' 
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-800/50'
+                }`}
                 onClick={() => setViewMode('kanban')}
               >
                 <Kanban className="h-4 w-4 sm:mr-2" />
@@ -316,7 +329,11 @@ export function KanbanView() {
               <Button
                 variant={viewMode === 'list' ? 'default' : 'ghost'}
                 size="sm"
-                className={`rounded-lg text-xs sm:text-sm ${viewMode === 'list' ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow' : 'text-gray-600 dark:text-gray-400'}`}
+                className={`relative rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 ${
+                  viewMode === 'list' 
+                    ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-md hover:shadow-lg' 
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-800/50'
+                }`}
                 onClick={() => setViewMode('list')}
               >
                 <ListIcon className="h-4 w-4 sm:mr-2" />
@@ -325,7 +342,11 @@ export function KanbanView() {
               <Button
                 variant={viewMode === 'metrics' ? 'default' : 'ghost'}
                 size="sm"
-                className={`rounded-lg text-xs sm:text-sm ${viewMode === 'metrics' ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow' : 'text-gray-600 dark:text-gray-400'}`}
+                className={`relative rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 ${
+                  viewMode === 'metrics' 
+                    ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-md hover:shadow-lg' 
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-800/50'
+                }`}
                 onClick={() => setViewMode('metrics')}
               >
                 <BarChart3 className="h-4 w-4 sm:mr-2" />
@@ -333,17 +354,21 @@ export function KanbanView() {
               </Button>
             </div>
 
-            {/* Botão de filtros */}
+            {/* Botão de filtros premium */}
             <Button 
               variant={hasActiveFilters ? "default" : "outline"} 
               onClick={() => setIsFiltersModalOpen(true)}
               size="sm"
-              className="gap-2 h-9"
+              className={`gap-2 h-10 px-4 font-medium shadow-sm transition-all duration-200 ${
+                hasActiveFilters 
+                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-md hover:shadow-lg' 
+                  : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+              }`}
             >
               <Filter className="h-4 w-4" />
               <span className="hidden sm:inline">Filtros</span>
               {hasActiveFilters && (
-                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                <Badge variant="secondary" className="ml-1 h-5 px-2 text-xs font-semibold bg-white/20 text-white border-0">
                   Ativos
                 </Badge>
               )}
@@ -363,7 +388,7 @@ export function KanbanView() {
         </div>
       ) : viewMode === 'kanban' ? (
         <div 
-          className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-x-auto max-w-full md:max-w-[calc(100vw-280px)] h-[calc(100vh-180px)] [scrollbar-width:thin] [scrollbar-color:#CBD5E1_#F1F5F9] dark:[scrollbar-color:#4B5563_#1F2937]"
+          className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-x-auto max-w-full md:max-w-[calc(100vw-280px)] h-[calc(100vh-205px)] [scrollbar-width:thin] [scrollbar-color:#CBD5E1_#F1F5F9] dark:[scrollbar-color:#4B5563_#1F2937]"
         >
           <div className="p-3 sm:p-4 min-w-min h-full">
             <KanbanBoard
