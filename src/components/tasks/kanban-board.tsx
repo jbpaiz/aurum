@@ -7,6 +7,7 @@ import {
   useSensors,
   DragStartEvent,
   DragEndEvent,
+  DragOverEvent,
   DragOverlay
 } from '@dnd-kit/core'
 import type { UniqueIdentifier } from '@dnd-kit/core'
@@ -33,6 +34,7 @@ export function KanbanBoard({ columns, onSelectTask, onCreateTask, moveTask, onT
   )
 
   const [activeCard, setActiveCard] = useState<TaskCard | null>(null)
+  const [overId, setOverId] = useState<UniqueIdentifier | null>(null)
   const columnCount = columns.length
   // Largura fixa: 368px (15% maior que 320px) ou adaptativa (flex-1 para se ajustar ao espaço disponível)
   const columnWidthClass = adaptiveWidth ? 'flex-1 min-w-[280px]' : 'w-[368px]'
@@ -51,9 +53,15 @@ export function KanbanBoard({ columns, onSelectTask, onCreateTask, moveTask, onT
     setActiveCard(task)
   }
 
+  const handleDragOver = (event: DragOverEvent) => {
+    const { over } = event
+    setOverId(over?.id ?? null)
+  }
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
     setActiveCard(null)
+    setOverId(null)
     if (!over) return
 
     const taskId = String(active.id)
@@ -98,18 +106,25 @@ export function KanbanBoard({ columns, onSelectTask, onCreateTask, moveTask, onT
   }
 
   return (
-    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
       <div className="flex gap-4 pb-4">
-        {columns.map((column) => (
-          <KanbanColumn
-            key={column.id}
-            column={column}
-            onSelectTask={onSelectTask}
-            onCreateTask={() => onCreateTask(column.id)}
-            onToggleChecklistItem={onToggleChecklistItem}
-            columnWidthClass={columnWidthClass}
-          />
-        ))}
+        {columns.map((column) => {
+          // Determinar se esta coluna está com hover (considerando se o mouse está sobre ela ou sobre um card dela)
+          const isColumnOver = overId === column.id || 
+            column.tasks.some(task => task.id === overId)
+          
+          return (
+            <KanbanColumn
+              key={column.id}
+              column={column}
+              onSelectTask={onSelectTask}
+              onCreateTask={() => onCreateTask(column.id)}
+              onToggleChecklistItem={onToggleChecklistItem}
+              columnWidthClass={columnWidthClass}
+              isOver={isColumnOver}
+            />
+          )
+        })}
       </div>
 
       <DragOverlay>{activeCard ? <KanbanCard task={activeCard} onSelect={() => undefined} /> : null}</DragOverlay>

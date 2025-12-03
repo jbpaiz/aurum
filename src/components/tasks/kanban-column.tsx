@@ -13,10 +13,11 @@ interface KanbanColumnProps {
   onCreateTask: (columnId: string) => void
   onToggleChecklistItem?: (taskId: string, checklistItemId: string, done: boolean) => Promise<void> | void
   columnWidthClass?: string
+  isOver?: boolean
 }
 
-export function KanbanColumn({ column, onSelectTask, onCreateTask, onToggleChecklistItem, columnWidthClass }: KanbanColumnProps) {
-  const { setNodeRef, isOver } = useDroppable({
+export function KanbanColumn({ column, onSelectTask, onCreateTask, onToggleChecklistItem, columnWidthClass, isOver: isOverProp }: KanbanColumnProps) {
+  const { setNodeRef, isOver: isOverDroppable } = useDroppable({
     id: column.id,
     data: {
       type: 'column',
@@ -24,6 +25,9 @@ export function KanbanColumn({ column, onSelectTask, onCreateTask, onToggleCheck
     }
   })
   const widthClass = columnWidthClass ?? 'w-80'
+  
+  // Usar a prop isOver se fornecida, caso contrário usar isOverDroppable
+  const isOver = isOverProp !== undefined ? isOverProp : isOverDroppable
 
   return (
     <div className={`flex ${widthClass} flex-shrink-0 flex-col`}>
