@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState, useRef } from 'react'
-import { X, Plus, Trash2, Check, GripVertical } from 'lucide-react'
+import { X, Plus, Trash2, Check, GripVertical, MoveRight } from 'lucide-react'
 import { DndContext, DragEndEvent, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -19,6 +19,7 @@ import type {
 import { TASK_PRIORITY_COLORS, TASK_PRIORITY_LABELS } from '@/types/tasks'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useTasks } from '@/contexts/tasks-context'
+import { MoveTaskModal } from '@/components/tasks/move-task-modal'
 
 interface TaskModalProps {
   open: boolean
@@ -73,6 +74,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const [showMoveModal, setShowMoveModal] = useState(false)
 
   const isEditing = Boolean(task)
   const sensors = useSensors(
@@ -498,11 +500,24 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
           </div>
 
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            {isEditing && onDeleteTask ? (
-              <Button type="button" variant="destructive" onClick={handleDeleteTask} disabled={isDeleting}>
-                {isDeleting ? 'Excluindo...' : 'Excluir tarefa'}
-              </Button>
-            ) : <span />}
+            <div className="flex gap-2">
+              {isEditing && onDeleteTask && (
+                <Button type="button" variant="destructive" onClick={handleDeleteTask} disabled={isDeleting}>
+                  {isDeleting ? 'Excluindo...' : 'Excluir tarefa'}
+                </Button>
+              )}
+              {isEditing && task && (
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setShowMoveModal(true)}
+                  className="gap-2"
+                >
+                  <MoveRight className="h-4 w-4" />
+                  Mover para outro quadro
+                </Button>
+              )}
+            </div>
             <div className="flex justify-end gap-3">
               <Button type="button" variant="outline" onClick={handleClose}>
                 Cancelar
@@ -513,6 +528,18 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
             </div>
           </div>
         </form>
+        
+        {/* Modal de mover para outro quadro */}
+        {isEditing && task && showMoveModal && (
+          <MoveTaskModal
+            open={showMoveModal}
+            onClose={() => {
+              setShowMoveModal(false)
+              onClose() // Fechar o modal da tarefa também após mover
+            }}
+            task={task}
+          />
+        )}
       </div>
     </div>
   )

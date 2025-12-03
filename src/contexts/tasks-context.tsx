@@ -50,6 +50,7 @@ interface TasksContextValue {
   updateTask: (taskId: string, updates: Partial<CreateTaskInput>) => Promise<void>
   deleteTask: (taskId: string) => Promise<void>
   moveTask: (payload: MoveTaskPayload) => Promise<void>
+  moveTaskToBoard: (taskId: string, targetBoardId: string, targetColumnId: string) => Promise<void>
   toggleTaskChecklistItem: (taskId: string, checklistItemId: string, done: boolean) => Promise<void>
   createColumn: (name: string, category?: TaskColumnCategory, color?: string) => Promise<void>
   createBoard: (name: string, description?: string) => Promise<void>
@@ -923,6 +924,27 @@ export function TasksProvider({ children }: TasksProviderProps) {
     [activeBoard, fetchWorkspace, normalizeColumnOrders, updateBoardState]
   )
 
+  const moveTaskToBoard = useCallback(
+    async (taskId: string, targetBoardId: string, targetColumnId: string) => {
+      const { error } = await supabase
+        .from('tasks')
+        .update({
+          board_id: targetBoardId,
+          column_id: targetColumnId,
+          sort_order: 1000
+        })
+        .eq('id', taskId)
+
+      if (error) {
+        console.error('Erro ao mover tarefa para outro quadro:', error.message)
+        return
+      }
+
+      await fetchWorkspace()
+    },
+    [fetchWorkspace]
+  )
+
   const toggleTaskChecklistItem = useCallback(
     async (taskId: string, checklistItemId: string, done: boolean) => {
       if (!activeBoard) return
@@ -1161,6 +1183,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
     updateTask,
     deleteTask,
     moveTask,
+    moveTaskToBoard,
     toggleTaskChecklistItem,
     createColumn,
     createBoard,
