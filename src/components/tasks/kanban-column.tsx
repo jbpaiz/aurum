@@ -29,13 +29,13 @@ export function KanbanColumn({ column, onSelectTask, onCreateTask, onToggleCheck
     <div className={`flex ${widthClass} flex-shrink-0 flex-col`}>
       <div className="mb-3 flex items-center justify-between">
         <div>
-          <p className="text-sm font-semibold text-gray-900">{column.name}</p>
-          <p className="text-xs text-gray-500">{column.tasks.length} itens</p>
+          <p className="text-sm font-semibold text-gray-900 dark:text-white">{column.name}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{column.tasks.length} itens</p>
         </div>
         <Button
           size="icon"
           variant="ghost"
-          className="h-7 w-7 text-gray-500"
+          className="h-7 w-7 text-gray-500 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:bg-gray-700"
           onClick={() => onCreateTask(column.id)}
         >
           <Plus className="h-4 w-4" />
@@ -44,8 +44,8 @@ export function KanbanColumn({ column, onSelectTask, onCreateTask, onToggleCheck
 
       <div
         ref={setNodeRef}
-        className={`flex flex-1 flex-col gap-3 rounded-xl border border-dashed border-gray-200 bg-gray-50/70 p-3 ${
-          isOver ? 'border-blue-400 bg-blue-50/60' : ''
+        className={`flex flex-1 flex-col gap-3 rounded-xl border border-dashed border-gray-200 dark:border-gray-700 bg-gray-50/70 dark:bg-gray-900/50 p-3 ${
+          isOver ? 'border-blue-400 dark:border-blue-500 bg-blue-50/60 dark:bg-blue-900/30' : ''
         }`}
       >
         <SortableContext items={column.tasks.map((task) => task.id)} strategy={verticalListSortingStrategy}>
@@ -62,7 +62,7 @@ export function KanbanColumn({ column, onSelectTask, onCreateTask, onToggleCheck
         {column.tasks.length === 0 && (
           <button
             type="button"
-            className="rounded-lg border border-dashed border-gray-300 bg-white py-6 text-sm text-gray-500 transition hover:border-blue-400 hover:text-blue-600"
+            className="rounded-lg border border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 py-6 text-sm text-gray-500 dark:text-gray-400 transition hover:border-blue-400 dark:hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400"
             onClick={() => onCreateTask(column.id)}
           >
             Adicionar primeiro cartão

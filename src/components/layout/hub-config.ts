@@ -35,6 +35,15 @@ export const HUB_META: Record<HubId, HubMeta> = {
 }
 
 export const resolveHubId = (pathname: string | null | undefined): HubId => {
-  if (!pathname) return 'finance'
+  if (!pathname) {
+    // Tentar recuperar o último hub acessado do localStorage
+    if (typeof window !== 'undefined') {
+      const lastHub = localStorage.getItem('aurum.lastActiveHub') as HubId | null
+      if (lastHub === 'finance' || lastHub === 'tasks') {
+        return lastHub
+      }
+    }
+    return 'finance'
+  }
   return pathname.startsWith('/tasks') ? 'tasks' : 'finance'
 }

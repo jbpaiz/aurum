@@ -145,12 +145,12 @@ export function AddCardModal({ onClose }: AddCardModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
+      <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto dark:bg-gray-800 dark:border-gray-700">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 dark:text-white">
                 <CreditCardIcon className="h-5 w-5" />
                 Adicionar Cartão
               </CardTitle>
@@ -174,15 +174,15 @@ export function AddCardModal({ onClose }: AddCardModalProps) {
                   key={provider.id}
                   type="button"
                   onClick={() => handleProviderSelect(provider)}
-                  className={`p-3 border rounded-lg text-left transition-all hover:shadow-sm ${
+                  className={`p-3 border rounded-lg text-left transition-all hover:shadow-sm dark:hover:bg-gray-700/50 ${
                     selectedProvider?.id === provider.id
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:border-primary/50'
+                      ? 'border-primary bg-primary/5 dark:bg-primary/10'
+                      : 'border-border dark:border-gray-700 hover:border-primary/50'
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-lg">{provider.icon}</span>
-                    <span className="font-medium text-sm">{provider.name}</span>
+                    <span className="font-medium text-sm dark:text-white">{provider.name}</span>
                   </div>
                   {provider.popularBrands && provider.popularBrands.length > 0 && (
                     <div className="flex flex-wrap gap-1">
@@ -207,18 +207,18 @@ export function AddCardModal({ onClose }: AddCardModalProps) {
                   <button
                     type="button"
                     onClick={() => setFormData((prev: typeof formData) => ({ ...prev, type: 'credit' }))}
-                    className={`p-3 border rounded-lg text-left transition-all hover:shadow-sm ${
+                    className={`p-3 border rounded-lg text-left transition-all hover:shadow-sm dark:hover:bg-gray-700/50 ${
                       formData.type === 'credit'
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-primary/50'
+                        ? 'border-primary bg-primary/5 dark:bg-primary/10'
+                        : 'border-border dark:border-gray-700 hover:border-primary/50'
                     }`}
                     disabled={!selectedProvider.supportedTypes.includes('credit')}
                   >
                     <div className="flex items-center gap-2">
                       <span className="text-lg">💳</span>
-                      <span className="font-medium text-sm">Crédito</span>
+                      <span className="font-medium text-sm dark:text-white">Crédito</span>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-xs text-muted-foreground dark:text-gray-400 mt-1">
                       Para compras parceladas
                     </p>
                   </button>

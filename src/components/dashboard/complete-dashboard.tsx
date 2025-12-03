@@ -95,12 +95,12 @@ export function CompleteDashboard() {
   }
 
   return (
-    <div className="flex-1 p-6 space-y-6 bg-gray-50">
+    <div className="flex-1 p-6 space-y-6 bg-gray-50 dark:bg-gray-900">
       {/* Header com controles */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard Financeiro</h1>
-          <p className="text-gray-600">Visão completa das suas finanças</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard Financeiro</h1>
+          <p className="text-gray-600 dark:text-gray-400">Visão completa das suas finanças</p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -124,62 +124,62 @@ export function CompleteDashboard() {
 
       {/* Cards principais de resumo */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Patrimônio Total</CardTitle>
-            <Wallet className="h-5 w-5 text-blue-600" />
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Patrimônio Total</CardTitle>
+            <Wallet className="h-5 w-5 text-blue-600 dark:text-blue-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
               {showValues ? formatCurrency(analytics?.totalBalance || 0) : '••••••'}
             </div>
             <div className="flex items-center mt-1">
-              <ArrowUpRight className="h-3 w-3 text-green-600 mr-1" />
-              <span className="text-xs text-green-600">+5.2% no mês</span>
+              <ArrowUpRight className="h-3 w-3 text-green-600 dark:text-green-400 mr-1" />
+              <span className="text-xs text-green-600 dark:text-green-400">+5.2% no mês</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Receitas do Mês</CardTitle>
-            <TrendingUp className="h-5 w-5 text-green-600" />
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Receitas do Mês</CardTitle>
+            <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
               {showValues ? formatCurrency(analytics?.monthlyIncome || 0) : '••••••'}
             </div>
             <div className="flex items-center mt-1">
-              <ArrowUpRight className="h-3 w-3 text-green-600 mr-1" />
-              <span className="text-xs text-green-600">{formatPercentage(analytics?.incomeGrowth || 0)}</span>
+              <ArrowUpRight className="h-3 w-3 text-green-600 dark:text-green-400 mr-1" />
+              <span className="text-xs text-green-600 dark:text-green-400">{formatPercentage(analytics?.incomeGrowth || 0)}</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Despesas do Mês</CardTitle>
-            <TrendingDown className="h-5 w-5 text-red-600" />
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Despesas do Mês</CardTitle>
+            <TrendingDown className="h-5 w-5 text-red-600 dark:text-red-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-2xl font-bold text-red-600 dark:text-red-400">
               {showValues ? formatCurrency(analytics?.monthlyExpenses || 0) : '••••••'}
             </div>
             <div className="flex items-center mt-1">
-              <ArrowUpRight className="h-3 w-3 text-red-600 mr-1" />
-              <span className="text-xs text-red-600">{formatPercentage(analytics?.expenseGrowth || 0)}</span>
+              <ArrowUpRight className="h-3 w-3 text-red-600 dark:text-red-400 mr-1" />
+              <span className="text-xs text-red-600 dark:text-red-400">{formatPercentage(analytics?.expenseGrowth || 0)}</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Resultado do Mês</CardTitle>
-            <DollarSign className="h-5 w-5 text-purple-600" />
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Resultado do Mês</CardTitle>
+            <DollarSign className="h-5 w-5 text-purple-600 dark:text-purple-400" />
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${
-              (analytics?.netIncome || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+              (analytics?.netIncome || 0) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
             }`}>
               {showValues ? formatCurrency(analytics?.netIncome || 0) : '••••••'}
             </div>
@@ -196,22 +196,22 @@ export function CompleteDashboard() {
       {/* Gráficos principais */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Tendência mensal */}
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 dark:text-white">
               <BarChart3 className="h-5 w-5" />
               Tendência Mensal
             </CardTitle>
-            <CardDescription>Receitas vs Despesas nos últimos 6 meses</CardDescription>
+            <CardDescription className="dark:text-gray-400">Receitas vs Despesas nos últimos 6 meses</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {analytics?.monthlyTrends.map((trend, index) => (
                 <div key={trend.month} className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="font-medium">{trend.month}</span>
+                    <span className="font-medium dark:text-white">{trend.month}</span>
                     <div className="flex gap-4">
-                      <span className="text-green-600">
+                      <span className="text-green-600 dark:text-green-400">
                         {showValues ? formatCurrency(trend.income) : '••••'}
                       </span>
                       <span className="text-red-600">
@@ -252,13 +252,13 @@ export function CompleteDashboard() {
         </Card>
 
         {/* Distribuição por categoria */}
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 dark:text-white">
               <PieChart className="h-5 w-5" />
               Despesas por Categoria
             </CardTitle>
-            <CardDescription>Top 5 categorias que mais consomem seu orçamento</CardDescription>
+            <CardDescription className="dark:text-gray-400">Top 5 categorias que mais consomem seu orçamento</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -271,10 +271,10 @@ export function CompleteDashboard() {
                         backgroundColor: `hsl(${index * 60}, 70%, 50%)` 
                       }}
                     ></div>
-                    <span className="text-sm font-medium">{category.category}</span>
+                    <span className="text-sm font-medium dark:text-white">{category.category}</span>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm font-semibold">
+                    <div className="text-sm font-semibold dark:text-white">
                       {showValues ? formatCurrency(category.amount) : '••••'}
                     </div>
                     <div className="text-xs text-gray-500">
@@ -297,30 +297,30 @@ export function CompleteDashboard() {
       {/* Resumo de contas e cartões */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Resumo de contas */}
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 dark:text-white">
               <Building2 className="h-5 w-5" />
               Resumo de Contas
             </CardTitle>
-            <CardDescription>Saldos das suas contas bancárias</CardDescription>
+            <CardDescription className="dark:text-gray-400">Saldos das suas contas bancárias</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {data?.accounts?.slice(0, 4).map((account) => (
-                <div key={account.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div key={account.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div 
                       className="w-3 h-3 rounded-full"
                       style={{ backgroundColor: account.color }}
                     ></div>
                     <div>
-                      <p className="font-medium text-sm">{account.name}</p>
-                      <p className="text-xs text-gray-500">{account.bank}</p>
+                      <p className="font-medium text-sm dark:text-white">{account.name}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{account.bank}</p>
                     </div>
                   </div>
                   <div className={`font-semibold ${
-                    account.balance >= 0 ? 'text-green-600' : 'text-red-600'
+                    account.balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                   }`}>
                     {showValues ? formatCurrency(account.balance) : '••••••'}
                   </div>
@@ -337,23 +337,23 @@ export function CompleteDashboard() {
         </Card>
 
         {/* Metas e objetivos */}
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 dark:text-white">
               <Target className="h-5 w-5" />
               Metas Financeiras
             </CardTitle>
-            <CardDescription>Acompanhe o progresso dos seus objetivos</CardDescription>
+            <CardDescription className="dark:text-gray-400">Acompanhe o progresso dos seus objetivos</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {/* Meta de poupança */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Meta de Poupança</span>
-                  <span className="text-sm text-gray-500">20% da renda</span>
+                  <span className="text-sm font-medium dark:text-white">Meta de Poupança</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">20% da renda</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                   <div 
                     className="bg-blue-500 h-2 rounded-full transition-all"
                     style={{ width: `${Math.min((analytics?.savingsRate || 0), 100)}%` }}
@@ -411,23 +411,23 @@ export function CompleteDashboard() {
       </div>
 
       {/* Transações recentes */}
-      <Card>
+      <Card className="dark:bg-gray-800 dark:border-gray-700">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 dark:text-white">
             <Calendar className="h-5 w-5" />
             Últimas Transações
           </CardTitle>
-          <CardDescription>Movimentações mais recentes</CardDescription>
+          <CardDescription className="dark:text-gray-400">Movimentações mais recentes</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             {data?.recentTransactions?.slice(0, 5).map((transaction) => (
-              <div key={transaction.id} className="flex items-center justify-between p-3 border-l-4 border-l-gray-200 bg-gray-50 rounded-r-lg">
+              <div key={transaction.id} className="flex items-center justify-between p-3 border-l-4 border-l-gray-200 dark:border-l-gray-700 bg-gray-50 dark:bg-gray-700/50 rounded-r-lg">
                 <div className="flex items-center gap-3">
                   <div className={`p-2 rounded-full ${
                     transaction.type === 'income' 
-                      ? 'bg-green-100 text-green-600' 
-                      : 'bg-red-100 text-red-600'
+                      ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' 
+                      : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
                   }`}>
                     {transaction.type === 'income' ? (
                       <TrendingUp className="h-4 w-4" />

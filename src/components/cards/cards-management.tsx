@@ -39,15 +39,15 @@ export function CardsManagement() {
   }
 
   return (
-    <Card>
+    <Card className="dark:bg-gray-800 dark:border-gray-700">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 dark:text-white">
               <CreditCardIcon className="h-5 w-5" />
               Meus Cartões
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="dark:text-gray-400">
               Gerencie seus cartões de crédito e débito
             </CardDescription>
           </div>
@@ -97,7 +97,7 @@ export function CardsManagement() {
               return (
                 <div
                   key={card.id}
-                  className="border rounded-lg p-4 hover:shadow-md transition-shadow"
+                  className="border dark:border-gray-700 rounded-lg p-4 hover:shadow-md dark:hover:bg-gray-700/50 transition-shadow"
                   style={{ 
                     borderColor: provider?.color + '20',
                     backgroundColor: provider?.color + '05'
@@ -132,7 +132,7 @@ export function CardsManagement() {
                   </div>
 
                   <div className="space-y-2">
-                    <h4 className="font-medium text-sm">{card.alias}</h4>
+                    <h4 className="font-medium text-sm dark:text-white">{card.alias}</h4>
                     <div className="flex items-center gap-2">
                       <Badge 
                         variant="outline"

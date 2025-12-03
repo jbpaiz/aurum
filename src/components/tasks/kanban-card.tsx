@@ -54,12 +54,12 @@ export function KanbanCard({ task, onSelect, onToggleChecklistItem }: KanbanCard
       {...listeners}
       onClick={() => onSelect(task)}
       className={cn(
-        'rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition hover:border-blue-400 hover:shadow-md',
-        isDragging && 'ring-2 ring-blue-200'
+        'rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 shadow-sm dark:shadow-gray-900/50 transition hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md',
+        isDragging && 'ring-2 ring-blue-200 dark:ring-blue-800'
       )}
     >
-      <div className="flex items-center justify-between text-xs text-gray-500">
-        <span className="font-medium text-gray-700">{task.key}</span>
+      <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+        <span className="font-medium text-gray-700 dark:text-gray-300">{task.key}</span>
         <span
           className="inline-flex h-6 items-center gap-1 rounded-full px-2"
           style={{ backgroundColor: `${TASK_PRIORITY_COLORS[task.priority]}22`, color: TASK_PRIORITY_COLORS[task.priority] }}
@@ -69,14 +69,14 @@ export function KanbanCard({ task, onSelect, onToggleChecklistItem }: KanbanCard
         </span>
       </div>
 
-      <p className="mt-2 text-sm font-semibold text-gray-900">{task.title}</p>
+      <p className="mt-2 text-sm font-semibold text-gray-900 dark:text-white">{task.title}</p>
 
       {task.description && (
-        <p className="mt-1 line-clamp-2 text-xs text-gray-600">{task.description}</p>
+        <p className="mt-1 line-clamp-2 text-xs text-gray-600 dark:text-gray-400">{task.description}</p>
       )}
 
       {task.checklist.length > 0 && (
-        <div className="mt-3 space-y-1 rounded-lg border border-gray-100 bg-gray-50/70 p-2">
+        <div className="mt-3 space-y-1 rounded-lg border border-gray-100 dark:border-gray-700 bg-gray-50/70 dark:bg-gray-900/50 p-2">
           {task.checklist.map((item) => (
             <div key={item.id} className="flex items-start gap-2 text-xs">
               <button
@@ -84,7 +84,7 @@ export function KanbanCard({ task, onSelect, onToggleChecklistItem }: KanbanCard
                 className={cn(
                   'mt-0.5 flex h-4 w-4 items-center justify-center rounded border text-white transition',
                   onToggleChecklistItem ? 'cursor-pointer' : 'cursor-default opacity-60',
-                  item.done ? 'border-emerald-500 bg-emerald-500' : 'border-gray-300 bg-white text-transparent'
+                  item.done ? 'border-emerald-500 bg-emerald-500 dark:border-emerald-600 dark:bg-emerald-600' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-transparent'
                 )}
                 onClick={(event) => {
                   event.stopPropagation()
@@ -97,7 +97,7 @@ export function KanbanCard({ task, onSelect, onToggleChecklistItem }: KanbanCard
               >
                 {item.done ? <Check className="h-3 w-3" /> : null}
               </button>
-              <span className={cn('flex-1 text-gray-600', item.done && 'line-through text-gray-400')}>
+              <span className={cn('flex-1 text-gray-600 dark:text-gray-400', item.done && 'line-through text-gray-400 dark:text-gray-500')}>
                 {item.title}
               </span>
             </div>
@@ -106,17 +106,17 @@ export function KanbanCard({ task, onSelect, onToggleChecklistItem }: KanbanCard
       )}
 
       <div className="mt-3 flex flex-wrap gap-2">
-        <Badge variant="secondary" className="bg-blue-50 text-blue-700">
+        <Badge variant="secondary" className="bg-blue-50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">
           {TASK_TYPE_LABEL[task.type]}
         </Badge>
         {task.labels.map((label) => (
-          <Badge key={label} variant="outline" className="border-gray-200 text-gray-600">
+          <Badge key={label} variant="outline" className="border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400">
             {label}
           </Badge>
         ))}
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-gray-500">
+      <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
         {startLabel && (
           <span className="inline-flex items-center gap-1 text-emerald-700">
             <Play className="h-3.5 w-3.5" />

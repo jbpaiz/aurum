@@ -61,54 +61,54 @@ export function NetWorthCard() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {/* Ativos */}
-      <Card>
+      <Card className="dark:bg-gray-800 dark:border-gray-700">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-gray-600">
+          <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
             Ativos
           </CardTitle>
-          <TrendingUp className="h-5 w-5 text-green-600" />
+          <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-green-600">
+          <div className="text-2xl font-bold text-green-600 dark:text-green-400">
             {formatCurrency(netWorth.assets)}
           </div>
-          <p className="text-xs text-gray-600 mt-1">
+          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
             Recursos disponíveis
           </p>
         </CardContent>
       </Card>
 
       {/* Passivos */}
-      <Card>
+      <Card className="dark:bg-gray-800 dark:border-gray-700">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-gray-600">
+          <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
             Passivos
           </CardTitle>
-          <TrendingDown className="h-5 w-5 text-red-600" />
+          <TrendingDown className="h-5 w-5 text-red-600 dark:text-red-400" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-red-600">
+          <div className="text-2xl font-bold text-red-600 dark:text-red-400">
             {formatCurrency(netWorth.liabilities)}
           </div>
-          <p className="text-xs text-gray-600 mt-1">
+          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
             Dívidas (cartão de crédito)
           </p>
         </CardContent>
       </Card>
 
       {/* Patrimônio Líquido */}
-      <Card className="border-2 border-blue-200 bg-blue-50">
+      <Card className="border-2 border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-900/20">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-blue-900">
+          <CardTitle className="text-sm font-medium text-blue-900 dark:text-blue-300">
             Patrimônio Líquido
           </CardTitle>
-          <DollarSign className="h-5 w-5 text-blue-600" />
+          <DollarSign className="h-5 w-5 text-blue-600 dark:text-blue-400" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-blue-600">
+          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
             {formatCurrency(netWorth.netWorth)}
           </div>
-          <p className="text-xs text-blue-700 mt-1">
+          <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
             Ativos - Passivos
           </p>
         </CardContent>

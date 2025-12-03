@@ -163,15 +163,15 @@ export function KanbanView() {
 
   return (
     <div className="flex flex-col gap-3 p-4 md:gap-3 md:p-3">
-      <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6">
+      <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 sm:p-6">
         {/* Header com título e ações */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wide text-blue-600 mb-1">Módulo de tarefas</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400 mb-1">Módulo de tarefas</p>
             <div className="flex items-center gap-2 flex-wrap">
-              <Kanban className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500 flex-shrink-0" />
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">{activeBoard?.name ?? 'Kanban'}</h1>
-              <Badge variant="outline" className="text-xs sm:text-sm font-medium text-gray-600">
+              <Kanban className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500 dark:text-blue-400 flex-shrink-0" />
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white truncate">{activeBoard?.name ?? 'Kanban'}</h1>
+              <Badge variant="outline" className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300 dark:border-gray-600">
                 {activeTasksCount}
               </Badge>
             </div>
@@ -268,11 +268,11 @@ export function KanbanView() {
         </div>
 
         {/* Modos de visualização */}
-        <div className="mt-4 sm:mt-6 inline-flex items-center gap-1 sm:gap-2 rounded-xl bg-gray-100 p-1">
+        <div className="mt-4 sm:mt-6 inline-flex items-center gap-1 sm:gap-2 rounded-xl bg-gray-100 dark:bg-gray-900 p-1">
           <Button
             variant={viewMode === 'kanban' ? 'default' : 'ghost'}
             size="sm"
-            className={`rounded-lg text-xs sm:text-sm ${viewMode === 'kanban' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'}`}
+            className={`rounded-lg text-xs sm:text-sm ${viewMode === 'kanban' ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow' : 'text-gray-600 dark:text-gray-400'}`}
             onClick={() => setViewMode('kanban')}
           >
             <Kanban className="h-4 w-4 sm:mr-2" />
@@ -281,7 +281,7 @@ export function KanbanView() {
           <Button
             variant={viewMode === 'list' ? 'default' : 'ghost'}
             size="sm"
-            className={`rounded-lg text-xs sm:text-sm ${viewMode === 'list' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'}`}
+            className={`rounded-lg text-xs sm:text-sm ${viewMode === 'list' ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow' : 'text-gray-600 dark:text-gray-400'}`}
             onClick={() => setViewMode('list')}
           >
             <ListIcon className="h-4 w-4 sm:mr-2" />
@@ -290,7 +290,7 @@ export function KanbanView() {
           <Button
             variant={viewMode === 'metrics' ? 'default' : 'ghost'}
             size="sm"
-            className={`rounded-lg text-xs sm:text-sm ${viewMode === 'metrics' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'}`}
+            className={`rounded-lg text-xs sm:text-sm ${viewMode === 'metrics' ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow' : 'text-gray-600 dark:text-gray-400'}`}
             onClick={() => setViewMode('metrics')}
           >
             <BarChart3 className="h-4 w-4 sm:mr-2" />
@@ -300,21 +300,17 @@ export function KanbanView() {
       </div>
 
       {loading ? (
-        <div className="flex min-h-[320px] items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white">
-          <p className="text-gray-500">Carregando quadro...</p>
+        <div className="flex min-h-[320px] items-center justify-center rounded-2xl border border-dashed border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <p className="text-gray-500 dark:text-gray-400">Carregando quadro...</p>
         </div>
       ) : filteredColumns.length === 0 ? (
-        <div className="flex min-h-[320px] flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-gray-200 bg-white">
-          <p className="text-lg font-semibold text-gray-600">Crie sua primeira tarefa</p>
+        <div className="flex min-h-[320px] flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <p className="text-lg font-semibold text-gray-600 dark:text-gray-300">Crie sua primeira tarefa</p>
           <Button onClick={() => openCreateTaskModal()}>Adicionar tarefa</Button>
         </div>
       ) : viewMode === 'kanban' ? (
         <div 
-          className="rounded-2xl border border-gray-200 bg-white overflow-x-scroll max-w-full md:max-w-[calc(100vw-280px)] max-h-[calc(100vh-360px)]"
-          style={{
-            scrollbarWidth: 'thin',
-            scrollbarColor: '#CBD5E1 #F1F5F9'
-          }}
+          className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-x-scroll max-w-full md:max-w-[calc(100vw-280px)] max-h-[calc(100vh-360px)] [scrollbar-width:thin] [scrollbar-color:#CBD5E1_#F1F5F9] dark:[scrollbar-color:#4B5563_#1F2937]"
         >
           <div className="p-3 sm:p-4 min-w-min">
             <KanbanBoard
@@ -368,5 +364,5 @@ export function KanbanView() {
 }
 
 const LabelSeamless = ({ children }: { children: ReactNode }) => (
-  <span className="text-xs font-medium uppercase tracking-wide text-gray-500">{children}</span>
+  <span className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">{children}</span>
 )

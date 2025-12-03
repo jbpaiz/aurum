@@ -85,13 +85,13 @@ export function TransactionList({
         return (
           <div
             key={transaction.id}
-            className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+            className="flex items-center justify-between p-4 border dark:border-gray-700 rounded-lg hover:bg-muted/50 dark:hover:bg-gray-700/50 transition-colors"
           >
             <div className="flex items-center gap-3">
               <div className={`p-2 rounded-full ${
                 transaction.type === 'income' 
-                  ? 'bg-green-50 text-green-600 border border-green-200' 
-                  : 'bg-red-50 text-red-600 border border-red-200'
+                  ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-800' 
+                  : 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800'
               }`}>
                 {transaction.type === 'income' ? (
                   <TrendingUp className="h-4 w-4" />
@@ -102,7 +102,7 @@ export function TransactionList({
               
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <h4 className="font-medium truncate">
+                  <h4 className="font-medium truncate dark:text-white">
                     {transaction.description}
                   </h4>
                   <Badge variant="outline" className="text-xs">
@@ -132,7 +132,7 @@ export function TransactionList({
                     </Badge>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground dark:text-gray-400">
                   <Calendar className="h-3 w-3 inline mr-1" />
                   {formatDate(transaction.date)}
                   {card?.lastFourDigits && (
@@ -147,7 +147,7 @@ export function TransactionList({
             <div className="flex items-center gap-3">
               <div className="text-right">
                 <div className={`font-bold ${
-                  transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                  transaction.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                 }`}>
                   {showBalance ? (
                     <>
@@ -177,7 +177,7 @@ export function TransactionList({
                       variant="ghost"
                       size="sm"
                       onClick={() => onDelete(transaction.id)}
-                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      className="h-8 w-8 p-0 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
                     >
                       <Trash2 className="h-3 w-3" />
                     </Button>

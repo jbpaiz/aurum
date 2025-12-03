@@ -349,7 +349,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 dark:bg-black/80 p-4"
       role="dialog"
       aria-modal="true"
       aria-label={isEditing ? 'Editar tarefa' : 'Nova tarefa'}
@@ -360,13 +360,13 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
       }}
     >
       <div
-        className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl"
+        className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-2xl dark:shadow-gray-900/50"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">{isEditing ? 'Editar tarefa' : 'Nova tarefa'}</h2>
-            <p className="text-sm text-gray-500">Defina título, prioridade, etiquetas e checklist</p>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{isEditing ? 'Editar tarefa' : 'Nova tarefa'}</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Defina título, prioridade, etiquetas e checklist</p>
           </div>
           <Button variant="ghost" size="icon" onClick={handleClose}>
             <X className="h-5 w-5" />
@@ -414,7 +414,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as TaskPriority)}
-                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background dark:bg-gray-800 dark:border-gray-700 dark:text-white px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
               >
                 {Object.keys(TASK_PRIORITY_COLORS).map((value) => (
                   <option key={value} value={value}>
@@ -428,7 +428,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value as TaskType)}
-                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background dark:bg-gray-800 dark:border-gray-700 dark:text-white px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
               >
                 {TASK_TYPES.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -447,7 +447,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
             </div>
           </div>
 
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
             Se deixar os campos em branco, o Aurum preenche automaticamente ao mover a tarefa para &quot;Fazendo&quot; (início) e
             &quot;Concluído&quot; (fim). Você pode ajustar manualmente quando precisar.
           </p>
@@ -460,7 +460,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
           <div className="space-y-2">
             <Label>Descrição</Label>
             <textarea
-              className="min-h-[120px] w-full rounded-lg border border-gray-200 p-3 text-sm focus:border-blue-500 focus:outline-none"
+              className="min-h-[120px] w-full rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white p-3 text-sm focus:border-blue-500 dark:focus:border-blue-600 focus:outline-none"
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               placeholder="Detalhe a tarefa, critérios de aceite, links úteis..."
@@ -471,7 +471,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
             <Label>Checklist</Label>
             <div className="mt-3 space-y-2">
               {checklist.length === 0 ? (
-                <p className="text-sm text-gray-500">Nenhum item adicionado</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Nenhum item adicionado</p>
               ) : (
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleChecklistReorder}>
                   <SortableContext items={checklist.map((item) => item.id)} strategy={verticalListSortingStrategy}>
@@ -537,11 +537,11 @@ function ChecklistItemRow({ item, onToggle, onRemove, onChangeTitle }: Checklist
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+      className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm"
     >
       <button
         type="button"
-        className="cursor-grab text-gray-400 transition-colors hover:text-gray-600"
+        className="cursor-grab text-gray-400 dark:text-gray-500 transition-colors hover:text-gray-600 dark:hover:text-gray-400"
         aria-label="Reordenar item"
         {...attributes}
         {...listeners}
@@ -551,7 +551,7 @@ function ChecklistItemRow({ item, onToggle, onRemove, onChangeTitle }: Checklist
       <button
         type="button"
         className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border ${
-          item.done ? 'border-green-500 bg-green-100 text-green-600' : 'border-gray-300 text-gray-400'
+          item.done ? 'border-green-500 dark:border-green-600 bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400' : 'border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-500'
         }`}
         onClick={() => onToggle(item.id)}
         aria-pressed={item.done}
@@ -561,11 +561,11 @@ function ChecklistItemRow({ item, onToggle, onRemove, onChangeTitle }: Checklist
       <Input
         value={item.title}
         onChange={(event) => onChangeTitle(item.id, event.target.value)}
-        className={`flex-1 text-sm ${item.done ? 'text-gray-400 line-through' : 'text-gray-700'}`}
+        className={`flex-1 text-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white ${item.done ? 'text-gray-400 dark:text-gray-500 line-through' : 'text-gray-700 dark:text-gray-300'}`}
         placeholder="Descrição do item"
       />
       <button type="button" onClick={() => onRemove(item.id)} aria-label="Remover item">
-        <Trash2 className="h-4 w-4 text-gray-400" />
+        <Trash2 className="h-4 w-4 text-gray-400 dark:text-gray-500" />
       </button>
     </div>
   )

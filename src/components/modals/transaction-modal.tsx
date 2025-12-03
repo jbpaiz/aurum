@@ -205,14 +205,14 @@ export function TransactionModal({ transaction, onSave, onClose, isSaving = fals
   const IconComponent = typeConfig.icon
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <Card className={`w-full max-w-4xl my-8 ${typeConfig.borderColor} border-2`}>
-        <CardHeader className={typeConfig.bgColor}>
+    <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <Card className={`w-full max-w-4xl my-8 ${typeConfig.borderColor} dark:border-gray-700 border-2 dark:bg-gray-800`}>
+        <CardHeader className={`${typeConfig.bgColor} dark:bg-gray-900/50`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <IconComponent className={`h-5 w-5 ${typeConfig.color}`} />
               <div>
-                <CardTitle className={typeConfig.color}>
+                <CardTitle className={`${typeConfig.color} dark:text-white`}>
                   {isEditing ? 'Editar Transação' : 'Nova Transação'}
                 </CardTitle>
                 <CardDescription>
@@ -248,7 +248,7 @@ export function TransactionModal({ transaction, onSave, onClose, isSaving = fals
                   onClick={() => setType('income')}
                   className={`gap-2 ${type === 'income' 
                     ? 'bg-green-600 hover:bg-green-700 text-white' 
-                    : 'text-green-600 border-green-600 hover:bg-green-50'
+                    : 'text-green-600 border-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 dark:border-green-500'
                   }`}
                 >
                   <TrendingUp className="h-4 w-4" />
@@ -260,7 +260,7 @@ export function TransactionModal({ transaction, onSave, onClose, isSaving = fals
                   onClick={() => setType('expense')}
                   className={`gap-2 ${type === 'expense' 
                     ? 'bg-red-600 hover:bg-red-700 text-white' 
-                    : 'text-red-600 border-red-600 hover:bg-red-50'
+                    : 'text-red-600 border-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:border-red-500'
                   }`}
                 >
                   <TrendingDown className="h-4 w-4" />
@@ -418,7 +418,7 @@ export function TransactionModal({ transaction, onSave, onClose, isSaving = fals
 
             {/* Alerta de Cartão de Crédito (largura total) */}
             {paymentMethod === 'credit_card' && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-700">
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-xs text-blue-700 dark:text-blue-300">
                 <div className="flex items-start gap-2">
                   <CreditCard className="h-4 w-4 mt-0.5 flex-shrink-0" />
                   <div>

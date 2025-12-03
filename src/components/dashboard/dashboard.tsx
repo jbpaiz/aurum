@@ -73,12 +73,12 @@ export function Dashboard() {
   const savings = data.monthlyIncome - data.monthlyExpenses
 
   return (
-    <div className="flex-1 p-6 space-y-6 bg-gray-50">
+    <div className="flex-1 p-6 space-y-6 bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600">Bem-vindo de volta! Aqui está um resumo das suas finanças.</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+          <p className="text-gray-600 dark:text-gray-400">Bem-vindo de volta! Aqui está um resumo das suas finanças.</p>
         </div>
         <div className="flex gap-2">
           <Button onClick={() => setIsTransactionModalOpen(true)} className="gap-2">
@@ -91,10 +91,10 @@ export function Dashboard() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Saldo Total */}
-        <Card className="relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-400 to-blue-600 rounded-bl-full opacity-10"></div>
+        <Card className="relative overflow-hidden dark:bg-gray-800 dark:border-gray-700">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-400 to-blue-600 rounded-bl-full opacity-10 dark:opacity-20"></div>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Saldo Total</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Saldo Total</CardTitle>
             <div className="flex items-center gap-1">
               <Button
                 variant="ghost"
@@ -112,10 +112,10 @@ export function Dashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">
               {showBalance ? formatCurrency(data.balance) : '••••••'}
             </div>
-            <p className="text-xs text-gray-600 flex items-center gap-1 mt-1">
+            <p className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1 mt-1">
               <TrendingUp className="h-3 w-3 text-green-600" />
               Total em todas as contas
             </p>
@@ -123,44 +123,44 @@ export function Dashboard() {
         </Card>
 
         {/* Receitas do Mês */}
-        <Card className="relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-bl-full opacity-10"></div>
+        <Card className="relative overflow-hidden dark:bg-gray-800 dark:border-gray-700">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-bl-full opacity-10 dark:opacity-20"></div>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Receitas do Mês</CardTitle>
-            <TrendingUp className="h-5 w-5 text-green-600" />
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Receitas do Mês</CardTitle>
+            <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
               {showBalance ? formatCurrency(data.monthlyIncome) : '••••••'}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
               Este mês
             </p>
           </CardContent>
         </Card>
 
         {/* Despesas do Mês */}
-        <Card className="relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-red-400 to-red-600 rounded-bl-full opacity-10"></div>
+        <Card className="relative overflow-hidden dark:bg-gray-800 dark:border-gray-700">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-red-400 to-red-600 rounded-bl-full opacity-10 dark:opacity-20"></div>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Despesas do Mês</CardTitle>
-            <TrendingDown className="h-5 w-5 text-red-600" />
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Despesas do Mês</CardTitle>
+            <TrendingDown className="h-5 w-5 text-red-600 dark:text-red-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-2xl font-bold text-red-600 dark:text-red-400">
               {showBalance ? formatCurrency(data.monthlyExpenses) : '••••••'}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
               Este mês
             </p>
           </CardContent>
         </Card>
 
         {/* Economia do Mês */}
-        <Card className="relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-400 to-purple-600 rounded-bl-full opacity-10"></div>
+        <Card className="relative overflow-hidden dark:bg-gray-800 dark:border-gray-700">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-400 to-purple-600 rounded-bl-full opacity-10 dark:opacity-20"></div>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Economia do Mês</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Economia do Mês</CardTitle>
             <PieChart className="h-5 w-5 text-purple-600" />
           </CardHeader>
           <CardContent>
@@ -177,13 +177,13 @@ export function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Gráfico de Despesas por Categoria */}
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-2 dark:bg-gray-800 dark:border-gray-700">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <PieChart className="h-5 w-5 text-blue-600" />
+            <CardTitle className="flex items-center gap-2 dark:text-white">
+              <PieChart className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               Despesas por Categoria
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="dark:text-gray-400">
               Distribuição dos seus gastos no mês atual
             </CardDescription>
           </CardHeader>
@@ -199,9 +199,9 @@ export function Dashboard() {
                           backgroundColor: `hsl(${index * 60}, 70%, 50%)` 
                         }}
                       ></div>
-                      <span className="text-sm font-medium text-gray-700">{category.category}</span>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{category.category}</span>
                       <div className="flex-1 mx-3">
-                        <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                           <div 
                             className="h-2 rounded-full transition-all duration-500"
                             style={{ 
@@ -213,10 +213,10 @@ export function Dashboard() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm font-semibold text-gray-900">
+                      <div className="text-sm font-semibold text-gray-900 dark:text-white">
                         {formatCurrency(category.amount)}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
                         {category.percentage}%
                       </div>
                     </div>
@@ -233,13 +233,13 @@ export function Dashboard() {
         </Card>
 
         {/* Resumo das Contas */}
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Wallet className="h-5 w-5 text-green-600" />
+            <CardTitle className="flex items-center gap-2 dark:text-white">
+              <Wallet className="h-5 w-5 text-green-600 dark:text-green-400" />
               Suas Contas
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="dark:text-gray-400">
               Saldo atual em cada conta
             </CardDescription>
           </CardHeader>
@@ -247,15 +247,15 @@ export function Dashboard() {
             {data.accounts.length > 0 ? (
               <div className="space-y-4">
                 {data.accounts.map((account, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                     <div className="flex items-center gap-3">
                       <div 
                         className="w-3 h-3 rounded-full"
                         style={{ backgroundColor: account.color }}
                       ></div>
-                      <span className="text-sm font-medium text-gray-700">{account.name}</span>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{account.name}</span>
                     </div>
-                    <span className="text-sm font-semibold text-gray-900">
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white">
                       {showBalance ? formatCurrency(account.balance) : '••••'}
                     </span>
                   </div>
@@ -275,15 +275,15 @@ export function Dashboard() {
       </div>
 
       {/* Transações Recentes */}
-      <Card>
+      <Card className="dark:bg-gray-800 dark:border-gray-700">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-orange-600" />
+              <CardTitle className="flex items-center gap-2 dark:text-white">
+                <Calendar className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                 Transações Recentes
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="dark:text-gray-400">
                 Suas últimas movimentações financeiras
               </CardDescription>
             </div>
@@ -296,12 +296,12 @@ export function Dashboard() {
           {data.recentTransactions.length > 0 ? (
             <div className="space-y-3">
               {data.recentTransactions.map((transaction) => (
-                <div key={transaction.id} className="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-lg hover:border-gray-200 transition-colors">
+                <div key={transaction.id} className="flex items-center justify-between p-4 bg-white dark:bg-gray-700/30 border border-gray-100 dark:border-gray-700 rounded-lg hover:border-gray-200 dark:hover:border-gray-600 transition-colors">
                   <div className="flex items-center gap-4">
                     <div className={`p-2 rounded-full ${
                       transaction.type === 'income' 
-                        ? 'bg-green-100 text-green-600' 
-                        : 'bg-red-100 text-red-600'
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' 
+                        : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
                     }`}>
                       {transaction.type === 'income' ? (
                         <TrendingUp className="h-4 w-4" />
@@ -310,19 +310,19 @@ export function Dashboard() {
                       )}
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900">{transaction.description}</p>
+                      <p className="font-medium text-gray-900 dark:text-white">{transaction.description}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <Badge variant="secondary" className="text-xs">
                           {transaction.category}
                         </Badge>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
                           {formatDate(transaction.date)}
                         </span>
                       </div>
                     </div>
                   </div>
                   <div className={`text-right ${
-                    transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                    transaction.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                   }`}>
                     <p className="font-semibold">
                       {transaction.type === 'income' ? '+' : '-'}

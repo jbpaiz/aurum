@@ -254,17 +254,17 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
 
   const renderBoardMeta = (boardId: string) => {
     if (savingBoards[boardId]) {
-      return <span className="text-xs text-blue-600">Salvando...</span>
+      return <span className="text-xs text-blue-600 dark:text-blue-400">Salvando...</span>
     }
     const board = boards.find((item) => item.id === boardId)
     if (!board) return null
     const updatedAt = new Date(board.updatedAt).toLocaleDateString('pt-BR')
-    return <span className="text-xs text-gray-500">Atualizado em {updatedAt}</span>
+    return <span className="text-xs text-gray-500 dark:text-gray-400">Atualizado em {updatedAt}</span>
   }
 
   if (!activeProject) {
     return (
-      <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-10 text-center text-gray-500">
+      <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-10 text-center text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
         Nenhum projeto encontrado. Crie um projeto para começar a gerenciar quadros.
       </div>
     )
@@ -272,12 +272,12 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-blue-500">Configurações do Kanban</p>
-            <h2 className="mt-1 text-2xl font-bold text-gray-900">Gerenciar quadros e colunas</h2>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-blue-500 dark:text-blue-400">Configurações do Kanban</p>
+            <h2 className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">Gerenciar quadros e colunas</h2>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               Todas as alterações são salvas automaticamente. Aplique ajustes enquanto navega entre diferentes quadros.
             </p>
           </div>
@@ -288,7 +288,7 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
                 Voltar para o quadro
               </Button>
             )}
-            <Badge variant="outline" className="bg-blue-50 text-blue-700">
+            <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
               {boards.length} quadros
             </Badge>
           </div>
@@ -296,18 +296,18 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
-        <section className="space-y-4 rounded-2xl border border-gray-200 bg-white p-5">
+        <section className="space-y-4 rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
           <header className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">Quadros do projeto</h3>
-              <p className="text-sm text-gray-500">Selecione um quadro para editar suas colunas ou renomeie-o rapidamente.</p>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Quadros do projeto</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Selecione um quadro para editar suas colunas ou renomeie-o rapidamente.</p>
             </div>
-            <Badge variant="outline" className="bg-blue-50 text-blue-700">
+            <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
               {boards.length} ativos
             </Badge>
           </header>
 
-          <form onSubmit={handleCreateBoard} className="flex flex-col gap-2 rounded-2xl bg-gray-50/80 p-4 sm:flex-row">
+          <form onSubmit={handleCreateBoard} className="flex flex-col gap-2 rounded-2xl bg-gray-50/80 p-4 sm:flex-row dark:bg-gray-700/50">
             <Input
               placeholder="Nome do novo quadro"
               value={newBoardName}
@@ -328,7 +328,7 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
                   key={board.id}
                   className={cn(
                     'flex flex-col gap-3 rounded-2xl border p-4 transition',
-                    active ? 'border-blue-200 bg-blue-50/70' : 'border-gray-200'
+                    active ? 'border-blue-200 bg-blue-50/70 dark:border-blue-700 dark:bg-blue-900/30' : 'border-gray-200 dark:border-gray-700'
                   )}
                 >
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
@@ -359,7 +359,7 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
                       </Button>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between text-xs text-gray-500">
+                  <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                     <span>{board.columns.length} colunas</span>
                     {renderBoardMeta(board.id)}
                   </div>
@@ -369,16 +369,16 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
           </div>
         </section>
 
-        <section className="space-y-4 rounded-2xl border border-gray-200 bg-white p-5">
+        <section className="space-y-4 rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
           <header className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">Colunas do quadro</h3>
-              <p className="text-sm text-gray-500">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Colunas do quadro</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 {activeBoard ? 'Renomeie, reordene ou crie colunas para o quadro selecionado.' : 'Escolha um quadro para começar.'}
               </p>
             </div>
             {activeBoard && (
-              <Badge variant="outline" className="bg-gray-50 text-gray-600">
+              <Badge variant="outline" className="bg-gray-50 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
                 {columns.length} colunas
               </Badge>
             )}
@@ -409,7 +409,7 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
                 </SortableContext>
               </DndContext>
 
-              <form onSubmit={handleCreateColumn} className="mt-4 flex flex-col gap-2 rounded-2xl bg-gray-50/80 p-4 sm:flex-row">
+              <form onSubmit={handleCreateColumn} className="mt-4 flex flex-col gap-2 rounded-2xl bg-gray-50/80 p-4 sm:flex-row dark:bg-gray-700/50">
                 <Input
                   placeholder="Nome da nova coluna"
                   value={newColumnName}
@@ -423,7 +423,7 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
               </form>
             </>
           ) : (
-            <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-8 text-center text-gray-500">
+            <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-8 text-center text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
               Selecione um quadro para ver e editar suas colunas.
             </div>
           )}
@@ -468,11 +468,11 @@ function SortableColumnCard({
   }
 
   return (
-    <div ref={setNodeRef} style={style} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+    <div ref={setNodeRef} style={style} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
         <button
           type="button"
-          className="flex h-9 w-9 items-center justify-center rounded-xl border border-dashed border-gray-300 text-gray-400 transition hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-dashed border-gray-300 text-gray-400 transition hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
           aria-label="Reordenar coluna"
           {...attributes}
           {...listeners}
@@ -488,7 +488,7 @@ function SortableColumnCard({
       </div>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-medium uppercase tracking-wide text-gray-500">Cor</span>
+          <span className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Cor</span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -541,7 +541,7 @@ function SortableColumnCard({
         </Button>
       </div>
       {(isNameSaving || isOrderSaving || isDeleting) && (
-        <span className="mt-2 inline-block text-xs text-blue-600">
+        <span className="mt-2 inline-block text-xs text-blue-600 dark:text-blue-400">
           {isDeleting
             ? 'Removendo coluna...'
             : isNameSaving

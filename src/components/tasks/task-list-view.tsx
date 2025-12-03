@@ -45,12 +45,12 @@ export function TaskListView({ columns, referenceColumns, onSelectTask, onCreate
   const columnOptions = referenceColumns ?? columns
 
   const renderDate = (date?: string | null) => {
-    if (!date) return <span className="text-gray-400">Sem data</span>
+    if (!date) return <span className="text-gray-400 dark:text-gray-500">Sem data</span>
     try {
       const normalized = date.includes('T') ? date : `${date}T00:00:00`
       return format(new Date(normalized), 'dd/MM/yyyy', { locale: ptBR })
     } catch (error) {
-      return <span className="text-gray-400">Sem data</span>
+      return <span className="text-gray-400 dark:text-gray-500">Sem data</span>
     }
   }
 
@@ -111,25 +111,21 @@ export function TaskListView({ columns, referenceColumns, onSelectTask, onCreate
 
   if (!tasks.length) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-gray-200 bg-white p-10 text-center">
-        <p className="text-lg font-semibold text-gray-600">Nenhuma tarefa combinou com os filtros</p>
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-10 text-center">
+        <p className="text-lg font-semibold text-gray-600 dark:text-gray-300">Nenhuma tarefa combinou com os filtros</p>
         <Button onClick={onCreateTask}>Adicionar tarefa</Button>
       </div>
     )
   }
 
   return (
-    <div className={`w-full rounded-2xl border border-gray-200 bg-white max-w-full md:max-w-[calc(100vw-280px)] overflow-hidden`}>
+    <div className={`w-full rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 max-w-full md:max-w-[calc(100vw-280px)] overflow-hidden`}>
       <div 
-        className="overflow-x-scroll overflow-y-scroll max-h-[calc(100vh-360px)]"
-        style={{
-          scrollbarWidth: 'thin',
-          scrollbarColor: '#CBD5E1 #F1F5F9'
-        }}
+        className="overflow-x-scroll overflow-y-scroll max-h-[calc(100vh-360px)] [scrollbar-width:thin] [scrollbar-color:#CBD5E1_#F1F5F9] dark:[scrollbar-color:#4B5563_#1F2937]"
       >
         <div className={adaptiveWidth ? 'w-full' : 'min-w-[1200px]'}>
           <table className="w-full table-auto">
-            <thead className="bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 sticky top-0 z-10 border-b border-gray-200">
+            <thead className="bg-gray-50 dark:bg-gray-900 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 sticky top-0 z-10 border-b border-gray-200 dark:border-gray-700">
               <tr>
               <th className="px-6 py-3 whitespace-nowrap">
                 <SortableHeader label="Chave" sortKey="key" sortConfig={sortConfig} onToggleSort={handleSort} />
@@ -154,7 +150,7 @@ export function TaskListView({ columns, referenceColumns, onSelectTask, onCreate
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 bg-white text-sm">
+          <tbody className="divide-y divide-gray-100 dark:divide-gray-700 bg-white dark:bg-gray-800 text-sm">
             {sortedTasks.map((task) => (
               <TaskListRow
                 key={task.id}
@@ -185,35 +181,35 @@ function TaskListRow({ task, onSelectTask, onChangeTaskColumn, renderDate, colum
   const selectedColumn = columnOptions.find((option) => option.id === task.columnId)
 
   return (
-    <tr className="cursor-pointer transition-colors hover:bg-blue-50/40" onClick={() => onSelectTask(task)}>
-      <td className="px-6 py-4 font-semibold text-gray-900 whitespace-nowrap">{task.key}</td>
+    <tr className="cursor-pointer transition-colors hover:bg-blue-50/40 dark:hover:bg-blue-900/20" onClick={() => onSelectTask(task)}>
+      <td className="px-6 py-4 font-semibold text-gray-900 dark:text-white whitespace-nowrap">{task.key}</td>
       <td className="px-6 py-4">
-        <p className="font-medium text-gray-900">{task.title}</p>
+        <p className="font-medium text-gray-900 dark:text-white">{task.title}</p>
         {task.description ? (
-          <p className="text-xs text-gray-500 max-w-[320px] truncate" title={task.description}>
+          <p className="text-xs text-gray-500 dark:text-gray-400 max-w-[320px] truncate" title={task.description}>
             {task.description}
           </p>
         ) : null}
       </td>
-      <td className="px-6 py-4 text-gray-600 whitespace-nowrap">
+      <td className="px-6 py-4 text-gray-600 dark:text-gray-400 whitespace-nowrap">
         {task.labels.length ? (
           <span className="block max-w-[220px] truncate" title={task.labels.join(', ')}>
             {task.labels.join(', ')}
           </span>
         ) : (
-          <span className="text-xs text-gray-400">Sem etiquetas</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500">Sem etiquetas</span>
         )}
       </td>
-      <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{renderDate(task.startDate)}</td>
-      <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{renderDate(task.endDate)}</td>
-      <td className="px-6 py-4 text-gray-600 whitespace-nowrap">
+      <td className="px-6 py-4 text-gray-600 dark:text-gray-400 whitespace-nowrap">{renderDate(task.startDate)}</td>
+      <td className="px-6 py-4 text-gray-600 dark:text-gray-400 whitespace-nowrap">{renderDate(task.endDate)}</td>
+      <td className="px-6 py-4 text-gray-600 dark:text-gray-400 whitespace-nowrap">
         <Select
           value={task.columnId}
           onValueChange={(value) => onChangeTaskColumn?.(task.id, value)}
           disabled={!onChangeTaskColumn}
         >
           <SelectTrigger
-            className="h-9 w-[200px] justify-between"
+            className="h-9 w-[200px] justify-between dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300"
             onClick={(event) => event.stopPropagation()}
             onPointerDown={(event) => event.stopPropagation()}
           >
@@ -222,7 +218,7 @@ function TaskListRow({ task, onSelectTask, onChangeTaskColumn, renderDate, colum
                 className="h-2.5 w-2.5 rounded-full"
                 style={{ backgroundColor: selectedColumn?.color ?? task.columnColor ?? '#CBD5F5' }}
               />
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 {selectedColumn?.name ?? task.columnName ?? 'Situação'}
               </span>
             </div>
@@ -270,7 +266,7 @@ function SortableHeader({ label, sortKey, sortConfig, onToggleSort }: SortableHe
   return (
     <button
       type="button"
-      className="flex items-center gap-2 rounded-md px-1 py-0.5 text-gray-600 transition hover:text-blue-600"
+      className="flex items-center gap-2 rounded-md px-1 py-0.5 text-gray-600 dark:text-gray-400 transition hover:text-blue-600 dark:hover:text-blue-400"
       onClick={(event) => {
         event.stopPropagation()
         onToggleSort(sortKey)
@@ -279,7 +275,7 @@ function SortableHeader({ label, sortKey, sortConfig, onToggleSort }: SortableHe
       title={tooltip}
     >
       <span>{label}</span>
-      <Icon className={`h-3.5 w-3.5 ${isActive ? 'text-blue-600' : 'text-gray-400'}`} aria-hidden />
+      <Icon className={`h-3.5 w-3.5 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500'}`} aria-hidden />
       {isActive ? (
         <span className="sr-only">
           {direction === 'asc' ? 'ordenado ascendente' : 'ordenado descendente'}
