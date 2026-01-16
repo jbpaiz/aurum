@@ -874,9 +874,49 @@ export function TasksProvider({ children }: TasksProviderProps) {
       if (!user) return
       const normalizedUpdates: Partial<CreateTaskInput> = { ...updates }
 
-      const taskSnapshot = activeBoard
+      // Buscar taskSnapshot do activeBoard ou do banco se não encontrar (caso tenha sido movida)
+      let taskSnapshot = activeBoard
         ? activeBoard.columns.flatMap((column) => column.tasks).find((task) => task.id === taskId)
         : undefined
+
+      // Se não encontrou no activeBoard, buscar no banco (tarefa pode ter sido movida para outro quadro)
+      if (!taskSnapshot) {
+        const { data: taskData } = await supabase
+          .from('tasks')
+          .select('*')
+          .eq('id', taskId)
+          .single()
+        
+        if (taskData) {
+          taskSnapshot = {
+            id: taskData.id,
+            key: taskData.key,
+            projectId: taskData.project_id,
+            boardId: taskData.board_id,
+            columnId: taskData.column_id,
+            sprintId: taskData.sprint_id,
+            userId: taskData.user_id,
+            title: taskData.title,
+            description: taskData.description,
+            type: taskData.type,
+            priority: taskData.priority,
+            reporterId: taskData.reporter_id,
+            assigneeId: taskData.assignee_id,
+            startDate: taskData.start_date,
+            endDate: taskData.due_date,
+            labels: (taskData.labels as unknown as string[]) || [],
+            attachments: (taskData.attachments as unknown as TaskAttachmentMeta[]) || [],
+            checklist: (taskData.checklist as unknown as TaskChecklistItem[]) || [],
+            isBlocked: taskData.is_blocked,
+            blockedReason: taskData.blocked_reason,
+            storyPoints: taskData.story_points,
+            estimateHours: taskData.estimate_hours,
+            sortOrder: taskData.sort_order,
+            createdAt: taskData.created_at,
+            updatedAt: taskData.updated_at
+          }
+        }
+      }
 
       const payload = buildTaskPayload(updates)
       if (updates.columnId) payload.column_id = updates.columnId
