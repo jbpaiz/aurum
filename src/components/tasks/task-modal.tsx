@@ -102,6 +102,14 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
   const resolvedColumnId = columnId || task?.columnId || defaultColumnId || availableColumns[0]?.id || ''
   const selectedColumn = availableColumns.find((column) => column.id === resolvedColumnId)
 
+  // Garantir que columnId seja setado corretamente quando a tarefa muda
+  useEffect(() => {
+    if (open && task && !columnId) {
+      // Setar o columnId da tarefa imediatamente
+      setColumnId(task.columnId)
+    }
+  }, [open, task, columnId])
+
   // Salvar dados no sessionStorage sempre que mudarem (mas só depois de inicializar)
   useEffect(() => {
     if (typeof window === 'undefined' || !open || !isInitialized.current) return
