@@ -31,7 +31,7 @@ export function KanbanColumn({ column, onSelectTask, onCreateTask, onToggleCheck
 
   return (
     <div className={`flex ${widthClass} flex-shrink-0 flex-col`}>
-      <div className="mb-3 flex items-center justify-between flex-shrink-0">
+      <div className="mb-2 flex items-center justify-between flex-shrink-0">
         <div>
           <p className="text-sm font-semibold text-gray-900 dark:text-white">{column.name}</p>
           <p className="text-xs text-gray-500 dark:text-gray-400">{column.tasks.length} itens</p>
@@ -48,7 +48,7 @@ export function KanbanColumn({ column, onSelectTask, onCreateTask, onToggleCheck
 
       <div
         ref={setNodeRef}
-        className={`flex flex-1 flex-col gap-3 rounded-xl border-2 p-3 transition-all duration-200 ${
+        className={`flex flex-1 flex-col gap-2 rounded-xl border-2 p-2 transition-all duration-200 ${
           isOver 
             ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/40 shadow-lg scale-[1.02]' 
             : 'border-dashed border-gray-200 dark:border-gray-700 bg-gray-50/70 dark:bg-gray-900/50'

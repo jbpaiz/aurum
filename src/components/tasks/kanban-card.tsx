@@ -61,29 +61,29 @@ export function KanbanCard({ task, onSelect, onToggleChecklistItem }: KanbanCard
       {...listeners}
       onClick={() => onSelect(task)}
       className={cn(
-        'rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 shadow-sm dark:shadow-gray-900/50 transition hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md',
+        'rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-2 shadow-sm dark:shadow-gray-900/50 transition hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md',
         isDragging && 'ring-2 ring-blue-200 dark:ring-blue-800'
       )}
     >
       <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
         <span className="font-medium text-gray-700 dark:text-gray-300">{task.key}</span>
         <span
-          className="inline-flex h-6 items-center gap-1 rounded-full px-2"
+          className="inline-flex h-5 items-center gap-1 rounded-full px-1.5"
           style={{ backgroundColor: `${priorityColor}22`, color: priorityColor }}
         >
-          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: priorityColor }} />
+          <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: priorityColor }} />
           {priorityLabel}
         </span>
       </div>
 
-      <p className="mt-2 text-sm font-semibold text-gray-900 dark:text-white break-words">{task.title}</p>
+      <p className="mt-1.5 text-sm font-semibold text-gray-900 dark:text-white break-words">{task.title}</p>
 
       {task.description && (
         <p className="mt-1 line-clamp-2 text-xs text-gray-600 dark:text-gray-400 break-words">{task.description}</p>
       )}
 
       {task.checklist.length > 0 && (
-        <div className="mt-3 space-y-1 rounded-lg border border-gray-100 dark:border-gray-700 bg-gray-50/70 dark:bg-gray-900/50 p-2">
+        <div className="mt-2 space-y-1 rounded-lg border border-gray-100 dark:border-gray-700 bg-gray-50/70 dark:bg-gray-900/50 p-1.5">
           {task.checklist.map((item) => (
             <div key={item.id} className="flex items-start gap-2 text-xs">
               <button
@@ -112,18 +112,18 @@ export function KanbanCard({ task, onSelect, onToggleChecklistItem }: KanbanCard
         </div>
       )}
 
-      <div className="mt-3 flex flex-wrap gap-2">
-        <Badge variant="secondary" className="bg-blue-50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        <Badge variant="secondary" className="bg-blue-50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs px-1.5 py-0">
           {TASK_TYPE_LABEL[task.type]}
         </Badge>
         {task.labels.map((label) => (
-          <Badge key={label} variant="outline" className="border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400">
+          <Badge key={label} variant="outline" className="border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 text-xs px-1.5 py-0">
             {label}
           </Badge>
         ))}
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
         {startLabel && (
           <span className="inline-flex items-center gap-1 text-emerald-700">
             <Play className="h-3.5 w-3.5" />
