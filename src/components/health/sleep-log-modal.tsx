@@ -54,32 +54,33 @@ export function SleepLogModal({ open, onOpenChange, editingSleep }: SleepLogModa
       setLoading(true)
       
       if (editingSleep) {
-        const yesterday = new Date(editingSleep.sleepDate)
-        const today = new Date(yesterday)
-        today.setDate(today.getDate() + 1)
+        const sleepDate = new Date(editingSleep.sleepDate)
+        const nextDay = new Date(sleepDate)
+        nextDay.setDate(nextDay.getDate() + 1)
         
-        const bedtimeDate = new Date(`${format(yesterday, 'yyyy-MM-dd')}T${bedtime}:00`)
-        const wakeTimeDate = new Date(`${format(today, 'yyyy-MM-dd')}T${wakeTime}:00`)
+        const bedtimeISO = `${format(sleepDate, 'yyyy-MM-dd')}T${bedtime}:00`
+        const wakeTimeISO = `${format(nextDay, 'yyyy-MM-dd')}T${wakeTime}:00`
         
         await updateSleepLog(editingSleep.id, {
           sleepDate: editingSleep.sleepDate,
-          bedtime: bedtimeDate.toISOString(),
-          wakeTime: wakeTimeDate.toISOString(),
+          bedtime: bedtimeISO,
+          wakeTime: wakeTimeISO,
           quality,
           notes: notes || undefined
         })
         toast.success('Sono atualizado com sucesso!')
       } else {
-        const yesterday = subDays(new Date(), 1)
         const today = new Date()
+        const yesterday = new Date(today)
+        yesterday.setDate(yesterday.getDate() - 1)
         
-        const bedtimeDate = new Date(`${format(yesterday, 'yyyy-MM-dd')}T${bedtime}:00`)
-        const wakeTimeDate = new Date(`${format(today, 'yyyy-MM-dd')}T${wakeTime}:00`)
+        const bedtimeISO = `${format(yesterday, 'yyyy-MM-dd')}T${bedtime}:00`
+        const wakeTimeISO = `${format(today, 'yyyy-MM-dd')}T${wakeTime}:00`
         
         await createSleepLog({
           sleepDate: format(yesterday, 'yyyy-MM-dd'),
-          bedtime: bedtimeDate.toISOString(),
-          wakeTime: wakeTimeDate.toISOString(),
+          bedtime: bedtimeISO,
+          wakeTime: wakeTimeISO,
           quality,
           notes: notes || undefined
         })
