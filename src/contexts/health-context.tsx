@@ -13,6 +13,10 @@ import type {
   HydrationGoal,
   Meal,
   NutritionGoal,
+  Badge,
+  UserStats,
+  Challenge,
+  BadgeType,
   CreateWeightLogInput,
   CreateActivityInput,
   CreateSleepLogInput,
@@ -50,6 +54,9 @@ interface HealthContextValue {
   hydrationGoal: HydrationGoal | null
   meals: Meal[]
   nutritionGoal: NutritionGoal | null
+  badges: Badge[]
+  userStats: UserStats | null
+  challenges: Challenge[]
   
   // Stats
   weightStats: WeightStats | null
@@ -96,6 +103,9 @@ interface HealthContextValue {
   deleteMeal: (id: string) => Promise<void>
   createOrUpdateNutritionGoal: (goal: Partial<NutritionGoal>) => Promise<void>
   
+  // Gamification
+  checkAndAwardBadges: () => Promise<void>
+  
   // Refresh
   refresh: () => Promise<void>
 }
@@ -114,6 +124,9 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
   const [hydrationGoal, setHydrationGoal] = useState<HydrationGoal | null>(null)
   const [meals, setMeals] = useState<Meal[]>([])
   const [nutritionGoal, setNutritionGoal] = useState<NutritionGoal | null>(null)
+  const [badges, setBadges] = useState<Badge[]>([])
+  const [userStats, setUserStats] = useState<UserStats | null>(null)
+  const [challenges, setChallenges] = useState<Challenge[]>([])
   
   // Carregar dados
   const loadData = useCallback(async () => {
@@ -127,6 +140,9 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
       setHydrationGoal(null)
       setMeals([])
       setNutritionGoal(null)
+      setBadges([])
+      setUserStats(null)
+      setChallenges([])
       setLoading(false)
       return
     }
@@ -137,7 +153,7 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
       // Buscar últimos 90 dias
       const ninetyDaysAgo = subDays(new Date(), 90).toISOString()
       
-      const [weightRes, activitiesRes, sleepRes, goalsRes, measurementsRes, hydrationRes, hydrationGoalRes, mealsRes, nutritionGoalRes] = await Promise.all([
+      const [weightRes, activitiesRes, sleepRes, goalsRes, measurementsRes, hydrationRes, hydrationGoalRes, mealsRes, nutritionGoalRes, badgesRes, userStatsRes, challengesRes] = await Promise.all([
         supabase
           .from('health_weight_logs')
           .select('*')
@@ -189,7 +205,23 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
         supabase
           .from('health_nutrition_goals')
           .select('*')
-          .single()
+          .single(),
+        
+        supabase
+          .from('health_badges')
+          .select('*')
+          .order('earned_at', { ascending: false }),
+        
+        supabase
+          .from('health_user_stats')
+          .select('*')
+          .single(),
+        
+        supabase
+          .from('health_challenges')
+          .select('*')
+          .in('status', ['active', 'completed'])
+          .order('created_at', { ascending: false })
       ])
 
       if (weightRes.data) {
@@ -226,6 +258,18 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
       
       if (nutritionGoalRes.data) {
         setNutritionGoal(mapNutritionGoal(nutritionGoalRes.data))
+      }
+      
+      if (badgesRes.data) {
+        setBadges(badgesRes.data.map(mapBadge))
+      }
+      
+      if (userStatsRes.data) {
+        setUserStats(mapUserStats(userStatsRes.data))
+      }
+      
+      if (challengesRes.data) {
+        setChallenges(challengesRes.data.map(mapChallenge))
       }
     } catch (error) {
       console.error('Erro ao carregar dados de saúde:', error)
@@ -686,6 +730,103 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     await loadData()
   }, [user, loadData])
 
+  // ===== GAMIFICATION =====
+  const checkAndAwardBadges = useCallback(async () => {
+    if (!user) return
+
+    // Verificar conquistas baseadas nos dados atuais
+    const potentialBadges: BadgeType[] = []
+
+    // Primeiro peso
+    if (weightLogs.length === 1) potentialBadges.push('first_weight')
+    
+    // Streak de peso (7 e 30 dias)
+    const recentWeightDays = new Set(weightLogs.slice(0, 7).map(w => format(new Date(w.recordedAt), 'yyyy-MM-dd')))
+    if (recentWeightDays.size >= 7) potentialBadges.push('weight_streak_7')
+    
+    const monthWeightDays = new Set(weightLogs.slice(0, 30).map(w => format(new Date(w.recordedAt), 'yyyy-MM-dd')))
+    if (monthWeightDays.size >= 30) potentialBadges.push('weight_streak_30')
+
+    // Primeira atividade
+    if (activities.length === 1) potentialBadges.push('first_activity')
+    
+    // Streak de atividades
+    const recentActivityDays = new Set(activities.slice(0, 7).map(a => a.activityDate))
+    if (recentActivityDays.size >= 7) potentialBadges.push('activity_streak_7')
+    
+    const monthActivityDays = new Set(activities.slice(0, 30).map(a => a.activityDate))
+    if (monthActivityDays.size >= 30) potentialBadges.push('activity_streak_30')
+
+    // 100 horas de atividade
+    const totalActivityHours = activities.reduce((sum, a) => sum + (a.durationMinutes || 0), 0) / 60
+    if (totalActivityHours >= 100) potentialBadges.push('activity_100h')
+
+    // Primeiro sono
+    if (sleepLogs.length === 1) potentialBadges.push('first_sleep')
+    
+    // Streak de sono
+    const recentSleepDays = new Set(sleepLogs.slice(0, 7).map(s => s.sleepDate))
+    if (recentSleepDays.size >= 7) potentialBadges.push('sleep_streak_7')
+    
+    const monthSleepDays = new Set(sleepLogs.slice(0, 30).map(s => s.sleepDate))
+    if (monthSleepDays.size >= 30) potentialBadges.push('sleep_streak_30')
+
+    // Hidratação streak
+    const recentHydrationDays = new Set(hydrationLogs.slice(0, 7).map(h => h.logDate))
+    if (recentHydrationDays.size >= 7) potentialBadges.push('hydration_streak_7')
+    
+    const monthHydrationDays = new Set(hydrationLogs.slice(0, 30).map(h => h.logDate))
+    if (monthHydrationDays.size >= 30) potentialBadges.push('hydration_streak_30')
+
+    // 100 refeições registradas
+    if (meals.length >= 100) potentialBadges.push('meal_logged_100')
+
+    // Verificar quais badges ainda não foram conquistadas
+    const existingBadgeTypes = badges.map(b => b.badgeType)
+    const newBadges = potentialBadges.filter(type => !existingBadgeTypes.includes(type))
+
+    // Inserir novas badges
+    if (newBadges.length > 0) {
+      const { error } = await supabase
+        .from('health_badges')
+        .insert(newBadges.map(badgeType => ({
+          user_id: user.id,
+          badge_type: badgeType,
+          earned_at: new Date().toISOString()
+        })))
+
+      if (error) console.error('Erro ao criar badges:', error)
+
+      // Atualizar pontos do usuário
+      const pointsToAdd = newBadges.length * 100
+      if (userStats) {
+        const newTotalPoints = userStats.totalPoints + pointsToAdd
+        const newLevel = Math.floor(newTotalPoints / 1000) + 1
+
+        await supabase
+          .from('health_user_stats')
+          .update({
+            total_points: newTotalPoints,
+            level: newLevel
+          })
+          .eq('user_id', user.id)
+      } else {
+        // Criar stats se não existir
+        await supabase
+          .from('health_user_stats')
+          .insert({
+            user_id: user.id,
+            total_points: newBadges.length * 100,
+            level: 1,
+            current_streak: 0,
+            longest_streak: 0
+          })
+      }
+
+      await loadData()
+    }
+  }, [user, weightLogs, activities, sleepLogs, hydrationLogs, meals, badges, userStats, loadData])
+
   // ===== STATS =====
   const weightStats: WeightStats | null = calculateWeightStats(weightLogs)
   const activityStats: ActivityStats | null = calculateActivityStats(activities, goals)
@@ -705,6 +846,9 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     hydrationGoal,
     meals,
     nutritionGoal,
+    badges,
+    userStats,
+    challenges,
     weightStats,
     activityStats,
     sleepStats,
@@ -734,6 +878,7 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     updateMeal,
     deleteMeal,
     createOrUpdateNutritionGoal,
+    checkAndAwardBadges,
     refresh: loadData
   }
 
@@ -877,6 +1022,45 @@ function mapNutritionGoal(data: any): NutritionGoal {
     dailyProtein: data.daily_protein,
     dailyCarbohydrates: data.daily_carbohydrates,
     dailyFats: data.daily_fats,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at
+  }
+}
+
+function mapBadge(data: any): Badge {
+  return {
+    id: data.id,
+    userId: data.user_id,
+    badgeType: data.badge_type,
+    earnedAt: data.earned_at,
+    createdAt: data.created_at
+  }
+}
+
+function mapUserStats(data: any): UserStats {
+  return {
+    id: data.id,
+    userId: data.user_id,
+    totalPoints: data.total_points,
+    level: data.level,
+    currentStreak: data.current_streak,
+    longestStreak: data.longest_streak,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at
+  }
+}
+
+function mapChallenge(data: any): Challenge {
+  return {
+    id: data.id,
+    userId: data.user_id,
+    challengeType: data.challenge_type,
+    targetValue: data.target_value,
+    currentValue: data.current_value,
+    status: data.status,
+    startDate: data.start_date,
+    endDate: data.end_date,
+    rewardPoints: data.reward_points,
     createdAt: data.created_at,
     updatedAt: data.updated_at
   }
