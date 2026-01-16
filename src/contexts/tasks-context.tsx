@@ -18,7 +18,13 @@ import type {
   TaskChecklistItem,
   TaskColumnCategory,
   TaskPriority,
-  TaskType
+  TaskType,
+  TaskCustomField,
+  TaskCustomFieldOption,
+  CreateCustomFieldInput,
+  UpdateCustomFieldInput,
+  CreateFieldOptionInput,
+  UpdateFieldOptionInput
 } from '@/types/tasks'
 import { TASK_COLUMN_COLOR_PALETTE } from '@/types/tasks'
 
@@ -45,6 +51,7 @@ interface TasksContextValue {
   projects: TaskProject[]
   activeProject?: TaskProject
   activeBoard?: TaskBoard
+  priorityField?: TaskCustomField // Campo de prioridade configurável
   setActiveProjectId: (projectId: string) => void
   setActiveBoardId: (boardId: string) => void
   createTask: (input: CreateTaskInput) => Promise<void>
@@ -61,6 +68,11 @@ interface TasksContextValue {
   deleteColumn: (columnId: string) => Promise<void>
   updateColumnColor: (columnId: string, color: string) => Promise<void>
   reorderColumns: (orderedIds: string[]) => Promise<void>
+  // Novos métodos para campos customizáveis
+  updateCustomField: (input: UpdateCustomFieldInput) => Promise<void>
+  createFieldOption: (input: CreateFieldOptionInput) => Promise<void>
+  updateFieldOption: (input: UpdateFieldOptionInput) => Promise<void>
+  deleteFieldOption: (optionId: string) => Promise<void>
   refresh: () => Promise<void>
 }
 
@@ -309,6 +321,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null)
   const [activeBoardId, setActiveBoardId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [priorityField, setPriorityField] = useState<TaskCustomField | undefined>(undefined)
   const creatingDefaultRef = useRef(false)
   const [preferencesInitialized, setPreferencesInitialized] = useState(false)
 
@@ -531,6 +544,175 @@ export function TasksProvider({ children }: TasksProviderProps) {
   const refresh = useCallback(async () => {
     await fetchWorkspace()
   }, [fetchWorkspace])
+
+  // ============================================
+  // CARREGAR CAMPO CUSTOMIZÁVEL DE PRIORIDADE
+  // ============================================
+  const fetchPriorityField = useCallback(async () => {
+    if (!user || !activeProjectId) {
+      setPriorityField(undefined)
+      return
+    }
+
+    try {
+      const { data: fieldData, error: fieldError } = await supabase
+        .from('task_custom_fields')
+        .select('*')
+        .eq('project_id', activeProjectId)
+        .eq('field_type', 'priority')
+        .eq('is_active', true)
+        .single()
+
+      if (fieldError || !fieldData) {
+        setPriorityField(undefined)
+        return
+      }
+
+      const { data: optionsData, error: optionsError } = await supabase
+        .from('task_custom_field_options')
+        .select('*')
+        .eq('custom_field_id', fieldData.id)
+        .eq('is_active', true)
+        .order('position', { ascending: true })
+
+      if (optionsError) {
+        console.error('Erro ao carregar opções do campo:', optionsError.message)
+        return
+      }
+
+      const field: TaskCustomField = {
+        id: fieldData.id,
+        projectId: fieldData.project_id,
+        fieldType: fieldData.field_type as 'priority',
+        fieldName: fieldData.field_name,
+        isActive: fieldData.is_active,
+        createdAt: fieldData.created_at,
+        updatedAt: fieldData.updated_at,
+        options: (optionsData ?? []).map((opt) => ({
+          id: opt.id,
+          customFieldId: opt.custom_field_id,
+          optionValue: opt.option_value,
+          optionLabel: opt.option_label,
+          color: opt.color,
+          position: opt.position,
+          isActive: opt.is_active,
+          createdAt: opt.created_at,
+          updatedAt: opt.updated_at
+        }))
+      }
+
+      setPriorityField(field)
+    } catch (err) {
+      console.error('Erro ao carregar campo de prioridade:', err)
+      setPriorityField(undefined)
+    }
+  }, [user, activeProjectId])
+
+  // Carregar campo quando mudar o projeto ativo
+  useEffect(() => {
+    fetchPriorityField()
+  }, [fetchPriorityField])
+
+  // ============================================
+  // FUNÇÕES PARA GERENCIAR CAMPOS CUSTOMIZÁVEIS
+  // ============================================
+  const updateCustomField = useCallback(async (input: UpdateCustomFieldInput) => {
+    if (!user) return
+
+    const updates: Partial<{ field_name: string; is_active: boolean }> = {}
+    if (input.fieldName !== undefined) {
+      updates.field_name = input.fieldName.slice(0, 20) // Limitar a 20 caracteres
+    }
+    if (input.isActive !== undefined) {
+      updates.is_active = input.isActive
+    }
+
+    const { error } = await supabase
+      .from('task_custom_fields')
+      .update(updates)
+      .eq('id', input.id)
+
+    if (error) {
+      console.error('Erro ao atualizar campo customizável:', error.message)
+      throw error
+    }
+
+    await fetchPriorityField()
+  }, [user, fetchPriorityField])
+
+  const createFieldOption = useCallback(async (input: CreateFieldOptionInput) => {
+    if (!user) return
+
+    const { error } = await supabase
+      .from('task_custom_field_options')
+      .insert({
+        custom_field_id: input.customFieldId,
+        option_value: input.optionValue,
+        option_label: input.optionLabel.slice(0, 20), // Limitar a 20 caracteres
+        color: input.color,
+        position: input.position ?? 999
+      })
+
+    if (error) {
+      console.error('Erro ao criar opção de campo:', error.message)
+      throw error
+    }
+
+    await fetchPriorityField()
+  }, [user, fetchPriorityField])
+
+  const updateFieldOption = useCallback(async (input: UpdateFieldOptionInput) => {
+    if (!user) return
+
+    const updates: Partial<{
+      option_label: string
+      color: string
+      position: number
+      is_active: boolean
+    }> = {}
+    
+    if (input.optionLabel !== undefined) {
+      updates.option_label = input.optionLabel.slice(0, 20) // Limitar a 20 caracteres
+    }
+    if (input.color !== undefined) {
+      updates.color = input.color
+    }
+    if (input.position !== undefined) {
+      updates.position = input.position
+    }
+    if (input.isActive !== undefined) {
+      updates.is_active = input.isActive
+    }
+
+    const { error } = await supabase
+      .from('task_custom_field_options')
+      .update(updates)
+      .eq('id', input.id)
+
+    if (error) {
+      console.error('Erro ao atualizar opção de campo:', error.message)
+      throw error
+    }
+
+    await fetchPriorityField()
+  }, [user, fetchPriorityField])
+
+  const deleteFieldOption = useCallback(async (optionId: string) => {
+    if (!user) return
+
+    // Soft delete - apenas desativa
+    const { error } = await supabase
+      .from('task_custom_field_options')
+      .update({ is_active: false })
+      .eq('id', optionId)
+
+    if (error) {
+      console.error('Erro ao deletar opção de campo:', error.message)
+      throw error
+    }
+
+    await fetchPriorityField()
+  }, [user, fetchPriorityField])
 
   const buildTaskPayload = (
     input: Partial<CreateTaskInput>
@@ -1207,6 +1389,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
     projects,
     activeProject,
     activeBoard,
+    priorityField,
     setActiveProjectId: (projectId: string) => setActiveProjectId(projectId),
     setActiveBoardId: (boardId: string) => setActiveBoardId(boardId),
     createTask,
@@ -1223,6 +1406,10 @@ export function TasksProvider({ children }: TasksProviderProps) {
     deleteColumn,
     updateColumnColor,
     reorderColumns,
+    updateCustomField,
+    createFieldOption,
+    updateFieldOption,
+    deleteFieldOption,
     refresh
   }
 

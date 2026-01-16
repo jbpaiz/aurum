@@ -8,6 +8,7 @@ import type { TaskCard, TaskColumn, TaskPriority } from '@/types/tasks'
 import { TASK_PRIORITY_COLORS, TASK_PRIORITY_LABELS } from '@/types/tasks'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { useTasks } from '@/contexts/tasks-context'
 
 type SortKey = 'key' | 'title' | 'labels' | 'startDate' | 'endDate' | 'columnName' | 'priority'
 type SortDirection = 'asc' | 'desc'
@@ -30,6 +31,7 @@ interface TaskListViewProps {
 }
 
 export function TaskListView({ columns, referenceColumns, onSelectTask, onCreateTask, onChangeTaskColumn, adaptiveWidth = false }: TaskListViewProps) {
+  const { priorityField } = useTasks()
   const tasks = useMemo<TaskWithMeta[]>(() => {
     return columns.flatMap((column) =>
       column.tasks.map((task) => ({
@@ -146,7 +148,7 @@ export function TaskListView({ columns, referenceColumns, onSelectTask, onCreate
                 <SortableHeader label="Situação" sortKey="columnName" sortConfig={sortConfig} onToggleSort={handleSort} />
               </th>
               <th className="px-6 py-3 whitespace-nowrap">
-                <SortableHeader label="Prioridade" sortKey="priority" sortConfig={sortConfig} onToggleSort={handleSort} />
+                <SortableHeader label={priorityField?.fieldName || 'Prioridade'} sortKey="priority" sortConfig={sortConfig} onToggleSort={handleSort} />
               </th>
             </tr>
           </thead>
@@ -159,6 +161,7 @@ export function TaskListView({ columns, referenceColumns, onSelectTask, onCreate
                 onChangeTaskColumn={onChangeTaskColumn}
                 renderDate={renderDate}
                 columnOptions={columnOptions}
+                priorityField={priorityField}
               />
             ))}
           </tbody>
@@ -175,9 +178,10 @@ interface TaskListRowProps {
   onChangeTaskColumn?: (taskId: string, columnId: string) => Promise<void> | void
   renderDate: (value?: string | null) => ReactNode
   columnOptions: TaskColumn[]
+  priorityField?: { id: string; name: string; options: Array<{ optionValue: string; optionLabel: string; color: string }> }
 }
 
-function TaskListRow({ task, onSelectTask, onChangeTaskColumn, renderDate, columnOptions }: TaskListRowProps) {
+function TaskListRow({ task, onSelectTask, onChangeTaskColumn, renderDate, columnOptions, priorityField }: TaskListRowProps) {
   const selectedColumn = columnOptions.find((option) => option.id === task.columnId)
 
   return (
@@ -238,9 +242,9 @@ function TaskListRow({ task, onSelectTask, onChangeTaskColumn, renderDate, colum
       <td className="px-6 py-4 whitespace-nowrap">
         <span
           className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold text-white"
-          style={{ backgroundColor: TASK_PRIORITY_COLORS[task.priority] }}
+          style={{ backgroundColor: priorityField?.options.find((opt) => opt.optionValue === task.priority)?.color || TASK_PRIORITY_COLORS[task.priority] }}
         >
-          {TASK_PRIORITY_LABELS[task.priority]}
+          {priorityField?.options.find((opt) => opt.optionValue === task.priority)?.optionLabel || TASK_PRIORITY_LABELS[task.priority]}
         </span>
       </td>
     </tr>

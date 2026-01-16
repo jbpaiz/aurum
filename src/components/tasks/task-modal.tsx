@@ -44,7 +44,7 @@ const TASK_TYPES: { value: TaskType; label: string }[] = [
 const STORAGE_KEY = 'task_modal_form_data'
 
 export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSave, onDeleteTask, onCloneTask }: TaskModalProps) {
-  const { activeBoard } = useTasks()
+  const { activeBoard, priorityField } = useTasks()
   const isInitialized = useRef(false)
   
   // Função para carregar dados persistidos
@@ -413,17 +413,23 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-2">
-              <Label>Prioridade</Label>
+              <Label>{priorityField?.fieldName || 'Prioridade'}</Label>
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as TaskPriority)}
                 className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background dark:bg-gray-800 dark:border-gray-700 dark:text-white px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
               >
-                {Object.keys(TASK_PRIORITY_COLORS).map((value) => (
-                  <option key={value} value={value}>
-                    {TASK_PRIORITY_LABELS[value as TaskPriority]}
-                  </option>
-                ))}
+                {priorityField && priorityField.options.length > 0
+                  ? priorityField.options.map((option) => (
+                      <option key={option.optionValue} value={option.optionValue}>
+                        {option.optionLabel}
+                      </option>
+                    ))
+                  : Object.keys(TASK_PRIORITY_COLORS).map((value) => (
+                      <option key={value} value={value}>
+                        {TASK_PRIORITY_LABELS[value as TaskPriority]}
+                      </option>
+                    ))}
               </select>
             </div>
             <div className="space-y-2">

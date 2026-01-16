@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Plus, Trash2, CornerUpLeft, ChevronsUpDown, GripVertical } from 'lucide-react'
+import { Plus, Trash2, CornerUpLeft, ChevronsUpDown, GripVertical, Settings } from 'lucide-react'
 import { DndContext, DragEndEvent, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -14,6 +14,7 @@ import { useTasks } from '@/contexts/tasks-context'
 import { TASK_COLUMN_COLOR_PALETTE } from '@/types/tasks'
 import type { TaskColumn } from '@/types/tasks'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { CustomFieldConfigModal } from '@/components/tasks/custom-field-config-modal'
 
 interface BoardManagementViewProps {
   onBack?: () => void
@@ -52,6 +53,7 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
   const [savingColumns, setSavingColumns] = useState<Record<string, boolean>>({})
   const [columnCards, setColumnCards] = useState<TaskColumn[]>(columns)
   const [isSavingOrder, setIsSavingOrder] = useState(false)
+  const [showCustomFieldModal, setShowCustomFieldModal] = useState(false)
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean
     title: string
@@ -319,6 +321,14 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => setShowCustomFieldModal(true)}
+            >
+              <Settings className="h-4 w-4" />
+              Configurar Campos
+            </Button>
             {onBack && (
               <Button variant="outline" className="gap-2" onClick={onBack}>
                 <CornerUpLeft className="h-4 w-4" />
@@ -476,6 +486,11 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
         confirmText={confirmDialog.variant === 'warning' ? 'OK' : 'Confirmar'}
         cancelText="Cancelar"
         variant={confirmDialog.variant || 'danger'}
+      />
+      
+      <CustomFieldConfigModal
+        open={showCustomFieldModal}
+        onClose={() => setShowCustomFieldModal(false)}
       />
     </div>
   )

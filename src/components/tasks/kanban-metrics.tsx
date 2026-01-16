@@ -8,6 +8,7 @@ import { TASK_PRIORITY_LABELS } from '@/types/tasks'
 
 interface KanbanMetricsProps {
   columns: TaskColumn[]
+  priorityField?: { fieldName: string }
 }
 
 const PRIORITY_ORDER: TaskPriority[] = ['highest', 'high', 'medium', 'low', 'lowest']
@@ -19,7 +20,7 @@ const safeDate = (value?: string | null, fallback: Date = new Date()) => {
   return Number.isNaN(parsed.getTime()) ? fallback : parsed
 }
 
-export function KanbanMetrics({ columns }: KanbanMetricsProps) {
+export function KanbanMetrics({ columns, priorityField }: KanbanMetricsProps) {
   const metrics = useMemo(() => {
     const now = new Date()
     const tasks = columns.flatMap((column) => column.tasks)
@@ -200,7 +201,7 @@ export function KanbanMetrics({ columns }: KanbanMetricsProps) {
 
         <Card className="dark:bg-gray-900 dark:border-gray-700">
           <CardHeader>
-            <CardTitle className="text-base font-semibold text-gray-900 dark:text-white">Distribuição por prioridade</CardTitle>
+            <CardTitle className="text-base font-semibold text-gray-900 dark:text-white">Distribuição por {priorityField?.fieldName || 'prioridade'}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {metrics.priorityDistribution.map((item) => (

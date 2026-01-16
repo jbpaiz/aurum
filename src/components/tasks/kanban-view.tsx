@@ -28,6 +28,7 @@ export function KanbanView() {
     loading,
     activeProject,
     activeBoard,
+    priorityField,
     setActiveBoardId,
     createTask,
     updateTask,
@@ -444,7 +445,7 @@ export function KanbanView() {
           adaptiveWidth={adaptiveWidthList}
         />
       ) : (
-        <KanbanMetrics columns={filteredColumns} />
+        <KanbanMetrics columns={filteredColumns} priorityField={priorityField} />
       )}
 
       <TaskModal
@@ -468,6 +469,7 @@ export function KanbanView() {
         onSearchChange={setSearchTerm}
         priorityFilter={priorityFilter}
         onPriorityChange={setPriorityFilter}
+        priorityField={priorityField}
         labelFilter={labelFilter}
         onLabelChange={setLabelFilter}
       />

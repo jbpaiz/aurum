@@ -13,6 +13,7 @@ interface FiltersModalProps {
   onSearchChange: (value: string) => void
   priorityFilter: TaskPriority | 'all'
   onPriorityChange: (value: TaskPriority | 'all') => void
+  priorityField?: { fieldName: string }
   labelFilter: string
   onLabelChange: (value: string) => void
 }
@@ -24,6 +25,7 @@ export function FiltersModal({
   onSearchChange,
   priorityFilter,
   onPriorityChange,
+  priorityField,
   labelFilter,
   onLabelChange
 }: FiltersModalProps) {
@@ -89,7 +91,7 @@ export function FiltersModal({
           {/* Prioridade */}
           <div className="space-y-2">
             <label className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-              Prioridade
+              {priorityField?.fieldName || 'Prioridade'}
             </label>
             <Select value={priorityFilter} onValueChange={(value) => onPriorityChange(value as TaskPriority | 'all')}>
               <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600 dark:text-white">

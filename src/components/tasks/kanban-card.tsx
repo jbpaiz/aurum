@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import type { TaskCard } from '@/types/tasks'
 import { TASK_PRIORITY_COLORS, TASK_PRIORITY_LABELS, TASK_TYPE_LABEL } from '@/types/tasks'
+import { useTasks } from '@/contexts/tasks-context'
 
 interface KanbanCardProps {
   task: TaskCard
@@ -16,6 +17,7 @@ interface KanbanCardProps {
 }
 
 export function KanbanCard({ task, onSelect, onToggleChecklistItem }: KanbanCardProps) {
+  const { priorityField } = useTasks()
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
     data: {
@@ -46,6 +48,11 @@ export function KanbanCard({ task, onSelect, onToggleChecklistItem }: KanbanCard
   const startLabel = formatShortDate(task.startDate)
   const endLabel = formatShortDate(task.endDate)
 
+  // Buscar opção customizável ou usar padrão
+  const priorityOption = priorityField?.options.find((opt) => opt.optionValue === task.priority)
+  const priorityColor = priorityOption?.color || TASK_PRIORITY_COLORS[task.priority]
+  const priorityLabel = priorityOption?.optionLabel || TASK_PRIORITY_LABELS[task.priority]
+
   return (
     <div
       ref={setNodeRef}
@@ -62,10 +69,10 @@ export function KanbanCard({ task, onSelect, onToggleChecklistItem }: KanbanCard
         <span className="font-medium text-gray-700 dark:text-gray-300">{task.key}</span>
         <span
           className="inline-flex h-6 items-center gap-1 rounded-full px-2"
-          style={{ backgroundColor: `${TASK_PRIORITY_COLORS[task.priority]}22`, color: TASK_PRIORITY_COLORS[task.priority] }}
+          style={{ backgroundColor: `${priorityColor}22`, color: priorityColor }}
         >
-          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: TASK_PRIORITY_COLORS[task.priority] }} />
-          {TASK_PRIORITY_LABELS[task.priority]}
+          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: priorityColor }} />
+          {priorityLabel}
         </span>
       </div>
 

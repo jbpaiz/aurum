@@ -146,6 +146,65 @@ export interface MoveTaskPayload {
   targetIndex: number
 }
 
+// ============================================
+// SISTEMA DE CAMPOS CUSTOMIZÁVEIS
+// ============================================
+
+export interface TaskCustomField {
+  id: string
+  projectId: string
+  fieldType: 'priority' // Extensível para outros tipos no futuro
+  fieldName: string // Nome customizável (max 20 chars)
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+  options: TaskCustomFieldOption[]
+}
+
+export interface TaskCustomFieldOption {
+  id: string
+  customFieldId: string
+  optionValue: string // Valor técnico (ex: 'low', 'high')
+  optionLabel: string // Label exibido (max 20 chars)
+  color: string // Cor do marcador
+  position: number // Ordem de exibição
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateCustomFieldInput {
+  projectId: string
+  fieldType: 'priority'
+  fieldName: string // Max 20 chars
+}
+
+export interface UpdateCustomFieldInput {
+  id: string
+  fieldName?: string // Max 20 chars
+  isActive?: boolean
+}
+
+export interface CreateFieldOptionInput {
+  customFieldId: string
+  optionValue: string
+  optionLabel: string // Max 20 chars
+  color: string
+  position?: number
+}
+
+export interface UpdateFieldOptionInput {
+  id: string
+  optionLabel?: string // Max 20 chars
+  color?: string
+  position?: number
+  isActive?: boolean
+}
+
+// ============================================
+// CONSTANTES DE PRIORIDADE (PADRÃO/FALLBACK)
+// ============================================
+
 export const TASK_PRIORITY_COLORS: Record<TaskPriority, string> = {
   lowest: '#94A3B8',
   low: '#0EA5E9',
