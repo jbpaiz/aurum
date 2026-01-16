@@ -18,6 +18,8 @@ export function WeightLogModal({ open, onOpenChange }: WeightLogModalProps) {
   const { createWeightLog } = useHealth()
   const [loading, setLoading] = useState(false)
   const [weight, setWeight] = useState('')
+  const [recordedDate, setRecordedDate] = useState(new Date().toISOString().split('T')[0])
+  const [recordedTime, setRecordedTime] = useState(new Date().toTimeString().slice(0, 5))
   const [note, setNote] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,14 +33,17 @@ export function WeightLogModal({ open, onOpenChange }: WeightLogModalProps) {
 
     try {
       setLoading(true)
+      const recordedAt = new Date(`${recordedDate}T${recordedTime}`).toISOString()
       await createWeightLog({
         weight: weightNum,
-        recordedAt: new Date().toISOString(),
+        recordedAt,
         note: note || undefined
       })
       
       toast.success('Peso registrado com sucesso!')
       setWeight('')
+      setRecordedDate(new Date().toISOString().split('T')[0])
+      setRecordedTime(new Date().toTimeString().slice(0, 5))
       setNote('')
       onOpenChange(false)
     } catch (error) {
@@ -72,6 +77,29 @@ export function WeightLogModal({ open, onOpenChange }: WeightLogModalProps) {
               autoFocus
               required
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-2">
+              <Label htmlFor="recorded-date">Data</Label>
+              <Input
+                id="recorded-date"
+                type="date"
+                value={recordedDate}
+                onChange={(e) => setRecordedDate(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="recorded-time">Hora</Label>
+              <Input
+                id="recorded-time"
+                type="time"
+                value={recordedTime}
+                onChange={(e) => setRecordedTime(e.target.value)}
+                required
+              />
+            </div>
           </div>
 
           <div className="space-y-2">

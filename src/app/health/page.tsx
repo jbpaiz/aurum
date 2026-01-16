@@ -1,12 +1,13 @@
-'use client'
-
-import { HealthProvider, useHealth } from '@/contexts/health-context'
+import { MainLayout } from '@/components/layout/main-layout'
+import { HealthProvider } from '@/contexts/health-context'
 import { HealthDashboard } from '@/components/health/health-dashboard'
 
 export default function HealthPage() {
   return (
-    <HealthProvider>
-      <HealthDashboard />
-    </HealthProvider>
+    <MainLayout>
+      <HealthProvider>
+        <HealthDashboard />
+      </HealthProvider>
+    </MainLayout>
   )
 }

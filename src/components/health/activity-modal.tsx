@@ -24,6 +24,7 @@ export function ActivityModal({ open, onOpenChange }: ActivityModalProps) {
   const [duration, setDuration] = useState('')
   const [intensity, setIntensity] = useState<ActivityIntensity>('medium')
   const [calories, setCalories] = useState('')
+  const [activityDate, setActivityDate] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [notes, setNotes] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,13 +43,14 @@ export function ActivityModal({ open, onOpenChange }: ActivityModalProps) {
         durationMinutes: durationNum,
         intensity,
         caloriesBurned: calories ? parseInt(calories) : undefined,
-        activityDate: format(new Date(), 'yyyy-MM-dd'),
+        activityDate,
         notes: notes || undefined
       })
       
       toast.success('Atividade registrada com sucesso!')
       setDuration('')
       setCalories('')
+      setActivityDate(format(new Date(), 'yyyy-MM-dd'))
       setNotes('')
       onOpenChange(false)
     } catch (error) {
@@ -97,6 +99,17 @@ export function ActivityModal({ open, onOpenChange }: ActivityModalProps) {
               placeholder="30"
               value={duration}
               onChange={(e) => setDuration(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="activity-date">Data</Label>
+            <Input
+              id="activity-date"
+              type="date"
+              value={activityDate}
+              onChange={(e) => setActivityDate(e.target.value)}
               required
             />
           </div>

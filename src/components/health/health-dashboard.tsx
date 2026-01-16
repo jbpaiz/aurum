@@ -33,15 +33,7 @@ export function HealthDashboard() {
   }
 
   return (
-    <div className="space-y-4 p-4 max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Saúde</h1>
-          <p className="text-sm text-muted-foreground">Acompanhe seu bem-estar</p>
-        </div>
-      </div>
-
+    <div className="space-y-4">
       {/* Insights */}
       {insights.length > 0 && (
         <InsightsCard insights={insights} />
