@@ -21,6 +21,9 @@ import { MealCard } from './meal-card'
 import { MacroBreakdownChart } from './macro-breakdown-chart'
 import { MealHistory } from './meal-history'
 import { DailyNutritionSummary } from './daily-nutrition-summary'
+import { PointsDisplay } from './points-display'
+import { AchievementsCard } from './achievements-card'
+import { ChallengesCard } from './challenges-card'
 import { GoalsCard } from './goals-card'
 import { InsightsCard } from './insights-card'
 import { StatsSummary } from './stats-summary'
@@ -137,7 +140,7 @@ export function HealthDashboard() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="weight">Peso</TabsTrigger>
           <TabsTrigger value="body">Medidas</TabsTrigger>
@@ -145,6 +148,7 @@ export function HealthDashboard() {
           <TabsTrigger value="nutrition">Nutrição</TabsTrigger>
           <TabsTrigger value="activity">Atividades</TabsTrigger>
           <TabsTrigger value="sleep">Sono</TabsTrigger>
+          <TabsTrigger value="gamification">Conquistas</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -266,6 +270,15 @@ export function HealthDashboard() {
             onGoalClick={() => setNutritionGoalsModalOpen(true)}
           />
           <MealHistory onEditClick={handleEditMeal} />
+        </TabsContent>
+
+        {/* Gamification Tab */}
+        <TabsContent value="gamification" className="space-y-6">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <PointsDisplay />
+            <AchievementsCard />
+          </div>
+          <ChallengesCard />
         </TabsContent>
       </Tabs>
 
