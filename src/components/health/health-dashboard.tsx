@@ -140,16 +140,18 @@ export function HealthDashboard() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-8">
-          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-          <TabsTrigger value="weight">Peso</TabsTrigger>
-          <TabsTrigger value="body">Medidas</TabsTrigger>
-          <TabsTrigger value="hydration">Hidratação</TabsTrigger>
-          <TabsTrigger value="nutrition">Nutrição</TabsTrigger>
-          <TabsTrigger value="activity">Atividades</TabsTrigger>
-          <TabsTrigger value="sleep">Sono</TabsTrigger>
-          <TabsTrigger value="gamification">Conquistas</TabsTrigger>
-        </TabsList>
+        <div className="w-full overflow-x-auto">
+          <TabsList className="inline-flex w-full min-w-max md:grid md:w-full md:grid-cols-8">
+            <TabsTrigger value="overview" className="whitespace-nowrap">Visão Geral</TabsTrigger>
+            <TabsTrigger value="weight" className="whitespace-nowrap">Peso</TabsTrigger>
+            <TabsTrigger value="body" className="whitespace-nowrap">Medidas</TabsTrigger>
+            <TabsTrigger value="hydration" className="whitespace-nowrap">Hidratação</TabsTrigger>
+            <TabsTrigger value="nutrition" className="whitespace-nowrap">Nutrição</TabsTrigger>
+            <TabsTrigger value="activity" className="whitespace-nowrap">Atividades</TabsTrigger>
+            <TabsTrigger value="sleep" className="whitespace-nowrap">Sono</TabsTrigger>
+            <TabsTrigger value="gamification" className="whitespace-nowrap">Conquistas</TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">

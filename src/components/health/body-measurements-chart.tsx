@@ -149,14 +149,15 @@ export function BodyMeasurementsChart() {
       </CardHeader>
 
       <CardContent>
-        <div className="h-[300px]">
+        <div className="h-[250px] sm:h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData}>
+            <LineChart data={chartData} margin={{ top: 5, right: 5, left: -10, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis 
                 dataKey="displayDate" 
                 className="text-xs"
-                tick={{ fill: 'currentColor' }}
+                tick={{ fill: 'currentColor', fontSize: 11 }}
+                interval="preserveStartEnd"
               />
               <YAxis 
                 className="text-xs"

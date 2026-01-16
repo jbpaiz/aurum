@@ -98,19 +98,20 @@ export function HydrationChart() {
       </CardHeader>
 
       <CardContent>
-        <div className="h-[300px]">
+        <div className="h-[250px] sm:h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData}>
+            <BarChart data={chartData} margin={{ top: 5, right: 5, left: -10, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis 
                 dataKey="displayDate" 
                 className="text-xs"
-                tick={{ fill: 'currentColor' }}
+                tick={{ fill: 'currentColor', fontSize: 11 }}
+                interval="preserveStartEnd"
               />
               <YAxis 
                 className="text-xs"
-                tick={{ fill: 'currentColor' }}
-                label={{ value: 'ml', angle: -90, position: 'insideLeft' }}
+                tick={{ fill: 'currentColor', fontSize: 11 }}
+                width={40}
               />
               <Tooltip 
                 contentStyle={{ 

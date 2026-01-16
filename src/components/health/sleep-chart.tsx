@@ -120,16 +120,17 @@ export function SleepChart() {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4">
           <div>
             <CardTitle>Evolução do Sono</CardTitle>
             <CardDescription>Acompanhe a qualidade e duração do seu sono</CardDescription>
           </div>
-          <div className="flex gap-1">
+          <div className="flex flex-wrap gap-2">
             <Button
               size="sm"
               variant={period === 'week' ? 'default' : 'outline'}
               onClick={() => setPeriod('week')}
+              className="flex-1 sm:flex-none"
             >
               Semana
             </Button>
@@ -137,6 +138,7 @@ export function SleepChart() {
               size="sm"
               variant={period === 'month' ? 'default' : 'outline'}
               onClick={() => setPeriod('month')}
+              className="flex-1 sm:flex-none"
             >
               Mês
             </Button>
@@ -144,6 +146,7 @@ export function SleepChart() {
               size="sm"
               variant={period === 'year' ? 'default' : 'outline'}
               onClick={() => setPeriod('year')}
+              className="flex-1 sm:flex-none"
             >
               Ano
             </Button>
@@ -151,6 +154,7 @@ export function SleepChart() {
               size="sm"
               variant={period === 'all' ? 'default' : 'outline'}
               onClick={() => setPeriod('all')}
+              className="flex-1 sm:flex-none"
             >
               Total
             </Button>
@@ -158,21 +162,22 @@ export function SleepChart() {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="h-[300px] w-full">
+        <div className="h-[250px] sm:h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData}>
+            <LineChart data={chartData} margin={{ top: 5, right: 5, left: -10, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis 
                 dataKey="date" 
                 className="text-xs"
-                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                interval="preserveStartEnd"
               />
               <YAxis 
                 yAxisId="left"
                 className="text-xs"
-                tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                label={{ value: 'Horas', angle: -90, position: 'insideLeft' }}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
                 domain={[0, 12]}
+                width={40}
               />
               <YAxis 
                 yAxisId="right"

@@ -146,16 +146,17 @@ export function ActivityChart() {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4">
           <div>
             <CardTitle>Evolução das Atividades</CardTitle>
             <CardDescription>Acompanhe sua performance ao longo do tempo</CardDescription>
           </div>
-          <div className="flex gap-1">
+          <div className="flex flex-wrap gap-2">
             <Button
               size="sm"
               variant={period === 'week' ? 'default' : 'outline'}
               onClick={() => setPeriod('week')}
+              className="flex-1 sm:flex-none"
             >
               Semana
             </Button>
@@ -163,6 +164,7 @@ export function ActivityChart() {
               size="sm"
               variant={period === 'month' ? 'default' : 'outline'}
               onClick={() => setPeriod('month')}
+              className="flex-1 sm:flex-none"
             >
               Mês
             </Button>
@@ -170,6 +172,7 @@ export function ActivityChart() {
               size="sm"
               variant={period === 'year' ? 'default' : 'outline'}
               onClick={() => setPeriod('year')}
+              className="flex-1 sm:flex-none"
             >
               Ano
             </Button>
@@ -177,6 +180,7 @@ export function ActivityChart() {
               size="sm"
               variant={period === 'all' ? 'default' : 'outline'}
               onClick={() => setPeriod('all')}
+              className="flex-1 sm:flex-none"
             >
               Total
             </Button>
@@ -184,27 +188,28 @@ export function ActivityChart() {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="h-[300px] w-full">
+        <div className="h-[250px] sm:h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData}>
+            <BarChart data={chartData} margin={{ top: 5, right: 5, left: -10, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis 
                 dataKey="date" 
                 className="text-xs"
-                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                interval="preserveStartEnd"
               />
               <YAxis 
                 yAxisId="left"
                 className="text-xs"
-                tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                label={{ value: 'Minutos', angle: -90, position: 'insideLeft' }}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                width={40}
               />
               <YAxis 
                 yAxisId="right"
                 orientation="right"
                 className="text-xs"
-                tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                label={{ value: 'Calorias', angle: 90, position: 'insideRight' }}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                width={40}
               />
               <Tooltip 
                 contentStyle={{
