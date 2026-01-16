@@ -1,21 +1,35 @@
 'use client'
 
 import { useMemo } from 'react'
-import { Moon } from 'lucide-react'
+import { Moon, Edit2, Trash2 } from 'lucide-react'
 import { useHealth } from '@/contexts/health-context'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { SLEEP_QUALITY_LABELS, SLEEP_QUALITY_ICONS } from '@/types/health'
+import { SLEEP_QUALITY_LABELS, SLEEP_QUALITY_ICONS, type SleepLog } from '@/types/health'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { toast } from 'sonner'
 
 interface SleepCardProps {
   detailed?: boolean
   onAddClick?: () => void
+  onEditClick?: (log: SleepLog) => void
 }
 
-export function SleepCard({ detailed = false, onAddClick }: SleepCardProps) {
-  const { sleepLogs, sleepStats } = useHealth()
+export function SleepCard({ detailed = false, onAddClick, onEditClick }: SleepCardProps) {
+  const { sleepLogs, sleepStats, deleteSleepLog } = useHealth()
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Deseja realmente excluir este registro?')) return
+    
+    try {
+      await deleteSleepLog(id)
+      toast.success('Registro excluído com sucesso!')
+    } catch (error) {
+      console.error('Erro ao excluir:', error)
+      toast.error('Erro ao excluir registro')
+    }
+  }
 
   const recentLogs = useMemo(() => {
     return sleepLogs.slice(0, detailed ? 20 : 5)
@@ -118,8 +132,8 @@ export function SleepCard({ detailed = false, onAddClick }: SleepCardProps) {
                 const hours = Math.floor(log.durationMinutes / 60)
                 const minutes = log.durationMinutes % 60
                 return (
-                  <div key={log.id} className="flex items-center justify-between text-sm border-b pb-2 last:border-0">
-                    <div className="flex flex-col">
+                  <div key={log.id} className="flex items-center justify-between text-sm border-b pb-2 last:border-0 gap-2">
+                    <div className="flex flex-col flex-1">
                       <span className="font-medium">
                         {hours}h {minutes}min
                       </span>
@@ -135,6 +149,26 @@ export function SleepCard({ detailed = false, onAddClick }: SleepCardProps) {
                         </span>
                       </div>
                     )}
+                    <div className="flex gap-1">
+                      {onEditClick && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8"
+                          onClick={() => onEditClick(log)}
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                        onClick={() => handleDelete(log.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 )
               })}

@@ -1,22 +1,36 @@
 'use client'
 
 import { useMemo } from 'react'
-import { Flame } from 'lucide-react'
+import { Flame, Edit2, Trash2 } from 'lucide-react'
 import { useHealth } from '@/contexts/health-context'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { ACTIVITY_LABELS, ACTIVITY_ICONS } from '@/types/health'
+import { ACTIVITY_LABELS, ACTIVITY_ICONS, type Activity } from '@/types/health'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { toast } from 'sonner'
 
 interface ActivityCardProps {
   detailed?: boolean
   onAddClick?: () => void
+  onEditClick?: (activity: Activity) => void
 }
 
-export function ActivityCard({ detailed = false, onAddClick }: ActivityCardProps) {
-  const { activities, activityStats } = useHealth()
+export function ActivityCard({ detailed = false, onAddClick, onEditClick }: ActivityCardProps) {
+  const { activities, activityStats, deleteActivity } = useHealth()
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Deseja realmente excluir esta atividade?')) return
+    
+    try {
+      await deleteActivity(id)
+      toast.success('Atividade excluída com sucesso!')
+    } catch (error) {
+      console.error('Erro ao excluir:', error)
+      toast.error('Erro ao excluir atividade')
+    }
+  }
 
   const recentActivities = useMemo(() => {
     return activities.slice(0, detailed ? 20 : 5)
@@ -107,8 +121,8 @@ export function ActivityCard({ detailed = false, onAddClick }: ActivityCardProps
             <h4 className="text-sm font-medium">Histórico</h4>
             <div className="space-y-2 max-h-[400px] overflow-y-auto">
               {recentActivities.map(activity => (
-                <div key={activity.id} className="flex items-center justify-between text-sm border-b pb-2 last:border-0">
-                  <div className="flex items-center gap-2">
+                <div key={activity.id} className="flex items-center justify-between text-sm border-b pb-2 last:border-0 gap-2">
+                  <div className="flex items-center gap-2 flex-1">
                     <span className="text-xl">
                       {ACTIVITY_ICONS[activity.activityType]}
                     </span>
@@ -128,6 +142,26 @@ export function ActivityCard({ detailed = false, onAddClick }: ActivityCardProps
                         {activity.caloriesBurned} cal
                       </p>
                     )}
+                  </div>
+                  <div className="flex gap-1">
+                    {onEditClick && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8"
+                        onClick={() => onEditClick(activity)}
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={() => handleDelete(activity.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               ))}

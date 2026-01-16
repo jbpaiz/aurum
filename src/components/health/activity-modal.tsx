@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useHealth } from '@/contexts/health-context'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -8,17 +8,18 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ACTIVITY_LABELS, ACTIVITY_ICONS, INTENSITY_LABELS, type ActivityType, type ActivityIntensity } from '@/types/health'
+import { ACTIVITY_LABELS, ACTIVITY_ICONS, INTENSITY_LABELS, type ActivityType, type ActivityIntensity, type Activity } from '@/types/health'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 
 interface ActivityModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  editingActivity?: Activity | null
 }
 
-export function ActivityModal({ open, onOpenChange }: ActivityModalProps) {
-  const { createActivity } = useHealth()
+export function ActivityModal({ open, onOpenChange, editingActivity }: ActivityModalProps) {
+  const { createActivity, updateActivity } = useHealth()
   const [loading, setLoading] = useState(false)
   const [activityType, setActivityType] = useState<ActivityType>('walking')
   const [duration, setDuration] = useState('')
@@ -26,6 +27,24 @@ export function ActivityModal({ open, onOpenChange }: ActivityModalProps) {
   const [calories, setCalories] = useState('')
   const [activityDate, setActivityDate] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [notes, setNotes] = useState('')
+
+  useEffect(() => {
+    if (editingActivity) {
+      setActivityType(editingActivity.activityType)
+      setDuration(editingActivity.durationMinutes.toString())
+      setIntensity(editingActivity.intensity || 'medium')
+      setCalories(editingActivity.caloriesBurned?.toString() || '')
+      setActivityDate(editingActivity.activityDate)
+      setNotes(editingActivity.notes || '')
+    } else {
+      setActivityType('walking')
+      setDuration('')
+      setIntensity('medium')
+      setCalories('')
+      setActivityDate(format(new Date(), 'yyyy-MM-dd'))
+      setNotes('')
+    }
+  }, [editingActivity, open])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -38,24 +57,37 @@ export function ActivityModal({ open, onOpenChange }: ActivityModalProps) {
 
     try {
       setLoading(true)
-      await createActivity({
-        activityType,
-        durationMinutes: durationNum,
-        intensity,
-        caloriesBurned: calories ? parseInt(calories) : undefined,
-        activityDate,
-        notes: notes || undefined
-      })
       
-      toast.success('Atividade registrada com sucesso!')
+      if (editingActivity) {
+        await updateActivity(editingActivity.id, {
+          activityType,
+          durationMinutes: durationNum,
+          intensity,
+          caloriesBurned: calories ? parseInt(calories) : undefined,
+          activityDate,
+          notes: notes || undefined
+        })
+        toast.success('Atividade atualizada com sucesso!')
+      } else {
+        await createActivity({
+          activityType,
+          durationMinutes: durationNum,
+          intensity,
+          caloriesBurned: calories ? parseInt(calories) : undefined,
+          activityDate,
+          notes: notes || undefined
+        })
+        toast.success('Atividade registrada com sucesso!')
+      }
+      
       setDuration('')
       setCalories('')
       setActivityDate(format(new Date(), 'yyyy-MM-dd'))
       setNotes('')
       onOpenChange(false)
     } catch (error) {
-      console.error('Erro ao registrar atividade:', error)
-      toast.error('Erro ao registrar atividade')
+      console.error('Erro ao salvar atividade:', error)
+      toast.error('Erro ao salvar atividade')
     } finally {
       setLoading(false)
     }
@@ -65,9 +97,9 @@ export function ActivityModal({ open, onOpenChange }: ActivityModalProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Registrar Atividade</DialogTitle>
+          <DialogTitle>{editingActivity ? 'Editar Atividade' : 'Registrar Atividade'}</DialogTitle>
           <DialogDescription>
-            Adicione uma atividade física realizada
+            {editingActivity ? 'Atualize os dados da atividade' : 'Adicione uma atividade física realizada'}
           </DialogDescription>
         </DialogHeader>
         

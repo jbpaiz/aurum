@@ -9,14 +9,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { WeightCard } from './weight-card'
 import { WeightChart } from './weight-chart'
 import { ActivityCard } from './activity-card'
+import { ActivityChart } from './activity-chart'
 import { SleepCard } from './sleep-card'
+import { SleepChart } from './sleep-chart'
 import { GoalsCard } from './goals-card'
 import { InsightsCard } from './insights-card'
+import { StatsSummary } from './stats-summary'
 import { WeightLogModal } from './weight-log-modal'
 import { ActivityModal } from './activity-modal'
 import { SleepLogModal } from './sleep-log-modal'
 import { GoalModal } from './goal-modal'
-import type { WeightLog } from '@/types/health'
+import type { WeightLog, Activity, SleepLog } from '@/types/health'
 
 export function HealthDashboard() {
   const { loading, insights } = useHealth()
@@ -24,7 +27,9 @@ export function HealthDashboard() {
   const [weightModalOpen, setWeightModalOpen] = useState(false)
   const [editingWeightLog, setEditingWeightLog] = useState<WeightLog | null>(null)
   const [activityModalOpen, setActivityModalOpen] = useState(false)
+  const [editingActivity, setEditingActivity] = useState<Activity | null>(null)
   const [sleepModalOpen, setSleepModalOpen] = useState(false)
+  const [editingSleep, setEditingSleep] = useState<SleepLog | null>(null)
   const [goalModalOpen, setGoalModalOpen] = useState(false)
 
   const handleEditWeight = (log: WeightLog) => {
@@ -36,6 +41,30 @@ export function HealthDashboard() {
     setWeightModalOpen(open)
     if (!open) {
       setEditingWeightLog(null)
+    }
+  }
+
+  const handleEditActivity = (activity: Activity) => {
+    setEditingActivity(activity)
+    setActivityModalOpen(true)
+  }
+
+  const handleCloseActivityModal = (open: boolean) => {
+    setActivityModalOpen(open)
+    if (!open) {
+      setEditingActivity(null)
+    }
+  }
+
+  const handleEditSleep = (log: SleepLog) => {
+    setEditingSleep(log)
+    setSleepModalOpen(true)
+  }
+
+  const handleCloseSleepModal = (open: boolean) => {
+    setSleepModalOpen(open)
+    if (!open) {
+      setEditingSleep(null)
     }
   }
 
@@ -65,6 +94,7 @@ export function HealthDashboard() {
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
+          <StatsSummary />
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             <WeightCard onAddClick={() => setWeightModalOpen(true)} />
             <ActivityCard onAddClick={() => setActivityModalOpen(true)} />
@@ -97,7 +127,12 @@ export function HealthDashboard() {
               Registrar Atividade
             </Button>
           </div>
-          <ActivityCard detailed onAddClick={() => setActivityModalOpen(true)} />
+          <ActivityChart />
+          <ActivityCard 
+            detailed 
+            onAddClick={() => setActivityModalOpen(true)}
+            onEditClick={handleEditActivity}
+          />
         </TabsContent>
 
         {/* Sleep Tab */}
@@ -108,7 +143,12 @@ export function HealthDashboard() {
               Registrar Sono
             </Button>
           </div>
-          <SleepCard detailed onAddClick={() => setSleepModalOpen(true)} />
+          <SleepChart />
+          <SleepCard 
+            detailed 
+            onAddClick={() => setSleepModalOpen(true)}
+            onEditClick={handleEditSleep}
+          />
         </TabsContent>
       </Tabs>
 
@@ -120,11 +160,13 @@ export function HealthDashboard() {
       />
       <ActivityModal
         open={activityModalOpen}
-        onOpenChange={setActivityModalOpen}
+        onOpenChange={handleCloseActivityModal}
+        editingActivity={editingActivity}
       />
       <SleepLogModal
         open={sleepModalOpen}
-        onOpenChange={setSleepModalOpen}
+        onOpenChange={handleCloseSleepModal}
+        editingSleep={editingSleep}
       />
       <GoalModal
         open={goalModalOpen}

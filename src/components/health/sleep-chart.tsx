@@ -4,118 +4,113 @@ import { useMemo, useState } from 'react'
 import { useHealth } from '@/contexts/health-context'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { format, subDays, subMonths, subYears, startOfWeek, startOfMonth, startOfYear, isSameWeek, isSameMonth, isSameYear } from 'date-fns'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
+import { format, subDays, subMonths, subYears, startOfWeek, startOfMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 type Period = 'week' | 'month' | 'year' | 'all'
 
-export function WeightChart() {
-  const { weightLogs } = useHealth()
+const QUALITY_VALUES = {
+  poor: 1,
+  normal: 2,
+  good: 3
+}
+
+export function SleepChart() {
+  const { sleepLogs } = useHealth()
   const [period, setPeriod] = useState<Period>('month')
 
   const chartData = useMemo(() => {
-    if (weightLogs.length === 0) return []
+    if (sleepLogs.length === 0) return []
 
     const now = new Date()
-    let filteredLogs = weightLogs
+    let filteredLogs = sleepLogs
 
     // Filtrar por período
     switch (period) {
       case 'week':
-        filteredLogs = weightLogs.filter(log => 
-          new Date(log.recordedAt) >= subDays(now, 7)
+        filteredLogs = sleepLogs.filter(log => 
+          new Date(log.sleepDate) >= subDays(now, 7)
         )
         break
       case 'month':
-        filteredLogs = weightLogs.filter(log => 
-          new Date(log.recordedAt) >= subMonths(now, 1)
+        filteredLogs = sleepLogs.filter(log => 
+          new Date(log.sleepDate) >= subMonths(now, 1)
         )
         break
       case 'year':
-        filteredLogs = weightLogs.filter(log => 
-          new Date(log.recordedAt) >= subYears(now, 1)
+        filteredLogs = sleepLogs.filter(log => 
+          new Date(log.sleepDate) >= subYears(now, 1)
         )
         break
       case 'all':
-        filteredLogs = weightLogs
+        filteredLogs = sleepLogs
         break
     }
 
     // Agrupar dados conforme período
-    if (period === 'week') {
-      // Mostrar cada medição
+    if (period === 'week' || period === 'month') {
+      // Mostrar cada dia
       return filteredLogs
         .map(log => ({
-          date: format(new Date(log.recordedAt), 'dd/MM', { locale: ptBR }),
-          fullDate: format(new Date(log.recordedAt), "dd/MM 'às' HH:mm", { locale: ptBR }),
-          weight: log.weight
-        }))
-        .reverse()
-    } else if (period === 'month') {
-      // Média por dia
-      const dayGroups = new Map<string, number[]>()
-      filteredLogs.forEach(log => {
-        const day = format(new Date(log.recordedAt), 'yyyy-MM-dd')
-        if (!dayGroups.has(day)) {
-          dayGroups.set(day, [])
-        }
-        dayGroups.get(day)!.push(log.weight)
-      })
-
-      return Array.from(dayGroups.entries())
-        .map(([day, weights]) => ({
-          date: format(new Date(day), 'dd/MM', { locale: ptBR }),
-          fullDate: format(new Date(day), "dd 'de' MMMM", { locale: ptBR }),
-          weight: weights.reduce((a, b) => a + b, 0) / weights.length
+          date: format(new Date(log.sleepDate), 'dd/MM', { locale: ptBR }),
+          fullDate: format(new Date(log.sleepDate), "dd 'de' MMMM", { locale: ptBR }),
+          hours: log.durationMinutes / 60,
+          quality: log.quality ? QUALITY_VALUES[log.quality] : 2
         }))
         .sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime())
     } else if (period === 'year') {
       // Média por semana
-      const weekGroups = new Map<string, number[]>()
+      const weekGroups = new Map<string, { durations: number[], qualities: number[] }>()
       filteredLogs.forEach(log => {
-        const weekStart = startOfWeek(new Date(log.recordedAt), { locale: ptBR })
+        const weekStart = startOfWeek(new Date(log.sleepDate), { locale: ptBR })
         const weekKey = format(weekStart, 'yyyy-MM-dd')
         if (!weekGroups.has(weekKey)) {
-          weekGroups.set(weekKey, [])
+          weekGroups.set(weekKey, { durations: [], qualities: [] })
         }
-        weekGroups.get(weekKey)!.push(log.weight)
+        const group = weekGroups.get(weekKey)!
+        group.durations.push(log.durationMinutes)
+        group.qualities.push(log.quality ? QUALITY_VALUES[log.quality] : 2)
       })
 
       return Array.from(weekGroups.entries())
-        .map(([week, weights]) => ({
+        .map(([week, data]) => ({
           date: format(new Date(week), 'dd/MM', { locale: ptBR }),
           fullDate: format(new Date(week), "dd 'de' MMMM", { locale: ptBR }),
-          weight: weights.reduce((a, b) => a + b, 0) / weights.length
+          hours: data.durations.reduce((a, b) => a + b, 0) / data.durations.length / 60,
+          quality: data.qualities.reduce((a, b) => a + b, 0) / data.qualities.length
         }))
         .sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime())
     } else {
       // Média por mês
-      const monthGroups = new Map<string, number[]>()
+      const monthGroups = new Map<string, { durations: number[], qualities: number[] }>()
       filteredLogs.forEach(log => {
-        const monthStart = startOfMonth(new Date(log.recordedAt))
+        const monthStart = startOfMonth(new Date(log.sleepDate))
         const monthKey = format(monthStart, 'yyyy-MM')
         if (!monthGroups.has(monthKey)) {
-          monthGroups.set(monthKey, [])
+          monthGroups.set(monthKey, { durations: [], qualities: [] })
         }
-        monthGroups.get(monthKey)!.push(log.weight)
+        const group = monthGroups.get(monthKey)!
+        group.durations.push(log.durationMinutes)
+        group.qualities.push(log.quality ? QUALITY_VALUES[log.quality] : 2)
       })
 
       return Array.from(monthGroups.entries())
-        .map(([month, weights]) => ({
+        .map(([month, data]) => ({
           date: format(new Date(month + '-01'), 'MMM/yy', { locale: ptBR }),
           fullDate: format(new Date(month + '-01'), "MMMM 'de' yyyy", { locale: ptBR }),
-          weight: weights.reduce((a, b) => a + b, 0) / weights.length
+          hours: data.durations.reduce((a, b) => a + b, 0) / data.durations.length / 60,
+          quality: data.qualities.reduce((a, b) => a + b, 0) / data.qualities.length
         }))
         .sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime())
     }
-  }, [weightLogs, period])
+  }, [sleepLogs, period])
 
-  if (weightLogs.length === 0) {
+  if (sleepLogs.length === 0) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Evolução do Peso</CardTitle>
+          <CardTitle>Evolução do Sono</CardTitle>
           <CardDescription>Nenhum registro ainda</CardDescription>
         </CardHeader>
       </Card>
@@ -127,8 +122,8 @@ export function WeightChart() {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Evolução do Peso</CardTitle>
-            <CardDescription>Acompanhe seu progresso ao longo do tempo</CardDescription>
+            <CardTitle>Evolução do Sono</CardTitle>
+            <CardDescription>Acompanhe a qualidade e duração do seu sono</CardDescription>
           </div>
           <div className="flex gap-1">
             <Button
@@ -173,9 +168,25 @@ export function WeightChart() {
                 tick={{ fill: 'hsl(var(--muted-foreground))' }}
               />
               <YAxis 
+                yAxisId="left"
                 className="text-xs"
                 tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                domain={['dataMin - 2', 'dataMax + 2']}
+                label={{ value: 'Horas', angle: -90, position: 'insideLeft' }}
+                domain={[0, 12]}
+              />
+              <YAxis 
+                yAxisId="right"
+                orientation="right"
+                className="text-xs"
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                domain={[0, 3]}
+                ticks={[1, 2, 3]}
+                tickFormatter={(value) => {
+                  if (value === 1) return 'Ruim'
+                  if (value === 2) return 'Normal'
+                  if (value === 3) return 'Boa'
+                  return ''
+                }}
               />
               <Tooltip 
                 contentStyle={{
@@ -184,18 +195,37 @@ export function WeightChart() {
                   borderRadius: '6px'
                 }}
                 labelStyle={{ color: 'hsl(var(--foreground))' }}
-                formatter={(value: number) => [`${value.toFixed(1)} kg`, 'Peso']}
+                formatter={(value: number, name: string) => {
+                  if (name === 'hours') {
+                    return [`${value.toFixed(1)}h`, 'Duração']
+                  }
+                  const qualityText = value <= 1.5 ? 'Ruim' : value <= 2.5 ? 'Normal' : 'Boa'
+                  return [qualityText, 'Qualidade']
+                }}
                 labelFormatter={(label: string) => {
                   const data = chartData.find(d => d.date === label)
                   return data ? data.fullDate : label
                 }}
               />
+              <Legend 
+                formatter={(value) => value === 'hours' ? 'Duração' : 'Qualidade'}
+              />
               <Line 
+                yAxisId="left"
                 type="monotone" 
-                dataKey="weight" 
+                dataKey="hours" 
                 stroke="hsl(var(--primary))" 
                 strokeWidth={2}
                 dot={{ fill: 'hsl(var(--primary))', r: 4 }}
+                activeDot={{ r: 6 }}
+              />
+              <Line 
+                yAxisId="right"
+                type="monotone" 
+                dataKey="quality" 
+                stroke="hsl(var(--chart-2))" 
+                strokeWidth={2}
+                dot={{ fill: 'hsl(var(--chart-2))', r: 4 }}
                 activeDot={{ r: 6 }}
               />
             </LineChart>

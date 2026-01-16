@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useHealth } from '@/contexts/health-context'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -8,22 +8,39 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { SLEEP_QUALITY_LABELS, type SleepQuality } from '@/types/health'
+import { SLEEP_QUALITY_LABELS, type SleepQuality, type SleepLog } from '@/types/health'
 import { toast } from 'sonner'
 import { format, subDays } from 'date-fns'
 
 interface SleepLogModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  editingSleep?: SleepLog | null
 }
 
-export function SleepLogModal({ open, onOpenChange }: SleepLogModalProps) {
-  const { createSleepLog } = useHealth()
+export function SleepLogModal({ open, onOpenChange, editingSleep }: SleepLogModalProps) {
+  const { createSleepLog, updateSleepLog } = useHealth()
   const [loading, setLoading] = useState(false)
   const [bedtime, setBedtime] = useState('')
   const [wakeTime, setWakeTime] = useState('')
   const [quality, setQuality] = useState<SleepQuality>('normal')
   const [notes, setNotes] = useState('')
+
+  useEffect(() => {
+    if (editingSleep) {
+      const bedtimeDate = new Date(editingSleep.bedtime)
+      const wakeTimeDate = new Date(editingSleep.wakeTime)
+      setBedtime(format(bedtimeDate, 'HH:mm'))
+      setWakeTime(format(wakeTimeDate, 'HH:mm'))
+      setQuality(editingSleep.quality || 'normal')
+      setNotes(editingSleep.notes || '')
+    } else {
+      setBedtime('')
+      setWakeTime('')
+      setQuality('normal')
+      setNotes('')
+    }
+  }, [editingSleep, open])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -36,29 +53,46 @@ export function SleepLogModal({ open, onOpenChange }: SleepLogModalProps) {
     try {
       setLoading(true)
       
-      // Construir timestamps completos
-      const yesterday = subDays(new Date(), 1)
-      const today = new Date()
+      if (editingSleep) {
+        const yesterday = new Date(editingSleep.sleepDate)
+        const today = new Date(yesterday)
+        today.setDate(today.getDate() + 1)
+        
+        const bedtimeDate = new Date(`${format(yesterday, 'yyyy-MM-dd')}T${bedtime}:00`)
+        const wakeTimeDate = new Date(`${format(today, 'yyyy-MM-dd')}T${wakeTime}:00`)
+        
+        await updateSleepLog(editingSleep.id, {
+          sleepDate: editingSleep.sleepDate,
+          bedtime: bedtimeDate.toISOString(),
+          wakeTime: wakeTimeDate.toISOString(),
+          quality,
+          notes: notes || undefined
+        })
+        toast.success('Sono atualizado com sucesso!')
+      } else {
+        const yesterday = subDays(new Date(), 1)
+        const today = new Date()
+        
+        const bedtimeDate = new Date(`${format(yesterday, 'yyyy-MM-dd')}T${bedtime}:00`)
+        const wakeTimeDate = new Date(`${format(today, 'yyyy-MM-dd')}T${wakeTime}:00`)
+        
+        await createSleepLog({
+          sleepDate: format(yesterday, 'yyyy-MM-dd'),
+          bedtime: bedtimeDate.toISOString(),
+          wakeTime: wakeTimeDate.toISOString(),
+          quality,
+          notes: notes || undefined
+        })
+        toast.success('Sono registrado com sucesso!')
+      }
       
-      const bedtimeDate = new Date(`${format(yesterday, 'yyyy-MM-dd')}T${bedtime}:00`)
-      const wakeTimeDate = new Date(`${format(today, 'yyyy-MM-dd')}T${wakeTime}:00`)
-      
-      await createSleepLog({
-        sleepDate: format(yesterday, 'yyyy-MM-dd'),
-        bedtime: bedtimeDate.toISOString(),
-        wakeTime: wakeTimeDate.toISOString(),
-        quality,
-        notes: notes || undefined
-      })
-      
-      toast.success('Sono registrado com sucesso!')
       setBedtime('')
       setWakeTime('')
       setNotes('')
       onOpenChange(false)
     } catch (error) {
-      console.error('Erro ao registrar sono:', error)
-      toast.error('Erro ao registrar sono')
+      console.error('Erro ao salvar sono:', error)
+      toast.error('Erro ao salvar sono')
     } finally {
       setLoading(false)
     }
@@ -68,9 +102,9 @@ export function SleepLogModal({ open, onOpenChange }: SleepLogModalProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Registrar Sono</DialogTitle>
+          <DialogTitle>{editingSleep ? 'Editar Sono' : 'Registrar Sono'}</DialogTitle>
           <DialogDescription>
-            Adicione informações sobre sua noite de sono
+            {editingSleep ? 'Atualize as informações sobre sua noite de sono' : 'Adicione informações sobre sua noite de sono'}
           </DialogDescription>
         </DialogHeader>
         

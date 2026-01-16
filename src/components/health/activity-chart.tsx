@@ -1,0 +1,246 @@
+'use client'
+
+import { useMemo, useState } from 'react'
+import { useHealth } from '@/contexts/health-context'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
+import { format, subDays, subMonths, subYears, startOfWeek, startOfMonth } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
+
+type Period = 'week' | 'month' | 'year' | 'all'
+
+export function ActivityChart() {
+  const { activities } = useHealth()
+  const [period, setPeriod] = useState<Period>('month')
+
+  const chartData = useMemo(() => {
+    if (activities.length === 0) return []
+
+    const now = new Date()
+    let filteredActivities = activities
+
+    // Filtrar por período
+    switch (period) {
+      case 'week':
+        filteredActivities = activities.filter(a => 
+          new Date(a.activityDate) >= subDays(now, 7)
+        )
+        break
+      case 'month':
+        filteredActivities = activities.filter(a => 
+          new Date(a.activityDate) >= subMonths(now, 1)
+        )
+        break
+      case 'year':
+        filteredActivities = activities.filter(a => 
+          new Date(a.activityDate) >= subYears(now, 1)
+        )
+        break
+      case 'all':
+        filteredActivities = activities
+        break
+    }
+
+    // Agrupar dados conforme período
+    if (period === 'week') {
+      // Por dia
+      const dayGroups = new Map<string, { duration: number, calories: number }>()
+      filteredActivities.forEach(a => {
+        const day = format(new Date(a.activityDate), 'yyyy-MM-dd')
+        if (!dayGroups.has(day)) {
+          dayGroups.set(day, { duration: 0, calories: 0 })
+        }
+        const group = dayGroups.get(day)!
+        group.duration += a.durationMinutes
+        group.calories += a.caloriesBurned || 0
+      })
+
+      return Array.from(dayGroups.entries())
+        .map(([day, data]) => ({
+          date: format(new Date(day), 'dd/MM', { locale: ptBR }),
+          fullDate: format(new Date(day), "dd 'de' MMMM", { locale: ptBR }),
+          duration: data.duration,
+          calories: data.calories
+        }))
+        .sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime())
+    } else if (period === 'month') {
+      // Por dia
+      const dayGroups = new Map<string, { duration: number, calories: number }>()
+      filteredActivities.forEach(a => {
+        const day = format(new Date(a.activityDate), 'yyyy-MM-dd')
+        if (!dayGroups.has(day)) {
+          dayGroups.set(day, { duration: 0, calories: 0 })
+        }
+        const group = dayGroups.get(day)!
+        group.duration += a.durationMinutes
+        group.calories += a.caloriesBurned || 0
+      })
+
+      return Array.from(dayGroups.entries())
+        .map(([day, data]) => ({
+          date: format(new Date(day), 'dd/MM', { locale: ptBR }),
+          fullDate: format(new Date(day), "dd 'de' MMMM", { locale: ptBR }),
+          duration: data.duration,
+          calories: data.calories
+        }))
+        .sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime())
+    } else if (period === 'year') {
+      // Por semana
+      const weekGroups = new Map<string, { duration: number, calories: number }>()
+      filteredActivities.forEach(a => {
+        const weekStart = startOfWeek(new Date(a.activityDate), { locale: ptBR })
+        const weekKey = format(weekStart, 'yyyy-MM-dd')
+        if (!weekGroups.has(weekKey)) {
+          weekGroups.set(weekKey, { duration: 0, calories: 0 })
+        }
+        const group = weekGroups.get(weekKey)!
+        group.duration += a.durationMinutes
+        group.calories += a.caloriesBurned || 0
+      })
+
+      return Array.from(weekGroups.entries())
+        .map(([week, data]) => ({
+          date: format(new Date(week), 'dd/MM', { locale: ptBR }),
+          fullDate: format(new Date(week), "dd 'de' MMMM", { locale: ptBR }),
+          duration: data.duration,
+          calories: data.calories
+        }))
+        .sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime())
+    } else {
+      // Por mês
+      const monthGroups = new Map<string, { duration: number, calories: number }>()
+      filteredActivities.forEach(a => {
+        const monthStart = startOfMonth(new Date(a.activityDate))
+        const monthKey = format(monthStart, 'yyyy-MM')
+        if (!monthGroups.has(monthKey)) {
+          monthGroups.set(monthKey, { duration: 0, calories: 0 })
+        }
+        const group = monthGroups.get(monthKey)!
+        group.duration += a.durationMinutes
+        group.calories += a.caloriesBurned || 0
+      })
+
+      return Array.from(monthGroups.entries())
+        .map(([month, data]) => ({
+          date: format(new Date(month + '-01'), 'MMM/yy', { locale: ptBR }),
+          fullDate: format(new Date(month + '-01'), "MMMM 'de' yyyy", { locale: ptBR }),
+          duration: data.duration,
+          calories: data.calories
+        }))
+        .sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime())
+    }
+  }, [activities, period])
+
+  if (activities.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Evolução das Atividades</CardTitle>
+          <CardDescription>Nenhum registro ainda</CardDescription>
+        </CardHeader>
+      </Card>
+    )
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Evolução das Atividades</CardTitle>
+            <CardDescription>Acompanhe sua performance ao longo do tempo</CardDescription>
+          </div>
+          <div className="flex gap-1">
+            <Button
+              size="sm"
+              variant={period === 'week' ? 'default' : 'outline'}
+              onClick={() => setPeriod('week')}
+            >
+              Semana
+            </Button>
+            <Button
+              size="sm"
+              variant={period === 'month' ? 'default' : 'outline'}
+              onClick={() => setPeriod('month')}
+            >
+              Mês
+            </Button>
+            <Button
+              size="sm"
+              variant={period === 'year' ? 'default' : 'outline'}
+              onClick={() => setPeriod('year')}
+            >
+              Ano
+            </Button>
+            <Button
+              size="sm"
+              variant={period === 'all' ? 'default' : 'outline'}
+              onClick={() => setPeriod('all')}
+            >
+              Total
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="h-[300px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <XAxis 
+                dataKey="date" 
+                className="text-xs"
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              />
+              <YAxis 
+                yAxisId="left"
+                className="text-xs"
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                label={{ value: 'Minutos', angle: -90, position: 'insideLeft' }}
+              />
+              <YAxis 
+                yAxisId="right"
+                orientation="right"
+                className="text-xs"
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                label={{ value: 'Calorias', angle: 90, position: 'insideRight' }}
+              />
+              <Tooltip 
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--background))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '6px'
+                }}
+                labelStyle={{ color: 'hsl(var(--foreground))' }}
+                formatter={(value: number, name: string) => [
+                  name === 'duration' ? `${value} min` : `${value} kcal`,
+                  name === 'duration' ? 'Duração' : 'Calorias'
+                ]}
+                labelFormatter={(label: string) => {
+                  const data = chartData.find(d => d.date === label)
+                  return data ? data.fullDate : label
+                }}
+              />
+              <Legend 
+                formatter={(value) => value === 'duration' ? 'Duração' : 'Calorias'}
+              />
+              <Bar 
+                yAxisId="left"
+                dataKey="duration" 
+                fill="hsl(var(--primary))" 
+                radius={[4, 4, 0, 0]}
+              />
+              <Bar 
+                yAxisId="right"
+                dataKey="calories" 
+                fill="hsl(var(--chart-2))" 
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
