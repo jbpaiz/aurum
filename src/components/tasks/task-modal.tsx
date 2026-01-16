@@ -78,6 +78,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
 
   // Inicializar com valores vazios/padrão
   const [title, setTitle] = useState('')
+  const [subtitle, setSubtitle] = useState('')
   const [description, setDescription] = useState('')
   const [taskKey, setTaskKey] = useState('')
   const [columnId, setColumnId] = useState<string>('')
@@ -116,6 +117,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
     
     const formData = {
       title,
+      subtitle,
       description,
       taskKey,
       columnId,
@@ -130,7 +132,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
     }
     
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(formData))
-  }, [title, description, taskKey, columnId, priority, type, startDate, endDate, labelsInput, checklist, open, task])
+  }, [title, subtitle, description, taskKey, columnId, priority, type, startDate, endDate, labelsInput, checklist, open, task])
 
   // Limpar dados persistidos
   const clearPersistedData = () => {
@@ -155,6 +157,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
       // Se há dados persistidos da mesma tarefa, usar eles (usuário estava editando)
       if (persisted && persisted.taskId === task.id) {
         setTitle(persisted.title ?? task.title ?? '')
+        setSubtitle(persisted.subtitle ?? task.subtitle ?? '')
         setDescription(persisted.description ?? task.description ?? '')
         setTaskKey(persisted.taskKey ?? task.key ?? '')
         // SEMPRE usar task.columnId atual, nunca o persistido (tarefa pode ter sido movida)
@@ -170,6 +173,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
         clearPersistedData()
         
         setTitle(task.title ?? '')
+        setSubtitle(task.subtitle ?? '')
         setDescription(task.description ?? '')
         setTaskKey(task.key ?? '')
         setColumnId(task.columnId ?? defaultColumnId ?? availableColumns[0]?.id ?? '')
@@ -187,6 +191,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
       // Se for nova tarefa, tentar carregar dados persistidos
       if (persisted && !persisted.taskId) {
         setTitle(persisted.title ?? '')
+        setSubtitle(persisted.subtitle ?? '')
         setDescription(persisted.description ?? '')
         setTaskKey(persisted.taskKey ?? '')
         setColumnId(persisted.columnId ?? defaultColumnId ?? availableColumns[0]?.id ?? '')
@@ -200,6 +205,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
         // Se não há dados persistidos, limpar e usar valores padrão
         clearPersistedData()
         setTitle('')
+        setSubtitle('')
         setDescription('')
         setTaskKey('')
         setColumnId(defaultColumnId ?? availableColumns[0]?.id ?? '')
@@ -324,6 +330,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
     const payload = {
       id: task?.id,
       title: title.trim(),
+      subtitle: subtitle.trim() || null,
       description,
       columnId: resolvedColumnId,
       key: normalizedKey || undefined,
@@ -412,27 +419,32 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
               <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Ex: Implementar fluxo de onboarding" />
             </div>
             <div className="space-y-2">
+              <Label>Subtítulo (opcional)</Label>
+              <Input value={subtitle} onChange={(event) => setSubtitle(event.target.value)} placeholder="Ex: Tela de boas-vindas" />
+            </div>
+            <div className="space-y-2">
               <Label>Código (ex: JIRA-120)</Label>
               <Input value={taskKey} onChange={(event) => setTaskKey(event.target.value)} placeholder={task?.key ?? 'AUR-123'} />
             </div>
-            <div className="space-y-2">
-              <Label>Situação</Label>
-              <Select value={resolvedColumnId} onValueChange={setColumnId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a situação" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableColumns.map((column) => (
-                    <SelectItem key={column.id} value={column.id}>
-                      <span className="inline-flex items-center gap-2">
-                        <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: column.color }} />
-                        {column.name}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Situação</Label>
+            <Select value={resolvedColumnId} onValueChange={setColumnId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione a situação" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableColumns.map((column) => (
+                  <SelectItem key={column.id} value={column.id}>
+                    <span className="inline-flex items-center gap-2">
+                      <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: column.color }} />
+                      {column.name}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

@@ -35,6 +35,7 @@ export interface TaskCard {
   sprintId?: string | null
   userId: string
   title: string
+  subtitle?: string | null
   description?: string | null
   type: TaskType
   priority: TaskPriority
@@ -116,6 +117,7 @@ export interface TaskProject {
 
 export interface CreateTaskInput {
   title: string
+  subtitle?: string | null
   description?: string
   columnId?: string
   boardId?: string

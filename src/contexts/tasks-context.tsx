@@ -31,7 +31,7 @@ import { TASK_COLUMN_COLOR_PALETTE } from '@/types/tasks'
 type ProjectRow = Database['public']['Tables']['task_projects']['Row']
 type BoardRow = Database['public']['Tables']['task_boards']['Row']
 type ColumnRow = Database['public']['Tables']['task_columns']['Row']
-type TaskRow = Database['public']['Tables']['tasks']['Row']
+type TaskRow = Database['public']['Tables']['tasks']['Row'] & { subtitle?: string | null }
 type CommentRow = Database['public']['Tables']['task_comments']['Row']
 type SprintRow = Database['public']['Tables']['task_sprints']['Row']
 
@@ -181,6 +181,7 @@ const mapTask = (row: TaskRow & { task_comments?: CommentRow[] | null }): TaskCa
   sprintId: row.sprint_id,
   userId: row.user_id,
   title: row.title,
+  subtitle: row.subtitle,
   description: row.description,
   type: normalizeType(row.type),
   priority: normalizePriority(row.priority),
@@ -719,6 +720,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
   ): Partial<Database['public']['Tables']['tasks']['Insert']> => {
     const payload: Partial<Database['public']['Tables']['tasks']['Insert']> = {}
     if (input.title !== undefined) payload.title = input.title
+    if (input.subtitle !== undefined) (payload as any).subtitle = input.subtitle
     if (input.description !== undefined) payload.description = input.description
     if (input.key !== undefined) payload.key = input.key?.trim()
     if (input.priority !== undefined) payload.priority = input.priority
@@ -740,6 +742,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
   const mergeTaskWithUpdates = (task: TaskCard, updates: Partial<CreateTaskInput>): TaskCard => ({
     ...task,
     title: updates.title ?? task.title,
+    subtitle: updates.subtitle ?? task.subtitle,
     description: updates.description ?? task.description,
     key: updates.key ?? task.key,
     priority: updates.priority ?? task.priority,
@@ -856,6 +859,9 @@ export function TasksProvider({ children }: TasksProviderProps) {
         sort_order: nextSortOrder
       }
 
+      // Campo opcional não presente nos tipos gerados
+      ;(payload as any).subtitle = input.subtitle ?? null
+
       const { error } = await supabase.from('tasks').insert(payload)
 
       if (error) {
@@ -897,6 +903,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
             sprintId: taskData.sprint_id,
             userId: taskData.user_id,
             title: taskData.title,
+            subtitle: (taskData as any).subtitle,
             description: taskData.description,
             type: taskData.type,
             priority: taskData.priority,

@@ -78,6 +78,10 @@ export function KanbanCard({ task, onSelect, onToggleChecklistItem }: KanbanCard
 
       <p className="mt-1.5 text-sm font-semibold text-gray-900 dark:text-white break-words">{task.title}</p>
 
+      {task.subtitle && (
+        <p className="mt-0.5 text-xs font-medium text-gray-700 dark:text-gray-300 break-words">{task.subtitle}</p>
+      )}
+
       {task.description && (
         <p className="mt-1 line-clamp-2 text-xs text-gray-600 dark:text-gray-400 break-words">{task.description}</p>
       )}

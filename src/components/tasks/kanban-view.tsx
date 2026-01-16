@@ -165,7 +165,11 @@ export function KanbanView() {
     const label = labelFilter.trim().toLowerCase()
 
     const matchesFilters = (task: TaskCard) => {
-      const matchesSearch = search ? task.title.toLowerCase().includes(search) || task.description?.toLowerCase().includes(search) : true
+      const matchesSearch = search
+        ? task.title.toLowerCase().includes(search) ||
+          task.subtitle?.toLowerCase().includes(search) ||
+          task.description?.toLowerCase().includes(search)
+        : true
       const matchesPriority = priorityFilter === 'all' ? true : task.priority === priorityFilter
       const matchesLabel = label
         ? task.labels.some((item) => item.toLowerCase().includes(label))
