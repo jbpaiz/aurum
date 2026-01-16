@@ -4,7 +4,7 @@ import { useMemo, useState, useCallback, type ReactNode } from 'react'
 import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
-import type { TaskCard, TaskColumn, TaskPriority } from '@/types/tasks'
+import type { TaskCard, TaskColumn, TaskPriority, TaskCustomField } from '@/types/tasks'
 import { TASK_PRIORITY_COLORS, TASK_PRIORITY_LABELS } from '@/types/tasks'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -178,7 +178,7 @@ interface TaskListRowProps {
   onChangeTaskColumn?: (taskId: string, columnId: string) => Promise<void> | void
   renderDate: (value?: string | null) => ReactNode
   columnOptions: TaskColumn[]
-  priorityField?: { id: string; name: string; options: Array<{ optionValue: string; optionLabel: string; color: string }> }
+  priorityField?: TaskCustomField
 }
 
 function TaskListRow({ task, onSelectTask, onChangeTaskColumn, renderDate, columnOptions, priorityField }: TaskListRowProps) {

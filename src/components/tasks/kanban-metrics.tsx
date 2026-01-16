@@ -3,12 +3,12 @@
 import { useMemo } from 'react'
 import { differenceInCalendarDays } from 'date-fns'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import type { TaskCard, TaskColumn, TaskPriority } from '@/types/tasks'
+import type { TaskCard, TaskColumn, TaskPriority, TaskCustomField } from '@/types/tasks'
 import { TASK_PRIORITY_LABELS } from '@/types/tasks'
 
 interface KanbanMetricsProps {
   columns: TaskColumn[]
-  priorityField?: { fieldName: string }
+  priorityField?: TaskCustomField
 }
 
 const PRIORITY_ORDER: TaskPriority[] = ['highest', 'high', 'medium', 'low', 'lowest']

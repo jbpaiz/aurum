@@ -834,6 +834,86 @@ export interface Database {
           }
         ]
       }
+      task_custom_fields: {
+        Row: {
+          id: string
+          project_id: string
+          field_type: string
+          field_name: string
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          field_type: string
+          field_name: string
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          field_type?: string
+          field_name?: string
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_custom_fields_project_id_fkey"
+            columns: ["project_id"]
+            referencedRelation: "task_projects"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      task_custom_field_options: {
+        Row: {
+          id: string
+          custom_field_id: string
+          option_value: string
+          option_label: string
+          color: string
+          position: number
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          custom_field_id: string
+          option_value: string
+          option_label: string
+          color: string
+          position?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          custom_field_id?: string
+          option_value?: string
+          option_label?: string
+          color?: string
+          position?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_custom_field_options_custom_field_id_fkey"
+            columns: ["custom_field_id"]
+            referencedRelation: "task_custom_fields"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never

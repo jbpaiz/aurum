@@ -4,7 +4,7 @@ import { Search, X, Filter as FilterIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { TASK_PRIORITY_COLORS, TASK_PRIORITY_LABELS, type TaskPriority } from '@/types/tasks'
+import { TASK_PRIORITY_COLORS, TASK_PRIORITY_LABELS, type TaskPriority, type TaskCustomField } from '@/types/tasks'
 
 interface FiltersModalProps {
   open: boolean
@@ -13,7 +13,7 @@ interface FiltersModalProps {
   onSearchChange: (value: string) => void
   priorityFilter: TaskPriority | 'all'
   onPriorityChange: (value: TaskPriority | 'all') => void
-  priorityField?: { fieldName: string }
+  priorityField?: TaskCustomField
   labelFilter: string
   onLabelChange: (value: string) => void
 }
