@@ -44,8 +44,23 @@ const TASK_TYPES: { value: TaskType; label: string }[] = [
 const STORAGE_KEY = 'task_modal_form_data'
 
 export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSave, onDeleteTask, onCloneTask }: TaskModalProps) {
-  const { activeBoard, priorityField } = useTasks()
+  const { activeBoard, activeProject, priorityField } = useTasks()
   const isInitialized = useRef(false)
+  
+  // Buscar as colunas corretas: se a tarefa está em outro quadro, pegar as colunas daquele quadro
+  const availableColumns = useMemo(() => {
+    if (!task) return columns
+    
+    // Se a tarefa está no quadro ativo, usar as colunas passadas por props
+    if (task.boardId === activeBoard?.id) return columns
+    
+    // Se a tarefa está em outro quadro, buscar as colunas daquele quadro
+    const taskBoard = activeProject?.boards.find(b => b.id === task.boardId)
+    if (taskBoard) return taskBoard.columns
+    
+    // Fallback para as colunas do quadro ativo
+    return columns
+  }, [task, activeBoard, activeProject, columns])
   
   // Função para carregar dados persistidos
   const loadPersistedData = () => {
@@ -84,8 +99,8 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   )
-  const resolvedColumnId = columnId || task?.columnId || defaultColumnId || columns[0]?.id || ''
-  const selectedColumn = columns.find((column) => column.id === resolvedColumnId)
+  const resolvedColumnId = columnId || task?.columnId || defaultColumnId || availableColumns[0]?.id || ''
+  const selectedColumn = availableColumns.find((column) => column.id === resolvedColumnId)
 
   // Salvar dados no sessionStorage sempre que mudarem (mas só depois de inicializar)
   useEffect(() => {
@@ -134,7 +149,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
         setTitle(persisted.title ?? task.title ?? '')
         setDescription(persisted.description ?? task.description ?? '')
         setTaskKey(persisted.taskKey ?? task.key ?? '')
-        setColumnId(persisted.columnId ?? task.columnId ?? defaultColumnId ?? columns[0]?.id ?? '')
+        setColumnId(persisted.columnId ?? task.columnId ?? defaultColumnId ?? availableColumns[0]?.id ?? '')
         setPriority(persisted.priority ?? task.priority ?? 'medium')
         setType(persisted.type ?? task.type ?? 'task')
         setStartDate(persisted.startDate ?? task.startDate ?? '')
@@ -148,7 +163,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
         setTitle(task.title ?? '')
         setDescription(task.description ?? '')
         setTaskKey(task.key ?? '')
-        setColumnId(task.columnId ?? defaultColumnId ?? columns[0]?.id ?? '')
+        setColumnId(task.columnId ?? defaultColumnId ?? availableColumns[0]?.id ?? '')
         setPriority(task.priority ?? 'medium')
         setType(task.type ?? 'task')
         setStartDate(task.startDate ?? '')
@@ -165,7 +180,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
         setTitle(persisted.title ?? '')
         setDescription(persisted.description ?? '')
         setTaskKey(persisted.taskKey ?? '')
-        setColumnId(persisted.columnId ?? defaultColumnId ?? columns[0]?.id ?? '')
+        setColumnId(persisted.columnId ?? defaultColumnId ?? availableColumns[0]?.id ?? '')
         setPriority(persisted.priority ?? 'medium')
         setType(persisted.type ?? 'task')
         setStartDate(persisted.startDate ?? '')
@@ -178,7 +193,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
         setTitle('')
         setDescription('')
         setTaskKey('')
-        setColumnId(defaultColumnId ?? columns[0]?.id ?? '')
+        setColumnId(defaultColumnId ?? availableColumns[0]?.id ?? '')
         setPriority('medium')
         setType('task')
         setStartDate('')
@@ -190,7 +205,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
     
     // Marcar como inicializado após carregar os dados
     isInitialized.current = true
-  }, [open, task, defaultColumnId, columns])
+  }, [open, task, defaultColumnId, availableColumns])
 
   const labels = useMemo(
     () =>
@@ -398,7 +413,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
                   <SelectValue placeholder="Selecione a situação" />
                 </SelectTrigger>
                 <SelectContent>
-                  {columns.map((column) => (
+                  {availableColumns.map((column) => (
                     <SelectItem key={column.id} value={column.id}>
                       <span className="inline-flex items-center gap-2">
                         <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: column.color }} />
