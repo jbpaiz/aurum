@@ -93,6 +93,14 @@ const tasksMenuItems: NavigationItem[] = [
   }
 ]
 
+const healthMenuItems: NavigationItem[] = [
+  {
+    title: 'Dashboard',
+    icon: LayoutDashboard,
+    href: '/health'
+  }
+]
+
 const hubNavigation = {
   finance: {
     ...HUB_META.finance,
@@ -101,6 +109,10 @@ const hubNavigation = {
   tasks: {
     ...HUB_META.tasks,
     menu: tasksMenuItems
+  },
+  health: {
+    ...HUB_META.health,
+    menu: healthMenuItems
   }
 } as const
 

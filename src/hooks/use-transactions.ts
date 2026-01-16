@@ -61,7 +61,7 @@ export function useTransactions() {
 
   const mapTransactionRow = useCallback((row: TransactionRow): TransactionRecord => ({
     id: row.id,
-    type: row.type,
+    type: row.type as TransactionRecord['type'],
     description: row.description,
     amount: Number(row.amount ?? 0),
     category: row.categories?.name || 'Sem categoria',

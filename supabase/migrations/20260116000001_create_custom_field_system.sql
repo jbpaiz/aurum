@@ -41,7 +41,18 @@ CREATE OR REPLACE FUNCTION create_default_priority_field(p_project_id UUID)
 RETURNS UUID AS $$
 DECLARE
   v_field_id UUID;
+  v_existing_field_id UUID;
 BEGIN
+  -- Verificar se já existe
+  SELECT id INTO v_existing_field_id
+  FROM task_custom_fields
+  WHERE project_id = p_project_id AND field_type = 'priority';
+  
+  -- Se já existe, retornar o ID existente
+  IF v_existing_field_id IS NOT NULL THEN
+    RETURN v_existing_field_id;
+  END IF;
+  
   -- Criar campo "Prioridade"
   INSERT INTO task_custom_fields (project_id, field_type, field_name)
   VALUES (p_project_id, 'priority', 'Prioridade')

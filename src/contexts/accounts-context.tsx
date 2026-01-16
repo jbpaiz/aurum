@@ -39,13 +39,13 @@ export function AccountsProvider({ children }: AccountsProviderProps) {
   const toBankAccount = useCallback((account: Database['public']['Tables']['bank_accounts']['Row']): BankAccount => ({
     id: account.id,
     name: account.name,
-    type: account.type,
+    type: account.type as BankAccount['type'],
     bank: account.bank ?? undefined,
     icon: account.icon,
     color: account.color,
     balance: Number(account.balance ?? 0),
     isActive: account.is_active,
-    createdAt: account.created_at,
+    createdAt: account.created_at || new Date().toISOString(),
     userId: account.user_id
   }), [])
 
