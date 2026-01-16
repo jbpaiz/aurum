@@ -17,6 +17,10 @@ import { BodyMeasurementsChart } from './body-measurements-chart'
 import { HydrationCard } from './hydration-card'
 import { HydrationChart } from './hydration-chart'
 import { HydrationQuickAdd } from './hydration-quick-add'
+import { MealCard } from './meal-card'
+import { MacroBreakdownChart } from './macro-breakdown-chart'
+import { MealHistory } from './meal-history'
+import { DailyNutritionSummary } from './daily-nutrition-summary'
 import { GoalsCard } from './goals-card'
 import { InsightsCard } from './insights-card'
 import { StatsSummary } from './stats-summary'
@@ -26,8 +30,10 @@ import { SleepLogModal } from './sleep-log-modal'
 import { BodyMeasurementsModal } from './body-measurements-modal'
 import { HydrationLogModal } from './hydration-log-modal'
 import { HydrationGoalModal } from './hydration-goal-modal'
+import { MealModal } from './meal-modal'
+import { NutritionGoalsModal } from './nutrition-goals-modal'
 import { GoalModal } from './goal-modal'
-import type { WeightLog, Activity, SleepLog, BodyMeasurement, HydrationLog } from '@/types/health'
+import type { WeightLog, Activity, SleepLog, BodyMeasurement, HydrationLog, Meal } from '@/types/health'
 
 export function HealthDashboard() {
   const { loading, insights } = useHealth()
@@ -43,6 +49,9 @@ export function HealthDashboard() {
   const [hydrationModalOpen, setHydrationModalOpen] = useState(false)
   const [editingHydration, setEditingHydration] = useState<HydrationLog | null>(null)
   const [hydrationGoalModalOpen, setHydrationGoalModalOpen] = useState(false)
+  const [mealModalOpen, setMealModalOpen] = useState(false)
+  const [editingMeal, setEditingMeal] = useState<Meal | null>(null)
+  const [nutritionGoalsModalOpen, setNutritionGoalsModalOpen] = useState(false)
   const [goalModalOpen, setGoalModalOpen] = useState(false)
 
   const handleEditWeight = (log: WeightLog) => {
@@ -101,6 +110,16 @@ export function HealthDashboard() {
     setEditingHydration(null)
   }
 
+  const handleEditMeal = (meal: Meal) => {
+    setEditingMeal(meal)
+    setMealModalOpen(true)
+  }
+
+  const handleCloseMealModal = () => {
+    setMealModalOpen(false)
+    setEditingMeal(null)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -118,11 +137,12 @@ export function HealthDashboard() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="weight">Peso</TabsTrigger>
           <TabsTrigger value="body">Medidas</TabsTrigger>
           <TabsTrigger value="hydration">Hidratação</TabsTrigger>
+          <TabsTrigger value="nutrition">Nutrição</TabsTrigger>
           <TabsTrigger value="activity">Atividades</TabsTrigger>
           <TabsTrigger value="sleep">Sono</TabsTrigger>
         </TabsList>
@@ -223,6 +243,30 @@ export function HealthDashboard() {
             />
           </div>
         </TabsContent>
+
+        {/* Nutrition Tab */}
+        <TabsContent value="nutrition" className="space-y-6">
+          <div className="flex justify-end">
+            <Button onClick={() => setMealModalOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Registrar Refeição
+            </Button>
+          </div>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <DailyNutritionSummary 
+              onGoalClick={() => setNutritionGoalsModalOpen(true)}
+              onAddMealClick={() => setMealModalOpen(true)}
+            />
+            <MacroBreakdownChart />
+          </div>
+          <MealCard 
+            detailed
+            onAddClick={() => setMealModalOpen(true)}
+            onEditClick={handleEditMeal}
+            onGoalClick={() => setNutritionGoalsModalOpen(true)}
+          />
+          <MealHistory onEditClick={handleEditMeal} />
+        </TabsContent>
       </Tabs>
 
       {/* Modals */}
@@ -258,6 +302,15 @@ export function HealthDashboard() {
       <HydrationGoalModal
         open={hydrationGoalModalOpen}
         onClose={() => setHydrationGoalModalOpen(false)}
+      />
+      <MealModal
+        open={mealModalOpen}
+        onClose={handleCloseMealModal}
+        editing={editingMeal}
+      />
+      <NutritionGoalsModal
+        open={nutritionGoalsModalOpen}
+        onClose={() => setNutritionGoalsModalOpen(false)}
       />
     </div>
   )
