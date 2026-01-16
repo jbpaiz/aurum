@@ -100,17 +100,42 @@ export function TaskListView({ columns, referenceColumns, onSelectTask, onCreate
       const valueA = getComparableValue(taskA, key)
       const valueB = getComparableValue(taskB, key)
 
-      if (valueA === valueB) return 0
-      if (valueA === null || valueA === undefined) return 1 * multiplier
-      if (valueB === null || valueB === undefined) return -1 * multiplier
-
-      if (typeof valueA === 'number' && typeof valueB === 'number') {
-        return (valueA - valueB) * multiplier
+      // Comparação primária
+      let comparison = 0
+      
+      if (valueA === valueB) {
+        comparison = 0
+      } else if (valueA === null || valueA === undefined) {
+        comparison = 1 * multiplier
+      } else if (valueB === null || valueB === undefined) {
+        comparison = -1 * multiplier
+      } else if (typeof valueA === 'number' && typeof valueB === 'number') {
+        comparison = (valueA - valueB) * multiplier
+      } else {
+        comparison = String(valueA).localeCompare(String(valueB), 'pt-BR', { sensitivity: 'base' }) * multiplier
       }
 
-      return String(valueA).localeCompare(String(valueB), 'pt-BR', { sensitivity: 'base' }) * multiplier
+      // Se ordenando por startDate e valores são iguais, aplicar ordenação secundária e terciária
+      if (comparison === 0 && key === 'startDate') {
+        // Secundário: Situação (columnName)
+        const columnA = taskA.columnName.toLowerCase()
+        const columnB = taskB.columnName.toLowerCase()
+        const columnComparison = columnA.localeCompare(columnB, 'pt-BR', { sensitivity: 'base' })
+        
+        if (columnComparison !== 0) {
+          return columnComparison
+        }
+        
+        // Terciário: Prioridade (alfabético pelo label)
+        const priorityLabelA = priorityField?.options.find(opt => opt.optionValue === taskA.priority)?.optionLabel || TASK_PRIORITY_LABELS[taskA.priority]
+        const priorityLabelB = priorityField?.options.find(opt => opt.optionValue === taskB.priority)?.optionLabel || TASK_PRIORITY_LABELS[taskB.priority]
+        
+        return priorityLabelA.localeCompare(priorityLabelB, 'pt-BR', { sensitivity: 'base' })
+      }
+
+      return comparison
     })
-  }, [getComparableValue, sortConfig, tasks])
+  }, [getComparableValue, sortConfig, tasks, priorityField])
 
   const handleSort = useCallback((key: SortKey) => {
     setSortConfig((current) => {
