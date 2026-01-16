@@ -280,6 +280,12 @@ export interface CreateHydrationLogInput {
 
 export interface UpdateHydrationLogInput extends Partial<CreateHydrationLogInput> {}
 
+export interface CreateHydrationGoalInput {
+  dailyGoalMl: number
+}
+
+export interface UpdateHydrationGoalInput extends Partial<CreateHydrationGoalInput> {}
+
 export interface HydrationStats {
   todayTotal: number
   dailyGoal: number

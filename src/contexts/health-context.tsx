@@ -9,19 +9,26 @@ import type {
   SleepLog,
   HealthGoal,
   BodyMeasurement,
+  HydrationLog,
+  HydrationGoal,
   CreateWeightLogInput,
   CreateActivityInput,
   CreateSleepLogInput,
   CreateGoalInput,
   CreateBodyMeasurementInput,
+  CreateHydrationLogInput,
+  CreateHydrationGoalInput,
   UpdateWeightLogInput,
   UpdateActivityInput,
   UpdateSleepLogInput,
   UpdateGoalInput,
   UpdateBodyMeasurementInput,
+  UpdateHydrationLogInput,
+  UpdateHydrationGoalInput,
   WeightStats,
   ActivityStats,
   SleepStats,
+  HydrationStats,
   HealthInsight
 } from '@/types/health'
 import { differenceInMinutes, format, startOfDay, subDays } from 'date-fns'
@@ -34,11 +41,14 @@ interface HealthContextValue {
   sleepLogs: SleepLog[]
   goals: HealthGoal[]
   bodyMeasurements: BodyMeasurement[]
+  hydrationLogs: HydrationLog[]
+  hydrationGoal: HydrationGoal | null
   
   // Stats
   weightStats: WeightStats | null
   activityStats: ActivityStats | null
   sleepStats: SleepStats | null
+  hydrationStats: HydrationStats | null
   insights: HealthInsight[]
   
   // Weight
@@ -66,6 +76,12 @@ interface HealthContextValue {
   updateBodyMeasurement: (id: string, input: UpdateBodyMeasurementInput) => Promise<void>
   deleteBodyMeasurement: (id: string) => Promise<void>
   
+  // Hydration
+  createHydrationLog: (input: CreateHydrationLogInput) => Promise<void>
+  updateHydrationLog: (id: string, input: UpdateHydrationLogInput) => Promise<void>
+  deleteHydrationLog: (id: string) => Promise<void>
+  createOrUpdateHydrationGoal: (input: CreateHydrationGoalInput) => Promise<void>
+  
   // Refresh
   refresh: () => Promise<void>
 }
@@ -80,6 +96,8 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
   const [sleepLogs, setSleepLogs] = useState<SleepLog[]>([])
   const [goals, setGoals] = useState<HealthGoal[]>([])
   const [bodyMeasurements, setBodyMeasurements] = useState<BodyMeasurement[]>([])
+  const [hydrationLogs, setHydrationLogs] = useState<HydrationLog[]>([])
+  const [hydrationGoal, setHydrationGoal] = useState<HydrationGoal | null>(null)
   
   // Carregar dados
   const loadData = useCallback(async () => {
@@ -89,6 +107,8 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
       setSleepLogs([])
       setGoals([])
       setBodyMeasurements([])
+      setHydrationLogs([])
+      setHydrationGoal(null)
       setLoading(false)
       return
     }
@@ -99,7 +119,7 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
       // Buscar últimos 90 dias
       const ninetyDaysAgo = subDays(new Date(), 90).toISOString()
       
-      const [weightRes, activitiesRes, sleepRes, goalsRes, measurementsRes] = await Promise.all([
+      const [weightRes, activitiesRes, sleepRes, goalsRes, measurementsRes, hydrationRes, hydrationGoalRes] = await Promise.all([
         supabase
           .from('health_weight_logs')
           .select('*')
@@ -128,7 +148,18 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
           .from('health_body_measurements')
           .select('*')
           .gte('measurement_date', format(subDays(new Date(), 365), 'yyyy-MM-dd'))
-          .order('measurement_date', { ascending: false })
+          .order('measurement_date', { ascending: false }),
+        
+        supabase
+          .from('health_hydration')
+          .select('*')
+          .gte('log_date', format(subDays(new Date(), 30), 'yyyy-MM-dd'))
+          .order('logged_at', { ascending: false }),
+        
+        supabase
+          .from('health_hydration_goals')
+          .select('*')
+          .single()
       ])
 
       if (weightRes.data) {
@@ -149,6 +180,14 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
       
       if (measurementsRes.data) {
         setBodyMeasurements(measurementsRes.data.map(mapBodyMeasurement))
+      }
+      
+      if (hydrationRes.data) {
+        setHydrationLogs(hydrationRes.data.map(mapHydrationLog))
+      }
+      
+      if (hydrationGoalRes.data) {
+        setHydrationGoal(mapHydrationGoal(hydrationGoalRes.data))
       }
     } catch (error) {
       console.error('Erro ao carregar dados de saúde:', error)
@@ -429,10 +468,89 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     setBodyMeasurements(prev => prev.filter(m => m.id !== id))
   }, [])
 
+  // ===== HYDRATION =====
+  const createHydrationLog = useCallback(async (input: CreateHydrationLogInput) => {
+    if (!user) return
+
+    const { data, error } = await supabase
+      .from('health_hydration')
+      .insert({
+        user_id: user.id,
+        log_date: input.logDate || format(new Date(), 'yyyy-MM-dd'),
+        amount_ml: input.amountMl,
+        logged_at: input.loggedAt || new Date().toISOString(),
+        notes: input.notes || null
+      })
+      .select()
+      .single()
+
+    if (error) throw error
+    if (data) {
+      setHydrationLogs(prev => [mapHydrationLog(data), ...prev])
+    }
+  }, [user])
+
+  const updateHydrationLog = useCallback(async (id: string, input: UpdateHydrationLogInput) => {
+    const { error } = await supabase
+      .from('health_hydration')
+      .update({
+        log_date: input.logDate,
+        amount_ml: input.amountMl,
+        logged_at: input.loggedAt,
+        notes: input.notes
+      })
+      .eq('id', id)
+
+    if (error) throw error
+    await loadData()
+  }, [loadData])
+
+  const deleteHydrationLog = useCallback(async (id: string) => {
+    const { error } = await supabase
+      .from('health_hydration')
+      .delete()
+      .eq('id', id)
+
+    if (error) throw error
+    setHydrationLogs(prev => prev.filter(log => log.id !== id))
+  }, [])
+
+  const createOrUpdateHydrationGoal = useCallback(async (input: CreateHydrationGoalInput) => {
+    if (!user) return
+
+    // Try to update first
+    const { data: existing } = await supabase
+      .from('health_hydration_goals')
+      .select('id')
+      .eq('user_id', user.id)
+      .single()
+
+    if (existing) {
+      const { error } = await supabase
+        .from('health_hydration_goals')
+        .update({ daily_goal_ml: input.dailyGoalMl })
+        .eq('id', existing.id)
+
+      if (error) throw error
+    } else {
+      const { error } = await supabase
+        .from('health_hydration_goals')
+        .insert({
+          user_id: user.id,
+          daily_goal_ml: input.dailyGoalMl
+        })
+
+      if (error) throw error
+    }
+
+    await loadData()
+  }, [user, loadData])
+
   // ===== STATS =====
   const weightStats: WeightStats | null = calculateWeightStats(weightLogs)
   const activityStats: ActivityStats | null = calculateActivityStats(activities, goals)
   const sleepStats: SleepStats | null = calculateSleepStats(sleepLogs)
+  const hydrationStats: HydrationStats | null = calculateHydrationStats(hydrationLogs, hydrationGoal)
   const insights: HealthInsight[] = generateInsights(weightStats, activityStats, sleepStats, goals)
 
   const value: HealthContextValue = {
@@ -442,9 +560,12 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     sleepLogs,
     goals,
     bodyMeasurements,
+    hydrationLogs,
+    hydrationGoal,
     weightStats,
     activityStats,
     sleepStats,
+    hydrationStats,
     insights,
     createWeightLog,
     updateWeightLog,
@@ -461,6 +582,10 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     createBodyMeasurement,
     updateBodyMeasurement,
     deleteBodyMeasurement,
+    createHydrationLog,
+    updateHydrationLog,
+    deleteHydrationLog,
+    createOrUpdateHydrationGoal,
     refresh: loadData
   }
 
@@ -554,6 +679,29 @@ function mapBodyMeasurement(data: any): BodyMeasurement {
   }
 }
 
+function mapHydrationLog(data: any): HydrationLog {
+  return {
+    id: data.id,
+    userId: data.user_id,
+    logDate: data.log_date,
+    amountMl: data.amount_ml,
+    loggedAt: data.logged_at,
+    notes: data.notes,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at
+  }
+}
+
+function mapHydrationGoal(data: any): HydrationGoal {
+  return {
+    id: data.id,
+    userId: data.user_id,
+    dailyGoalMl: data.daily_goal_ml,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at
+  }
+}
+
 // ===== CALCULATORS =====
 function calculateWeightStats(logs: WeightLog[]): WeightStats | null {
   if (logs.length === 0) return null
@@ -642,6 +790,37 @@ function calculateSleepStats(logs: SleepLog[]): SleepStats | null {
     totalNights: weekLogs.length,
     bestNight: Math.max(...durations),
     worstNight: Math.min(...durations)
+  }
+}
+
+function calculateHydrationStats(logs: HydrationLog[], goal: HydrationGoal | null): HydrationStats | null {
+  if (logs.length === 0) return null
+
+  const today = format(new Date(), 'yyyy-MM-dd')
+  const todayLogs = logs.filter(l => l.logDate === today)
+  const todayTotal = todayLogs.reduce((sum, log) => sum + log.amountMl, 0)
+
+  const sevenDaysAgo = subDays(new Date(), 7)
+  const weekLogs = logs.filter(l => new Date(l.logDate) >= sevenDaysAgo)
+  
+  // Group by date
+  const dailyTotals: Record<string, number> = {}
+  weekLogs.forEach(log => {
+    dailyTotals[log.logDate] = (dailyTotals[log.logDate] || 0) + log.amountMl
+  })
+
+  const weekValues = Object.values(dailyTotals)
+  const avgDailyLast7Days = weekValues.length > 0 ? weekValues.reduce((a, b) => a + b, 0) / weekValues.length : 0
+
+  const dailyGoal = goal?.dailyGoalMl || 2000
+  const progress = Math.min(100, (todayTotal / dailyGoal) * 100)
+
+  return {
+    todayTotal,
+    dailyGoal,
+    progress,
+    logsToday: todayLogs.length,
+    avgDailyLast7Days
   }
 }
 
