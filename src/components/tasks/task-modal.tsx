@@ -294,26 +294,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
       return
     }
 
-    // Validar título duplicado (exceto ao editar a própria tarefa)
     const allTasks = activeBoard?.columns.flatMap(col => col.tasks) ?? []
-    
-    const duplicateTitle = allTasks.find(
-      t => t.title?.toLowerCase().trim() === title.toLowerCase().trim() && t.id !== task?.id
-    )
-    
-    if (duplicateTitle) {
-      const duplicateColumn = activeBoard?.columns.find(col => 
-        col.tasks.some(t => t.id === duplicateTitle.id)
-      )
-      
-      setFormError(
-        `Já existe outra tarefa com o título "${title}" na situação "${duplicateColumn?.name || 'desconhecida'}". ` +
-        `${task?.id ? `(Esta tarefa: ${task.id.slice(0, 8)}... | Duplicata: ${duplicateTitle.id.slice(0, 8)}...)` : ''} ` +
-        `Delete a tarefa duplicada ou use outro título.`
-      )
-      setIsSaving(false)
-      return
-    }
 
     // Validar código duplicado se fornecido (exceto ao editar a própria tarefa)
     if (normalizedKey) {
