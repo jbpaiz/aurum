@@ -11,6 +11,8 @@ import type {
   BodyMeasurement,
   HydrationLog,
   HydrationGoal,
+  Meal,
+  NutritionGoal,
   CreateWeightLogInput,
   CreateActivityInput,
   CreateSleepLogInput,
@@ -18,6 +20,7 @@ import type {
   CreateBodyMeasurementInput,
   CreateHydrationLogInput,
   CreateHydrationGoalInput,
+  CreateMealInput,
   UpdateWeightLogInput,
   UpdateActivityInput,
   UpdateSleepLogInput,
@@ -25,10 +28,12 @@ import type {
   UpdateBodyMeasurementInput,
   UpdateHydrationLogInput,
   UpdateHydrationGoalInput,
+  UpdateMealInput,
   WeightStats,
   ActivityStats,
   SleepStats,
   HydrationStats,
+  NutritionStats,
   HealthInsight
 } from '@/types/health'
 import { differenceInMinutes, format, startOfDay, subDays } from 'date-fns'
@@ -43,12 +48,15 @@ interface HealthContextValue {
   bodyMeasurements: BodyMeasurement[]
   hydrationLogs: HydrationLog[]
   hydrationGoal: HydrationGoal | null
+  meals: Meal[]
+  nutritionGoal: NutritionGoal | null
   
   // Stats
   weightStats: WeightStats | null
   activityStats: ActivityStats | null
   sleepStats: SleepStats | null
   hydrationStats: HydrationStats | null
+  nutritionStats: NutritionStats | null
   insights: HealthInsight[]
   
   // Weight
@@ -82,6 +90,12 @@ interface HealthContextValue {
   deleteHydrationLog: (id: string) => Promise<void>
   createOrUpdateHydrationGoal: (input: CreateHydrationGoalInput) => Promise<void>
   
+  // Nutrition
+  createMeal: (input: CreateMealInput) => Promise<void>
+  updateMeal: (id: string, input: UpdateMealInput) => Promise<void>
+  deleteMeal: (id: string) => Promise<void>
+  createOrUpdateNutritionGoal: (goal: Partial<NutritionGoal>) => Promise<void>
+  
   // Refresh
   refresh: () => Promise<void>
 }
@@ -98,6 +112,8 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
   const [bodyMeasurements, setBodyMeasurements] = useState<BodyMeasurement[]>([])
   const [hydrationLogs, setHydrationLogs] = useState<HydrationLog[]>([])
   const [hydrationGoal, setHydrationGoal] = useState<HydrationGoal | null>(null)
+  const [meals, setMeals] = useState<Meal[]>([])
+  const [nutritionGoal, setNutritionGoal] = useState<NutritionGoal | null>(null)
   
   // Carregar dados
   const loadData = useCallback(async () => {
@@ -109,6 +125,8 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
       setBodyMeasurements([])
       setHydrationLogs([])
       setHydrationGoal(null)
+      setMeals([])
+      setNutritionGoal(null)
       setLoading(false)
       return
     }
@@ -119,7 +137,7 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
       // Buscar últimos 90 dias
       const ninetyDaysAgo = subDays(new Date(), 90).toISOString()
       
-      const [weightRes, activitiesRes, sleepRes, goalsRes, measurementsRes, hydrationRes, hydrationGoalRes] = await Promise.all([
+      const [weightRes, activitiesRes, sleepRes, goalsRes, measurementsRes, hydrationRes, hydrationGoalRes, mealsRes, nutritionGoalRes] = await Promise.all([
         supabase
           .from('health_weight_logs')
           .select('*')
@@ -159,6 +177,18 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
         supabase
           .from('health_hydration_goals')
           .select('*')
+          .single(),
+        
+        supabase
+          .from('health_meals')
+          .select('*')
+          .gte('meal_date', format(subDays(new Date(), 30), 'yyyy-MM-dd'))
+          .order('meal_date', { ascending: false })
+          .order('meal_time', { ascending: false }),
+        
+        supabase
+          .from('health_nutrition_goals')
+          .select('*')
           .single()
       ])
 
@@ -188,6 +218,14 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
       
       if (hydrationGoalRes.data) {
         setHydrationGoal(mapHydrationGoal(hydrationGoalRes.data))
+      }
+      
+      if (mealsRes.data) {
+        setMeals(mealsRes.data.map(mapMeal))
+      }
+      
+      if (nutritionGoalRes.data) {
+        setNutritionGoal(mapNutritionGoal(nutritionGoalRes.data))
       }
     } catch (error) {
       console.error('Erro ao carregar dados de saúde:', error)
@@ -546,11 +584,114 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     await loadData()
   }, [user, loadData])
 
+  // ===== NUTRITION =====
+  const createMeal = useCallback(async (input: CreateMealInput) => {
+    if (!user) return
+    
+    const mealDate = input.mealDate || format(new Date(), 'yyyy-MM-dd')
+    const mealTime = input.mealTime || format(new Date(), 'HH:mm')
+    
+    const { error } = await supabase
+      .from('health_meals')
+      .insert({
+        user_id: user.id,
+        meal_date: mealDate,
+        meal_time: mealTime,
+        meal_type: input.mealType,
+        description: input.description,
+        calories: input.calories || null,
+        protein: input.protein || null,
+        carbohydrates: input.carbohydrates || null,
+        fats: input.fats || null,
+        fiber: input.fiber || null,
+        notes: input.notes || null
+      })
+
+    if (error) throw error
+
+    await loadData()
+  }, [user, loadData])
+
+  const updateMeal = useCallback(async (id: string, input: UpdateMealInput) => {
+    const updateData: any = {}
+    
+    if (input.mealDate !== undefined) updateData.meal_date = input.mealDate
+    if (input.mealTime !== undefined) updateData.meal_time = input.mealTime
+    if (input.mealType !== undefined) updateData.meal_type = input.mealType
+    if (input.description !== undefined) updateData.description = input.description
+    if (input.calories !== undefined) updateData.calories = input.calories
+    if (input.protein !== undefined) updateData.protein = input.protein
+    if (input.carbohydrates !== undefined) updateData.carbohydrates = input.carbohydrates
+    if (input.fats !== undefined) updateData.fats = input.fats
+    if (input.fiber !== undefined) updateData.fiber = input.fiber
+    if (input.notes !== undefined) updateData.notes = input.notes
+
+    const { error } = await supabase
+      .from('health_meals')
+      .update(updateData)
+      .eq('id', id)
+
+    if (error) throw error
+
+    await loadData()
+  }, [loadData])
+
+  const deleteMeal = useCallback(async (id: string) => {
+    const { error } = await supabase
+      .from('health_meals')
+      .delete()
+      .eq('id', id)
+
+    if (error) throw error
+
+    setMeals(prev => prev.filter(m => m.id !== id))
+  }, [])
+
+  const createOrUpdateNutritionGoal = useCallback(async (goal: Partial<NutritionGoal>) => {
+    if (!user) return
+
+    // Verificar se já existe uma meta
+    const { data: existing } = await supabase
+      .from('health_nutrition_goals')
+      .select('id')
+      .single()
+
+    if (existing) {
+      const updateData: any = {}
+      if (goal.dailyCalories !== undefined) updateData.daily_calories = goal.dailyCalories
+      if (goal.dailyProtein !== undefined) updateData.daily_protein = goal.dailyProtein
+      if (goal.dailyCarbohydrates !== undefined) updateData.daily_carbohydrates = goal.dailyCarbohydrates
+      if (goal.dailyFats !== undefined) updateData.daily_fats = goal.dailyFats
+
+      const { error } = await supabase
+        .from('health_nutrition_goals')
+        .update(updateData)
+        .eq('id', existing.id)
+
+      if (error) throw error
+    } else {
+      const { error } = await supabase
+        .from('health_nutrition_goals')
+        .insert({
+          user_id: user.id,
+          daily_calories: goal.dailyCalories || null,
+          daily_protein: goal.dailyProtein || null,
+          daily_carbohydrates: goal.dailyCarbohydrates || null,
+          daily_fats: goal.dailyFats || null
+        })
+
+      if (error) throw error
+    }
+
+    await loadData()
+  }, [user, loadData])
+
   // ===== STATS =====
   const weightStats: WeightStats | null = calculateWeightStats(weightLogs)
   const activityStats: ActivityStats | null = calculateActivityStats(activities, goals)
   const sleepStats: SleepStats | null = calculateSleepStats(sleepLogs)
   const hydrationStats: HydrationStats | null = calculateHydrationStats(hydrationLogs, hydrationGoal)
+  const nutritionStats: NutritionStats | null = calculateNutritionStats(meals, nutritionGoal)
   const insights: HealthInsight[] = generateInsights(weightStats, activityStats, sleepStats, goals)
 
   const value: HealthContextValue = {
@@ -562,10 +703,13 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     bodyMeasurements,
     hydrationLogs,
     hydrationGoal,
+    meals,
+    nutritionGoal,
     weightStats,
     activityStats,
     sleepStats,
     hydrationStats,
+    nutritionStats,
     insights,
     createWeightLog,
     updateWeightLog,
@@ -586,6 +730,10 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     updateHydrationLog,
     deleteHydrationLog,
     createOrUpdateHydrationGoal,
+    createMeal,
+    updateMeal,
+    deleteMeal,
+    createOrUpdateNutritionGoal,
     refresh: loadData
   }
 
@@ -697,6 +845,38 @@ function mapHydrationGoal(data: any): HydrationGoal {
     id: data.id,
     userId: data.user_id,
     dailyGoalMl: data.daily_goal_ml,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at
+  }
+}
+
+function mapMeal(data: any): Meal {
+  return {
+    id: data.id,
+    userId: data.user_id,
+    mealDate: data.meal_date,
+    mealTime: data.meal_time,
+    mealType: data.meal_type,
+    description: data.description,
+    calories: data.calories,
+    protein: data.protein,
+    carbohydrates: data.carbohydrates,
+    fats: data.fats,
+    fiber: data.fiber,
+    notes: data.notes,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at
+  }
+}
+
+function mapNutritionGoal(data: any): NutritionGoal {
+  return {
+    id: data.id,
+    userId: data.user_id,
+    dailyCalories: data.daily_calories,
+    dailyProtein: data.daily_protein,
+    dailyCarbohydrates: data.daily_carbohydrates,
+    dailyFats: data.daily_fats,
     createdAt: data.created_at,
     updatedAt: data.updated_at
   }
@@ -821,6 +1001,32 @@ function calculateHydrationStats(logs: HydrationLog[], goal: HydrationGoal | nul
     progress,
     logsToday: todayLogs.length,
     avgDailyLast7Days
+  }
+}
+
+function calculateNutritionStats(meals: Meal[], goal: NutritionGoal | null): NutritionStats | null {
+  if (meals.length === 0) return null
+
+  const today = format(new Date(), 'yyyy-MM-dd')
+  const todayMeals = meals.filter(m => m.mealDate === today)
+
+  const todayCalories = todayMeals.reduce((sum, meal) => sum + (meal.calories || 0), 0)
+  const todayProtein = todayMeals.reduce((sum, meal) => sum + (meal.protein || 0), 0)
+  const todayCarbs = todayMeals.reduce((sum, meal) => sum + (meal.carbohydrates || 0), 0)
+  const todayFats = todayMeals.reduce((sum, meal) => sum + (meal.fats || 0), 0)
+
+  const caloriesProgress = goal?.dailyCalories
+    ? Math.min(100, (todayCalories / goal.dailyCalories) * 100)
+    : 0
+
+  return {
+    todayCalories,
+    todayProtein,
+    todayCarbs,
+    todayFats,
+    dailyGoals: goal || undefined,
+    caloriesProgress,
+    mealsToday: todayMeals.length
   }
 }
 
