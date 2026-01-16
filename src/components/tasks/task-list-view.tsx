@@ -231,9 +231,9 @@ function TaskListRow({ task, onSelectTask, onChangeTaskColumn, renderDate, colum
       <td className="px-6 py-4 font-semibold text-gray-900 dark:text-white whitespace-nowrap">{task.key}</td>
       <td className="px-6 py-4">
         <p className="font-medium text-gray-900 dark:text-white">{task.title}</p>
-        {task.description ? (
-          <p className="text-xs text-gray-500 dark:text-gray-400 max-w-[320px] truncate" title={task.description}>
-            {task.description}
+        {task.subtitle ? (
+          <p className="text-xs text-gray-500 dark:text-gray-400 max-w-[320px] truncate" title={task.subtitle}>
+            {task.subtitle}
           </p>
         ) : null}
       </td>
