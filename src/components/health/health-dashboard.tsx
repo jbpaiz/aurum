@@ -14,6 +14,9 @@ import { SleepCard } from './sleep-card'
 import { SleepChart } from './sleep-chart'
 import { BodyMeasurementsCard } from './body-measurements-card'
 import { BodyMeasurementsChart } from './body-measurements-chart'
+import { HydrationCard } from './hydration-card'
+import { HydrationChart } from './hydration-chart'
+import { HydrationQuickAdd } from './hydration-quick-add'
 import { GoalsCard } from './goals-card'
 import { InsightsCard } from './insights-card'
 import { StatsSummary } from './stats-summary'
@@ -21,8 +24,10 @@ import { WeightLogModal } from './weight-log-modal'
 import { ActivityModal } from './activity-modal'
 import { SleepLogModal } from './sleep-log-modal'
 import { BodyMeasurementsModal } from './body-measurements-modal'
+import { HydrationLogModal } from './hydration-log-modal'
+import { HydrationGoalModal } from './hydration-goal-modal'
 import { GoalModal } from './goal-modal'
-import type { WeightLog, Activity, SleepLog, BodyMeasurement } from '@/types/health'
+import type { WeightLog, Activity, SleepLog, BodyMeasurement, HydrationLog } from '@/types/health'
 
 export function HealthDashboard() {
   const { loading, insights } = useHealth()
@@ -35,6 +40,9 @@ export function HealthDashboard() {
   const [editingSleep, setEditingSleep] = useState<SleepLog | null>(null)
   const [measurementsModalOpen, setMeasurementsModalOpen] = useState(false)
   const [editingMeasurement, setEditingMeasurement] = useState<BodyMeasurement | null>(null)
+  const [hydrationModalOpen, setHydrationModalOpen] = useState(false)
+  const [editingHydration, setEditingHydration] = useState<HydrationLog | null>(null)
+  const [hydrationGoalModalOpen, setHydrationGoalModalOpen] = useState(false)
   const [goalModalOpen, setGoalModalOpen] = useState(false)
 
   const handleEditWeight = (log: WeightLog) => {
@@ -83,6 +91,16 @@ export function HealthDashboard() {
     setEditingMeasurement(null)
   }
 
+  const handleEditHydration = (log: HydrationLog) => {
+    setEditingHydration(log)
+    setHydrationModalOpen(true)
+  }
+
+  const handleCloseHydrationModal = () => {
+    setHydrationModalOpen(false)
+    setEditingHydration(null)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -100,10 +118,11 @@ export function HealthDashboard() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="weight">Peso</TabsTrigger>
           <TabsTrigger value="body">Medidas</TabsTrigger>
+          <TabsTrigger value="hydration">Hidratação</TabsTrigger>
           <TabsTrigger value="activity">Atividades</TabsTrigger>
           <TabsTrigger value="sleep">Sono</TabsTrigger>
         </TabsList>
@@ -185,6 +204,25 @@ export function HealthDashboard() {
             onEditClick={handleEditSleep}
           />
         </TabsContent>
+
+        {/* Hydration Tab */}
+        <TabsContent value="hydration" className="space-y-6">
+          <div className="flex flex-col gap-6">
+            <HydrationQuickAdd onCustomClick={() => setHydrationModalOpen(true)} />
+            <div className="flex justify-end">
+              <Button variant="outline" onClick={() => setHydrationGoalModalOpen(true)}>
+                Definir Meta
+              </Button>
+            </div>
+            <HydrationChart />
+            <HydrationCard 
+              detailed 
+              onAddClick={() => setHydrationModalOpen(true)}
+              onEditClick={handleEditHydration}
+              onGoalClick={() => setHydrationGoalModalOpen(true)}
+            />
+          </div>
+        </TabsContent>
       </Tabs>
 
       {/* Modals */}
@@ -211,6 +249,15 @@ export function HealthDashboard() {
       <GoalModal
         open={goalModalOpen}
         onOpenChange={setGoalModalOpen}
+      />
+      <HydrationLogModal 
+        open={hydrationModalOpen}
+        onClose={handleCloseHydrationModal}
+        editing={editingHydration}
+      />
+      <HydrationGoalModal
+        open={hydrationGoalModalOpen}
+        onClose={() => setHydrationGoalModalOpen(false)}
       />
     </div>
   )
