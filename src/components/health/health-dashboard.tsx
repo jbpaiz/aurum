@@ -140,17 +140,24 @@ export function HealthDashboard() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <div className="w-full overflow-x-auto">
-          <TabsList className="inline-flex w-full min-w-max md:grid md:w-full md:grid-cols-8">
-            <TabsTrigger value="overview" className="whitespace-nowrap">Visão Geral</TabsTrigger>
-            <TabsTrigger value="weight" className="whitespace-nowrap">Peso</TabsTrigger>
-            <TabsTrigger value="body" className="whitespace-nowrap">Medidas</TabsTrigger>
-            <TabsTrigger value="hydration" className="whitespace-nowrap">Hidratação</TabsTrigger>
-            <TabsTrigger value="nutrition" className="whitespace-nowrap">Nutrição</TabsTrigger>
-            <TabsTrigger value="activity" className="whitespace-nowrap">Atividades</TabsTrigger>
-            <TabsTrigger value="sleep" className="whitespace-nowrap">Sono</TabsTrigger>
-            <TabsTrigger value="gamification" className="whitespace-nowrap">Conquistas</TabsTrigger>
-          </TabsList>
+        <div className="relative w-full">
+          {/* Fade gradients */}
+          <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-8 bg-gradient-to-r from-background to-transparent md:hidden" />
+          <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-8 bg-gradient-to-l from-background to-transparent md:hidden" />
+          
+          {/* Scrollable tabs container */}
+          <div className="w-full overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory md:overflow-visible">
+            <TabsList className="inline-flex w-full min-w-max gap-1 px-1 md:grid md:w-full md:grid-cols-8 md:gap-0 md:px-0">
+              <TabsTrigger value="overview" className="whitespace-nowrap snap-start px-4 md:px-3">Visão Geral</TabsTrigger>
+              <TabsTrigger value="weight" className="whitespace-nowrap snap-start px-4 md:px-3">Peso</TabsTrigger>
+              <TabsTrigger value="body" className="whitespace-nowrap snap-start px-4 md:px-3">Medidas</TabsTrigger>
+              <TabsTrigger value="hydration" className="whitespace-nowrap snap-start px-4 md:px-3">Hidratação</TabsTrigger>
+              <TabsTrigger value="nutrition" className="whitespace-nowrap snap-start px-4 md:px-3">Nutrição</TabsTrigger>
+              <TabsTrigger value="activity" className="whitespace-nowrap snap-start px-4 md:px-3">Atividades</TabsTrigger>
+              <TabsTrigger value="sleep" className="whitespace-nowrap snap-start px-4 md:px-3">Sono</TabsTrigger>
+              <TabsTrigger value="gamification" className="whitespace-nowrap snap-start px-4 md:px-3">Conquistas</TabsTrigger>
+            </TabsList>
+          </div>
         </div>
 
         {/* Overview Tab */}
