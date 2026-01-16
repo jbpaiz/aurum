@@ -444,3 +444,17 @@ export const BADGE_ICONS: Record<BadgeType, string> = {
   all_in_one_week: '🌟',
   health_champion: '👑'
 }
+export const MEASUREMENT_LABELS: Record<string, string> = {
+  waist: 'Cintura',
+  hips: 'Quadril',
+  chest: 'Peitoral',
+  neck: 'Pescoço',
+  armLeft: 'Braço Esquerdo',
+  armRight: 'Braço Direito',
+  thighLeft: 'Coxa Esquerda',
+  thighRight: 'Coxa Direita',
+  calfLeft: 'Panturrilha Esquerda',
+  calfRight: 'Panturrilha Direita',
+  bodyFatPercentage: 'Gordura Corporal',
+  muscleMass: 'Massa Muscular'
+}

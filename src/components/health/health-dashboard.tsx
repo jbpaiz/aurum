@@ -12,14 +12,17 @@ import { ActivityCard } from './activity-card'
 import { ActivityChart } from './activity-chart'
 import { SleepCard } from './sleep-card'
 import { SleepChart } from './sleep-chart'
+import { BodyMeasurementsCard } from './body-measurements-card'
+import { BodyMeasurementsChart } from './body-measurements-chart'
 import { GoalsCard } from './goals-card'
 import { InsightsCard } from './insights-card'
 import { StatsSummary } from './stats-summary'
 import { WeightLogModal } from './weight-log-modal'
 import { ActivityModal } from './activity-modal'
 import { SleepLogModal } from './sleep-log-modal'
+import { BodyMeasurementsModal } from './body-measurements-modal'
 import { GoalModal } from './goal-modal'
-import type { WeightLog, Activity, SleepLog } from '@/types/health'
+import type { WeightLog, Activity, SleepLog, BodyMeasurement } from '@/types/health'
 
 export function HealthDashboard() {
   const { loading, insights } = useHealth()
@@ -30,6 +33,8 @@ export function HealthDashboard() {
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null)
   const [sleepModalOpen, setSleepModalOpen] = useState(false)
   const [editingSleep, setEditingSleep] = useState<SleepLog | null>(null)
+  const [measurementsModalOpen, setMeasurementsModalOpen] = useState(false)
+  const [editingMeasurement, setEditingMeasurement] = useState<BodyMeasurement | null>(null)
   const [goalModalOpen, setGoalModalOpen] = useState(false)
 
   const handleEditWeight = (log: WeightLog) => {
@@ -68,6 +73,16 @@ export function HealthDashboard() {
     }
   }
 
+  const handleEditMeasurement = (measurement: BodyMeasurement) => {
+    setEditingMeasurement(measurement)
+    setMeasurementsModalOpen(true)
+  }
+
+  const handleCloseMeasurementsModal = () => {
+    setMeasurementsModalOpen(false)
+    setEditingMeasurement(null)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -85,9 +100,10 @@ export function HealthDashboard() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="weight">Peso</TabsTrigger>
+          <TabsTrigger value="body">Medidas</TabsTrigger>
           <TabsTrigger value="activity">Atividades</TabsTrigger>
           <TabsTrigger value="sleep">Sono</TabsTrigger>
         </TabsList>
@@ -100,6 +116,10 @@ export function HealthDashboard() {
             <ActivityCard onAddClick={() => setActivityModalOpen(true)} />
             <SleepCard onAddClick={() => setSleepModalOpen(true)} />
           </div>
+          <BodyMeasurementsCard 
+            onAddClick={() => setMeasurementsModalOpen(true)}
+            onEditClick={handleEditMeasurement}
+          />
           <GoalsCard onAddClick={() => setGoalModalOpen(true)} />
         </TabsContent>
 
@@ -116,6 +136,21 @@ export function HealthDashboard() {
             detailed 
             onAddClick={() => setWeightModalOpen(true)}
             onEditClick={handleEditWeight}
+          />
+        </TabsContent>
+
+        {/* Body Measurements Tab */}
+        <TabsContent value="body" className="space-y-6">
+          <div className="flex justify-end">
+            <Button onClick={() => setMeasurementsModalOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Nova Medição
+            </Button>
+          </div>
+          <BodyMeasurementsChart />
+          <BodyMeasurementsCard 
+            onAddClick={() => setMeasurementsModalOpen(true)}
+            onEditClick={handleEditMeasurement}
           />
         </TabsContent>
 
@@ -167,6 +202,11 @@ export function HealthDashboard() {
         open={sleepModalOpen}
         onOpenChange={handleCloseSleepModal}
         editingSleep={editingSleep}
+      />
+      <BodyMeasurementsModal
+        open={measurementsModalOpen}
+        onClose={handleCloseMeasurementsModal}
+        editing={editingMeasurement}
       />
       <GoalModal
         open={goalModalOpen}

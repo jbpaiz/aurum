@@ -8,14 +8,17 @@ import type {
   Activity,
   SleepLog,
   HealthGoal,
+  BodyMeasurement,
   CreateWeightLogInput,
   CreateActivityInput,
   CreateSleepLogInput,
   CreateGoalInput,
+  CreateBodyMeasurementInput,
   UpdateWeightLogInput,
   UpdateActivityInput,
   UpdateSleepLogInput,
   UpdateGoalInput,
+  UpdateBodyMeasurementInput,
   WeightStats,
   ActivityStats,
   SleepStats,
@@ -30,6 +33,7 @@ interface HealthContextValue {
   activities: Activity[]
   sleepLogs: SleepLog[]
   goals: HealthGoal[]
+  bodyMeasurements: BodyMeasurement[]
   
   // Stats
   weightStats: WeightStats | null
@@ -57,6 +61,11 @@ interface HealthContextValue {
   updateGoal: (id: string, input: UpdateGoalInput) => Promise<void>
   deleteGoal: (id: string) => Promise<void>
   
+  // Body Measurements
+  createBodyMeasurement: (input: CreateBodyMeasurementInput) => Promise<void>
+  updateBodyMeasurement: (id: string, input: UpdateBodyMeasurementInput) => Promise<void>
+  deleteBodyMeasurement: (id: string) => Promise<void>
+  
   // Refresh
   refresh: () => Promise<void>
 }
@@ -70,6 +79,7 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
   const [activities, setActivities] = useState<Activity[]>([])
   const [sleepLogs, setSleepLogs] = useState<SleepLog[]>([])
   const [goals, setGoals] = useState<HealthGoal[]>([])
+  const [bodyMeasurements, setBodyMeasurements] = useState<BodyMeasurement[]>([])
   
   // Carregar dados
   const loadData = useCallback(async () => {
@@ -78,6 +88,7 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
       setActivities([])
       setSleepLogs([])
       setGoals([])
+      setBodyMeasurements([])
       setLoading(false)
       return
     }
@@ -88,7 +99,7 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
       // Buscar últimos 90 dias
       const ninetyDaysAgo = subDays(new Date(), 90).toISOString()
       
-      const [weightRes, activitiesRes, sleepRes, goalsRes] = await Promise.all([
+      const [weightRes, activitiesRes, sleepRes, goalsRes, measurementsRes] = await Promise.all([
         supabase
           .from('health_weight_logs')
           .select('*')
@@ -111,7 +122,13 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
           .from('health_goals')
           .select('*')
           .eq('is_active', true)
-          .order('created_at', { ascending: false })
+          .order('created_at', { ascending: false }),
+        
+        supabase
+          .from('health_body_measurements')
+          .select('*')
+          .gte('measurement_date', format(subDays(new Date(), 365), 'yyyy-MM-dd'))
+          .order('measurement_date', { ascending: false })
       ])
 
       if (weightRes.data) {
@@ -128,6 +145,10 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
       
       if (goalsRes.data) {
         setGoals(goalsRes.data.map(mapGoal))
+      }
+      
+      if (measurementsRes.data) {
+        setBodyMeasurements(measurementsRes.data.map(mapBodyMeasurement))
       }
     } catch (error) {
       console.error('Erro ao carregar dados de saúde:', error)
@@ -341,6 +362,73 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     setGoals(prev => prev.filter(goal => goal.id !== id))
   }, [])
 
+  // ===== BODY MEASUREMENTS =====
+  const createBodyMeasurement = useCallback(async (input: CreateBodyMeasurementInput) => {
+    if (!user) return
+
+    const { data, error } = await supabase
+      .from('health_body_measurements')
+      .insert({
+        user_id: user.id,
+        measurement_date: input.measurementDate || format(new Date(), 'yyyy-MM-dd'),
+        waist: input.waist || null,
+        hips: input.hips || null,
+        chest: input.chest || null,
+        arm_left: input.armLeft || null,
+        arm_right: input.armRight || null,
+        thigh_left: input.thighLeft || null,
+        thigh_right: input.thighRight || null,
+        calf_left: input.calfLeft || null,
+        calf_right: input.calfRight || null,
+        neck: input.neck || null,
+        body_fat_percentage: input.bodyFatPercentage || null,
+        muscle_mass: input.muscleMass || null,
+        notes: input.notes || null
+      })
+      .select()
+      .single()
+
+    if (error) throw error
+    if (data) {
+      setBodyMeasurements(prev => [mapBodyMeasurement(data), ...prev])
+    }
+  }, [user])
+
+  const updateBodyMeasurement = useCallback(async (id: string, input: UpdateBodyMeasurementInput) => {
+    const { error } = await supabase
+      .from('health_body_measurements')
+      .update({
+        measurement_date: input.measurementDate,
+        waist: input.waist,
+        hips: input.hips,
+        chest: input.chest,
+        arm_left: input.armLeft,
+        arm_right: input.armRight,
+        thigh_left: input.thighLeft,
+        thigh_right: input.thighRight,
+        calf_left: input.calfLeft,
+        calf_right: input.calfRight,
+        neck: input.neck,
+        body_fat_percentage: input.bodyFatPercentage,
+        muscle_mass: input.muscleMass,
+        notes: input.notes
+      })
+      .eq('id', id)
+
+    if (error) throw error
+    await loadData()
+  }, [loadData])
+
+  const deleteBodyMeasurement = useCallback(async (id: string) => {
+    const { error } = await supabase
+      .from('health_body_measurements')
+      .delete()
+      .eq('id', id)
+
+    if (error) throw error
+    setBodyMeasurements(prev => prev.filter(m => m.id !== id))
+  }, [])
+
   // ===== STATS =====
   const weightStats: WeightStats | null = calculateWeightStats(weightLogs)
   const activityStats: ActivityStats | null = calculateActivityStats(activities, goals)
@@ -353,6 +441,7 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     activities,
     sleepLogs,
     goals,
+    bodyMeasurements,
     weightStats,
     activityStats,
     sleepStats,
@@ -369,6 +458,9 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     createGoal,
     updateGoal,
     deleteGoal,
+    createBodyMeasurement,
+    updateBodyMeasurement,
+    deleteBodyMeasurement,
     refresh: loadData
   }
 
@@ -434,6 +526,29 @@ function mapGoal(data: any): HealthGoal {
     targetValue: Number(data.target_value),
     targetDate: data.target_date,
     isActive: data.is_active,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at
+  }
+}
+
+function mapBodyMeasurement(data: any): BodyMeasurement {
+  return {
+    id: data.id,
+    userId: data.user_id,
+    measurementDate: data.measurement_date,
+    waist: data.waist ? Number(data.waist) : null,
+    hips: data.hips ? Number(data.hips) : null,
+    chest: data.chest ? Number(data.chest) : null,
+    armLeft: data.arm_left ? Number(data.arm_left) : null,
+    armRight: data.arm_right ? Number(data.arm_right) : null,
+    thighLeft: data.thigh_left ? Number(data.thigh_left) : null,
+    thighRight: data.thigh_right ? Number(data.thigh_right) : null,
+    calfLeft: data.calf_left ? Number(data.calf_left) : null,
+    calfRight: data.calf_right ? Number(data.calf_right) : null,
+    neck: data.neck ? Number(data.neck) : null,
+    bodyFatPercentage: data.body_fat_percentage ? Number(data.body_fat_percentage) : null,
+    muscleMass: data.muscle_mass ? Number(data.muscle_mass) : null,
+    notes: data.notes,
     createdAt: data.created_at,
     updatedAt: data.updated_at
   }
