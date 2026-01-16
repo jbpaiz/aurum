@@ -33,14 +33,14 @@ export function HealthDashboard() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Insights */}
       {insights.length > 0 && (
         <InsightsCard insights={insights} />
       )}
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="weight">Peso</TabsTrigger>
@@ -49,8 +49,8 @@ export function HealthDashboard() {
         </TabsList>
 
         {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             <WeightCard onAddClick={() => setWeightModalOpen(true)} />
             <ActivityCard onAddClick={() => setActivityModalOpen(true)} />
             <SleepCard onAddClick={() => setSleepModalOpen(true)} />
@@ -59,7 +59,7 @@ export function HealthDashboard() {
         </TabsContent>
 
         {/* Weight Tab */}
-        <TabsContent value="weight" className="space-y-4">
+        <TabsContent value="weight" className="space-y-6">
           <div className="flex justify-end">
             <Button onClick={() => setWeightModalOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
@@ -70,7 +70,7 @@ export function HealthDashboard() {
         </TabsContent>
 
         {/* Activity Tab */}
-        <TabsContent value="activity" className="space-y-4">
+        <TabsContent value="activity" className="space-y-6">
           <div className="flex justify-end">
             <Button onClick={() => setActivityModalOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
@@ -81,7 +81,7 @@ export function HealthDashboard() {
         </TabsContent>
 
         {/* Sleep Tab */}
-        <TabsContent value="sleep" className="space-y-4">
+        <TabsContent value="sleep" className="space-y-6">
           <div className="flex justify-end">
             <Button onClick={() => setSleepModalOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
