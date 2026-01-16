@@ -1,20 +1,35 @@
 'use client'
 
 import { useMemo } from 'react'
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { TrendingUp, TrendingDown, Minus, Edit2, Trash2 } from 'lucide-react'
 import { useHealth } from '@/contexts/health-context'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import type { WeightLog } from '@/types/health'
+import { toast } from 'sonner'
 
 interface WeightCardProps {
   detailed?: boolean
   onAddClick?: () => void
+  onEditClick?: (log: WeightLog) => void
 }
 
-export function WeightCard({ detailed = false, onAddClick }: WeightCardProps) {
-  const { weightLogs, weightStats } = useHealth()
+export function WeightCard({ detailed = false, onAddClick, onEditClick }: WeightCardProps) {
+  const { weightLogs, weightStats, deleteWeightLog } = useHealth()
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Deseja realmente excluir este registro?')) return
+    
+    try {
+      await deleteWeightLog(id)
+      toast.success('Registro excluído com sucesso!')
+    } catch (error) {
+      console.error('Erro ao excluir:', error)
+      toast.error('Erro ao excluir registro')
+    }
+  }
 
   const recentLogs = useMemo(() => {
     return weightLogs.slice(0, detailed ? 30 : 5)
@@ -103,18 +118,38 @@ export function WeightCard({ detailed = false, onAddClick }: WeightCardProps) {
             <h4 className="text-sm font-medium">Histórico</h4>
             <div className="space-y-2 max-h-[400px] overflow-y-auto">
               {recentLogs.map(log => (
-                <div key={log.id} className="flex items-center justify-between text-sm border-b pb-2 last:border-0">
-                  <div className="flex flex-col">
+                <div key={log.id} className="flex items-center justify-between text-sm border-b pb-2 last:border-0 gap-2">
+                  <div className="flex flex-col flex-1">
                     <span className="font-medium">{log.weight} kg</span>
                     <span className="text-xs text-muted-foreground">
                       {format(new Date(log.recordedAt), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
                     </span>
+                    {log.note && (
+                      <span className="text-xs text-muted-foreground mt-1">
+                        {log.note}
+                      </span>
+                    )}
                   </div>
-                  {log.note && (
-                    <span className="text-xs text-muted-foreground max-w-[150px] truncate">
-                      {log.note}
-                    </span>
-                  )}
+                  <div className="flex gap-1">
+                    {onEditClick && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8"
+                        onClick={() => onEditClick(log)}
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={() => handleDelete(log.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>

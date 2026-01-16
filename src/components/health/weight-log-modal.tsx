@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useHealth } from '@/contexts/health-context'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -8,19 +8,37 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
+import type { WeightLog } from '@/types/health'
 
 interface WeightLogModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  editingLog?: WeightLog | null
 }
 
-export function WeightLogModal({ open, onOpenChange }: WeightLogModalProps) {
-  const { createWeightLog } = useHealth()
+export function WeightLogModal({ open, onOpenChange, editingLog }: WeightLogModalProps) {
+  const { createWeightLog, updateWeightLog } = useHealth()
   const [loading, setLoading] = useState(false)
   const [weight, setWeight] = useState('')
   const [recordedDate, setRecordedDate] = useState(new Date().toISOString().split('T')[0])
   const [recordedTime, setRecordedTime] = useState(new Date().toTimeString().slice(0, 5))
   const [note, setNote] = useState('')
+
+  // Preencher campos ao editar
+  useEffect(() => {
+    if (editingLog) {
+      setWeight(editingLog.weight.toString())
+      const date = new Date(editingLog.recordedAt)
+      setRecordedDate(date.toISOString().split('T')[0])
+      setRecordedTime(date.toTimeString().slice(0, 5))
+      setNote(editingLog.note || '')
+    } else {
+      setWeight('')
+      setRecordedDate(new Date().toISOString().split('T')[0])
+      setRecordedTime(new Date().toTimeString().slice(0, 5))
+      setNote('')
+    }
+  }, [editingLog, open])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,21 +52,31 @@ export function WeightLogModal({ open, onOpenChange }: WeightLogModalProps) {
     try {
       setLoading(true)
       const recordedAt = new Date(`${recordedDate}T${recordedTime}`).toISOString()
-      await createWeightLog({
-        weight: weightNum,
-        recordedAt,
-        note: note || undefined
-      })
       
-      toast.success('Peso registrado com sucesso!')
+      if (editingLog) {
+        await updateWeightLog(editingLog.id, {
+          weight: weightNum,
+          recordedAt,
+          note: note || undefined
+        })
+        toast.success('Peso atualizado com sucesso!')
+      } else {
+        await createWeightLog({
+          weight: weightNum,
+          recordedAt,
+          note: note || undefined
+        })
+        toast.success('Peso registrado com sucesso!')
+      }
+      
       setWeight('')
       setRecordedDate(new Date().toISOString().split('T')[0])
       setRecordedTime(new Date().toTimeString().slice(0, 5))
       setNote('')
       onOpenChange(false)
     } catch (error) {
-      console.error('Erro ao registrar peso:', error)
-      toast.error('Erro ao registrar peso')
+      console.error('Erro ao salvar peso:', error)
+      toast.error('Erro ao salvar peso')
     } finally {
       setLoading(false)
     }
@@ -58,9 +86,9 @@ export function WeightLogModal({ open, onOpenChange }: WeightLogModalProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Registrar Peso</DialogTitle>
+          <DialogTitle>{editingLog ? 'Editar Peso' : 'Registrar Peso'}</DialogTitle>
           <DialogDescription>
-            Adicione sua medição de peso atual
+            {editingLog ? 'Atualize sua medição de peso' : 'Adicione sua medição de peso atual'}
           </DialogDescription>
         </DialogHeader>
         

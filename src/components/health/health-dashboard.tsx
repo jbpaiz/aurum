@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { WeightCard } from './weight-card'
+import { WeightChart } from './weight-chart'
 import { ActivityCard } from './activity-card'
 import { SleepCard } from './sleep-card'
 import { GoalsCard } from './goals-card'
@@ -15,14 +16,28 @@ import { WeightLogModal } from './weight-log-modal'
 import { ActivityModal } from './activity-modal'
 import { SleepLogModal } from './sleep-log-modal'
 import { GoalModal } from './goal-modal'
+import type { WeightLog } from '@/types/health'
 
 export function HealthDashboard() {
   const { loading, insights } = useHealth()
   const [activeTab, setActiveTab] = useState('overview')
   const [weightModalOpen, setWeightModalOpen] = useState(false)
+  const [editingWeightLog, setEditingWeightLog] = useState<WeightLog | null>(null)
   const [activityModalOpen, setActivityModalOpen] = useState(false)
   const [sleepModalOpen, setSleepModalOpen] = useState(false)
   const [goalModalOpen, setGoalModalOpen] = useState(false)
+
+  const handleEditWeight = (log: WeightLog) => {
+    setEditingWeightLog(log)
+    setWeightModalOpen(true)
+  }
+
+  const handleCloseWeightModal = (open: boolean) => {
+    setWeightModalOpen(open)
+    if (!open) {
+      setEditingWeightLog(null)
+    }
+  }
 
   if (loading) {
     return (
@@ -66,7 +81,12 @@ export function HealthDashboard() {
               Adicionar Peso
             </Button>
           </div>
-          <WeightCard detailed onAddClick={() => setWeightModalOpen(true)} />
+          <WeightChart />
+          <WeightCard 
+            detailed 
+            onAddClick={() => setWeightModalOpen(true)}
+            onEditClick={handleEditWeight}
+          />
         </TabsContent>
 
         {/* Activity Tab */}
@@ -95,7 +115,8 @@ export function HealthDashboard() {
       {/* Modals */}
       <WeightLogModal 
         open={weightModalOpen} 
-        onOpenChange={setWeightModalOpen}
+        onOpenChange={handleCloseWeightModal}
+        editingLog={editingWeightLog}
       />
       <ActivityModal
         open={activityModalOpen}
