@@ -15,6 +15,8 @@ function mapDbToPreferences(data: any): UserPreferences {
     tasksViewMode: data.tasks_view_mode,
     tasksAdaptiveWidth: data.tasks_adaptive_width,
     tasksAdaptiveWidthList: data.tasks_adaptive_width_list,
+    tasksSortKey: data.tasks_sort_key || 'startDate',
+    tasksSortDirection: data.tasks_sort_direction || 'asc',
     activeProjectId: data.active_project_id,
     activeBoardId: data.active_board_id,
     createdAt: data.created_at,
@@ -31,6 +33,8 @@ function mapPreferencesToDb(preferences: UserPreferencesInput): Record<string, a
   if (preferences.tasksViewMode !== undefined) mapped.tasks_view_mode = preferences.tasksViewMode
   if (preferences.tasksAdaptiveWidth !== undefined) mapped.tasks_adaptive_width = preferences.tasksAdaptiveWidth
   if (preferences.tasksAdaptiveWidthList !== undefined) mapped.tasks_adaptive_width_list = preferences.tasksAdaptiveWidthList
+  if (preferences.tasksSortKey !== undefined) mapped.tasks_sort_key = preferences.tasksSortKey
+  if (preferences.tasksSortDirection !== undefined) mapped.tasks_sort_direction = preferences.tasksSortDirection
   if (preferences.activeProjectId !== undefined) mapped.active_project_id = preferences.activeProjectId
   if (preferences.activeBoardId !== undefined) mapped.active_board_id = preferences.activeBoardId
   
@@ -62,6 +66,8 @@ export function useUserPreferences() {
       tasks_view_mode: localViewMode || 'kanban',
       tasks_adaptive_width: localAdaptiveWidth,
       tasks_adaptive_width_list: localAdaptiveWidthList,
+      tasks_sort_key: 'startDate',
+      tasks_sort_direction: 'asc',
       active_project_id: localActiveProjectId,
       active_board_id: localActiveBoardId,
     }

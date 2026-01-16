@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useCallback, type ReactNode } from 'react'
+import { useMemo, useState, useCallback, useEffect, type ReactNode } from 'react'
 import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
@@ -9,6 +9,7 @@ import { TASK_PRIORITY_COLORS, TASK_PRIORITY_LABELS } from '@/types/tasks'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { useTasks } from '@/contexts/tasks-context'
+import { useUserPreferences } from '@/hooks/use-user-preferences'
 
 type SortKey = 'key' | 'title' | 'labels' | 'startDate' | 'endDate' | 'columnName' | 'priority'
 type SortDirection = 'asc' | 'desc'
@@ -32,6 +33,8 @@ interface TaskListViewProps {
 
 export function TaskListView({ columns, referenceColumns, onSelectTask, onCreateTask, onChangeTaskColumn, adaptiveWidth = false }: TaskListViewProps) {
   const { priorityField } = useTasks()
+  const { preferences, updatePreferences } = useUserPreferences()
+  
   const tasks = useMemo<TaskWithMeta[]>(() => {
     return columns.flatMap((column) =>
       column.tasks.map((task) => ({
@@ -45,6 +48,16 @@ export function TaskListView({ columns, referenceColumns, onSelectTask, onCreate
 
   const [sortConfig, setSortConfig] = useState<SortConfig | null>(null)
   const columnOptions = referenceColumns ?? columns
+
+  // Carregar ordenação salva ao montar o componente
+  useEffect(() => {
+    if (preferences && !sortConfig) {
+      setSortConfig({
+        key: preferences.tasksSortKey,
+        direction: preferences.tasksSortDirection
+      })
+    }
+  }, [preferences, sortConfig])
 
   const renderDate = (date?: string | null) => {
     if (!date) return <span className="text-gray-400 dark:text-gray-500">Sem data</span>
@@ -101,15 +114,19 @@ export function TaskListView({ columns, referenceColumns, onSelectTask, onCreate
 
   const handleSort = useCallback((key: SortKey) => {
     setSortConfig((current) => {
-      if (!current || current.key !== key) {
-        return { key, direction: 'asc' }
-      }
-      return {
-        key,
-        direction: current.direction === 'asc' ? 'desc' : 'asc'
-      }
+      const newConfig = !current || current.key !== key
+        ? { key, direction: 'asc' as SortDirection }
+        : { key, direction: (current.direction === 'asc' ? 'desc' : 'asc') as SortDirection }
+      
+      // Salvar preferência no banco
+      updatePreferences({
+        tasksSortKey: newConfig.key,
+        tasksSortDirection: newConfig.direction
+      })
+      
+      return newConfig
     })
-  }, [])
+  }, [updatePreferences])
 
   if (!tasks.length) {
     return (

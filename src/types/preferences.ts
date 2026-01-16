@@ -1,6 +1,8 @@
 export type Theme = 'light' | 'dark' | 'system'
 export type HubId = 'finance' | 'tasks'
 export type TasksViewMode = 'kanban' | 'list' | 'metrics'
+export type TasksSortKey = 'key' | 'title' | 'labels' | 'startDate' | 'endDate' | 'columnName' | 'priority'
+export type TasksSortDirection = 'asc' | 'desc'
 
 export interface UserPreferences {
   id: string
@@ -10,6 +12,8 @@ export interface UserPreferences {
   tasksViewMode: TasksViewMode
   tasksAdaptiveWidth: boolean
   tasksAdaptiveWidthList: boolean
+  tasksSortKey: TasksSortKey
+  tasksSortDirection: TasksSortDirection
   activeProjectId?: string
   activeBoardId?: string
   createdAt: string
@@ -22,6 +26,8 @@ export interface UserPreferencesInput {
   tasksViewMode?: TasksViewMode
   tasksAdaptiveWidth?: boolean
   tasksAdaptiveWidthList?: boolean
+  tasksSortKey?: TasksSortKey
+  tasksSortDirection?: TasksSortDirection
   activeProjectId?: string
   activeBoardId?: string
 }
