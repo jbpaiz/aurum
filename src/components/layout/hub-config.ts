@@ -1,7 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
-import { DollarSign, Kanban, Activity } from 'lucide-react'
+import { DollarSign, Kanban, Activity, Car } from 'lucide-react'
 
-export type HubId = 'finance' | 'tasks' | 'health'
+export type HubId = 'finance' | 'tasks' | 'health' | 'vehicles'
 
 export interface HubMeta {
   id: HubId
@@ -40,6 +40,15 @@ export const HUB_META: Record<HubId, HubMeta> = {
     accent: 'from-green-600 to-teal-500',
     icon: Activity,
     entryHref: '/health'
+  },
+  vehicles: {
+    id: 'vehicles',
+    name: 'Veículos',
+    description: 'Frota, manutenção e compliance',
+    tagline: 'Mobilidade, custos e documentos',
+    accent: 'from-blue-600 to-cyan-500',
+    icon: Car,
+    entryHref: '/vehicles'
   }
 }
 
@@ -56,5 +65,6 @@ export const resolveHubId = (pathname: string | null | undefined): HubId => {
   }
   if (pathname.startsWith('/tasks')) return 'tasks'
   if (pathname.startsWith('/health')) return 'health'
+  if (pathname.startsWith('/vehicles')) return 'vehicles'
   return 'finance'
 }

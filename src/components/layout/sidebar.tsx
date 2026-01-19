@@ -20,7 +20,8 @@ import {
   Bell,
   Kanban,
   ChevronDown,
-  Columns2
+  Columns2,
+  Car
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { HUB_META, resolveHubId, type HubId } from '@/components/layout/hub-config'
@@ -62,6 +63,11 @@ const financeMenuItems: NavigationItem[] = [
     href: '/cards'
   },
   {
+    title: 'Veículos',
+    icon: Car,
+    href: '/vehicles'
+  },
+  {
     title: 'Relatórios',
     icon: PieChart,
     href: '/reports'
@@ -75,6 +81,14 @@ const financeMenuItems: NavigationItem[] = [
     title: 'Planejamento',
     icon: Calendar,
     href: '/planning'
+  }
+]
+
+const vehiclesMenuItems: NavigationItem[] = [
+  {
+    title: 'Frota',
+    icon: Car,
+    href: '/vehicles'
   }
 ]
 
@@ -118,6 +132,10 @@ const hubNavigation = {
   health: {
     ...HUB_META.health,
     menu: healthMenuItems
+  },
+  vehicles: {
+    ...HUB_META.vehicles,
+    menu: vehiclesMenuItems
   }
 } as const
 
