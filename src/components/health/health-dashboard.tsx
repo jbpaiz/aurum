@@ -24,7 +24,6 @@ import { PointsDisplay } from './points-display'
 import { AchievementsCard } from './achievements-card'
 import { ChallengesCard } from './challenges-card'
 import { GoalsCard } from './goals-card'
-import { InsightsCard } from './insights-card'
 import { StatsSummary } from './stats-summary'
 import { WeightLogModal } from './weight-log-modal'
 import { ActivityModal } from './activity-modal'
@@ -38,7 +37,7 @@ import { GoalModal } from './goal-modal'
 import type { WeightLog, Activity, SleepLog, BodyMeasurement, HydrationLog, Meal } from '@/types/health'
 
 export function HealthDashboard() {
-  const { loading, insights } = useHealth()
+  const { loading } = useHealth()
   const [activeTab, setActiveTab] = useState('overview')
   const [weightModalOpen, setWeightModalOpen] = useState(false)
   const [editingWeightLog, setEditingWeightLog] = useState<WeightLog | null>(null)
@@ -122,10 +121,6 @@ export function HealthDashboard() {
     setEditingMeal(null)
   }
 
-  const weightInsights = insights.filter((insight) => insight.type === 'weight')
-  const activityInsights = insights.filter((insight) => insight.type === 'activity')
-  const sleepInsights = insights.filter((insight) => insight.type === 'sleep')
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -176,7 +171,6 @@ export function HealthDashboard() {
               Adicionar Peso
             </Button>
           </div>
-          {weightInsights.length > 0 && <InsightsCard insights={weightInsights} />}
           <WeightChart />
           <WeightCard 
             detailed 
@@ -208,7 +202,6 @@ export function HealthDashboard() {
               Registrar Atividade
             </Button>
           </div>
-          {activityInsights.length > 0 && <InsightsCard insights={activityInsights} />}
           <ActivityChart />
           <ActivityCard 
             detailed 
@@ -225,7 +218,6 @@ export function HealthDashboard() {
               Registrar Sono
             </Button>
           </div>
-          {sleepInsights.length > 0 && <InsightsCard insights={sleepInsights} />}
           <SleepChart />
           <SleepCard 
             detailed 

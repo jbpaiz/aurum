@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { TrendingUp, TrendingDown, Minus, Edit2, Trash2, AlertTriangle, Plus, Minus as MinusIcon } from 'lucide-react'
+import { TrendingUp, TrendingDown, Minus, Edit2, Trash2, Plus, Minus as MinusIcon } from 'lucide-react'
 import { useHealth } from '@/contexts/health-context'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -50,11 +50,6 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
   }, [weightLogs, detailed])
 
   const latestLog = weightLogs[0]
-
-  const weeklyChangePercent = weightStats?.weeklyChange && weightStats.current ? (weightStats.weeklyChange / weightStats.current) * 100 : null
-  const monthlyChangePercent = weightStats?.monthlyChange && weightStats.current ? (weightStats.monthlyChange / weightStats.current) * 100 : null
-
-  const showAlert = (weeklyChangePercent && Math.abs(weeklyChangePercent) >= 2.5) || (monthlyChangePercent && Math.abs(monthlyChangePercent) >= 5)
 
   const getTrendIcon = () => {
     if (!weightStats) return <Minus className="h-4 w-4 text-muted-foreground" />
@@ -113,13 +108,27 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
   return weightStats ? (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
+        <CardTitle className="flex items-start justify-between gap-3">
           <span>Peso</span>
-          {onAddClick && (
-            <Button size="sm" variant="outline" onClick={onAddClick}>
-              Adicionar
-            </Button>
-          )}
+          <div className="flex flex-wrap gap-2 justify-end">
+            {[-0.6, -0.5, -0.2, -0.1, 0.1, 0.2, 0.5, 0.6].map(delta => (
+              <Button
+                key={delta}
+                size="sm"
+                variant="secondary"
+                onClick={() => handleQuickAdjust(delta)}
+                className="flex items-center gap-1"
+              >
+                {delta < 0 ? <MinusIcon className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                {Math.abs(delta)} kg
+              </Button>
+            ))}
+            {onAddClick && (
+              <Button size="sm" variant="outline" onClick={onAddClick}>
+                Adicionar
+              </Button>
+            )}
+          </div>
         </CardTitle>
         <CardDescription>
           {weightStats.todayCount > 0 ? 'Peso de hoje' : 'Última medição'}
@@ -207,70 +216,7 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
           )}
         </div>
 
-        {/* Alerts */}
-        {showAlert && (
-          <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-            <AlertTriangle className="h-4 w-4 mt-0.5" />
-            <div>
-              Variação acentuada detectada. Revise alimentação/hidratação e confirme a precisão das medições.
-            </div>
-          </div>
-        )}
-
-        {/* Comparisons & Trend */}
-        <div className="grid grid-cols-2 gap-2 text-sm">
-          <div className="rounded-md border p-3">
-            <p className="text-xs text-muted-foreground">7 dias</p>
-            <p className={`text-base font-medium ${weeklyChangePercent ? (weeklyChangePercent > 0 ? 'text-orange-500' : 'text-green-600') : ''}`}>
-              {weeklyChangePercent ? `${weeklyChangePercent > 0 ? '+' : ''}${weeklyChangePercent.toFixed(1)}%` : '—'}
-            </p>
-            {weightStats.weeklyChange !== null && weightStats.weeklyChange !== undefined && (
-              <p className="text-xs text-muted-foreground">{weightStats.weeklyChange > 0 ? 'Aumento' : 'Redução'} de {Math.abs(weightStats.weeklyChange).toFixed(1)} kg</p>
-            )}
-          </div>
-          <div className="rounded-md border p-3">
-            <p className="text-xs text-muted-foreground">30 dias</p>
-            <p className={`text-base font-medium ${monthlyChangePercent ? (monthlyChangePercent > 0 ? 'text-orange-500' : 'text-green-600') : ''}`}>
-              {monthlyChangePercent ? `${monthlyChangePercent > 0 ? '+' : ''}${monthlyChangePercent.toFixed(1)}%` : '—'}
-            </p>
-            {weightStats.monthlyChange !== null && weightStats.monthlyChange !== undefined && (
-              <p className="text-xs text-muted-foreground">{weightStats.monthlyChange > 0 ? 'Aumento' : 'Redução'} de {Math.abs(weightStats.monthlyChange).toFixed(1)} kg</p>
-            )}
-          </div>
-          <div className="rounded-md border p-3">
-            <p className="text-xs text-muted-foreground">Melhor semana</p>
-            <p className="text-base font-medium text-green-600">{weightStats.bestWeekChange ? `${weightStats.bestWeekChange.toFixed(1)} kg` : '—'}</p>
-          </div>
-          <div className="rounded-md border p-3">
-            <p className="text-xs text-muted-foreground">Pior semana</p>
-            <p className="text-base font-medium text-orange-500">{weightStats.worstWeekChange ? `${weightStats.worstWeekChange.toFixed(1)} kg` : '—'}</p>
-          </div>
-          <div className="rounded-md border p-3 col-span-2">
-            <div className="flex items-center justify-between text-sm">
-              <span>Tendência</span>
-              <span className="text-muted-foreground">{weightStats.trendKgPerWeek ? `${weightStats.trendKgPerWeek.toFixed(2)} kg/sem` : '—'}</span>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {weightStats.etaWeeksToGoal ? `Projeção de ${weightStats.etaWeeksToGoal} semana(s) até a meta` : 'Sem projeção para meta atual'}
-            </p>
-          </div>
-        </div>
-
-        {/* Quick actions */}
-        <div className="flex flex-wrap gap-2 items-center">
-          {[-0.6, -0.5, -0.2, -0.1, 0.1, 0.2, 0.5, 0.6].map(delta => (
-            <Button
-              key={delta}
-              size="sm"
-              variant="secondary"
-              onClick={() => handleQuickAdjust(delta)}
-              className="flex items-center gap-1"
-            >
-              {delta < 0 ? <MinusIcon className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-              {Math.abs(delta)} kg
-            </Button>
-          ))}
-        </div>
+        {/* Insights removidos */}
 
         {/* Recent Logs */}
         {detailed && recentLogs.length > 0 && (
