@@ -296,6 +296,22 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
 
     const allTasks = activeBoard?.columns.flatMap(col => col.tasks) ?? []
 
+    const normalizedTitle = title.trim().toLowerCase()
+    const normalizedSubtitle = subtitle.trim().toLowerCase()
+
+    const duplicatePair = allTasks.find(
+      (t) =>
+        (t.title?.trim().toLowerCase() ?? '') === normalizedTitle &&
+        (t.subtitle?.trim().toLowerCase() ?? '') === normalizedSubtitle &&
+        t.id !== task?.id
+    )
+
+    if (duplicatePair) {
+      setFormError('Já existe uma tarefa com o mesmo título e subtítulo. Use outra combinação.')
+      setIsSaving(false)
+      return
+    }
+
     // Validar código duplicado se fornecido (exceto ao editar a própria tarefa)
     if (normalizedKey) {
       const duplicateKey = allTasks.find(
