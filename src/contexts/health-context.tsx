@@ -380,11 +380,14 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
 
   // ===== SLEEP LOGS =====
   const createSleepLog = useCallback(async (input: CreateSleepLogInput) => {
-    if (!user) return
+    if (!user) throw new Error('Usuário não autenticado')
 
     const bedtime = new Date(input.bedtime)
     const wakeTime = new Date(input.wakeTime)
-    const durationMinutes = differenceInMinutes(wakeTime, bedtime)
+    let durationMinutes = differenceInMinutes(wakeTime, bedtime)
+    if (durationMinutes <= 0) {
+      durationMinutes += 24 * 60
+    }
 
     const { data, error } = await supabase
       .from('health_sleep_logs')
@@ -410,6 +413,9 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     let durationMinutes: number | undefined
     if (input.bedtime && input.wakeTime) {
       durationMinutes = differenceInMinutes(new Date(input.wakeTime), new Date(input.bedtime))
+      if (durationMinutes <= 0) {
+        durationMinutes += 24 * 60
+      }
     }
 
     const { error } = await supabase
@@ -826,6 +832,13 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
       await loadData()
     }
   }, [user, weightLogs, activities, sleepLogs, hydrationLogs, meals, badges, userStats, loadData])
+
+  useEffect(() => {
+    if (!user || loading) return
+    checkAndAwardBadges().catch((error) => {
+      console.error('Erro ao verificar conquistas:', error)
+    })
+  }, [checkAndAwardBadges, user, loading, weightLogs, activities, sleepLogs, hydrationLogs, meals])
 
   // ===== STATS =====
   const weightStats: WeightStats | null = calculateWeightStats(weightLogs)

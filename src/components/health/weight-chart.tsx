@@ -64,12 +64,12 @@ export function WeightChart() {
       })
 
       return Array.from(dayGroups.entries())
+        .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
         .map(([day, weights]) => ({
           date: format(new Date(day), 'dd/MM', { locale: ptBR }),
           fullDate: format(new Date(day), "dd 'de' MMMM", { locale: ptBR }),
           weight: weights.reduce((a, b) => a + b, 0) / weights.length
         }))
-        .sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime())
     } else if (period === 'year') {
       // Média por semana
       const weekGroups = new Map<string, number[]>()
@@ -83,12 +83,12 @@ export function WeightChart() {
       })
 
       return Array.from(weekGroups.entries())
+        .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
         .map(([week, weights]) => ({
           date: format(new Date(week), 'dd/MM', { locale: ptBR }),
           fullDate: format(new Date(week), "dd 'de' MMMM", { locale: ptBR }),
           weight: weights.reduce((a, b) => a + b, 0) / weights.length
         }))
-        .sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime())
     } else {
       // Média por mês
       const monthGroups = new Map<string, number[]>()
@@ -102,12 +102,12 @@ export function WeightChart() {
       })
 
       return Array.from(monthGroups.entries())
+        .sort((a, b) => new Date(a[0] + '-01').getTime() - new Date(b[0] + '-01').getTime())
         .map(([month, weights]) => ({
           date: format(new Date(month + '-01'), 'MMM/yy', { locale: ptBR }),
           fullDate: format(new Date(month + '-01'), "MMMM 'de' yyyy", { locale: ptBR }),
           weight: weights.reduce((a, b) => a + b, 0) / weights.length
         }))
-        .sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime())
     }
   }, [weightLogs, period])
 

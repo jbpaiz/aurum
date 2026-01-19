@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { useHealth } from '@/contexts/health-context'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { WeightCard } from './weight-card'
 import { WeightChart } from './weight-chart'
@@ -123,6 +122,10 @@ export function HealthDashboard() {
     setEditingMeal(null)
   }
 
+  const weightInsights = insights.filter((insight) => insight.type === 'weight')
+  const activityInsights = insights.filter((insight) => insight.type === 'activity')
+  const sleepInsights = insights.filter((insight) => insight.type === 'sleep')
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -133,29 +136,19 @@ export function HealthDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Insights */}
-      {insights.length > 0 && (
-        <InsightsCard insights={insights} />
-      )}
-
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <div className="relative w-full">
-          {/* Fade gradients */}
-          <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-8 bg-gradient-to-r from-background to-transparent md:hidden" />
-          <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-8 bg-gradient-to-l from-background to-transparent md:hidden" />
-          
-          {/* Scrollable tabs container */}
+        <div className="w-full">
           <div className="w-full overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory md:overflow-visible">
-            <TabsList className="inline-flex w-full min-w-max gap-1 px-1 md:grid md:w-full md:grid-cols-8 md:gap-0 md:px-0">
-              <TabsTrigger value="overview" className="whitespace-nowrap snap-start px-4 md:px-3">Visão Geral</TabsTrigger>
-              <TabsTrigger value="weight" className="whitespace-nowrap snap-start px-4 md:px-3">Peso</TabsTrigger>
-              <TabsTrigger value="body" className="whitespace-nowrap snap-start px-4 md:px-3">Medidas</TabsTrigger>
-              <TabsTrigger value="hydration" className="whitespace-nowrap snap-start px-4 md:px-3">Hidratação</TabsTrigger>
-              <TabsTrigger value="nutrition" className="whitespace-nowrap snap-start px-4 md:px-3">Nutrição</TabsTrigger>
-              <TabsTrigger value="activity" className="whitespace-nowrap snap-start px-4 md:px-3">Atividades</TabsTrigger>
-              <TabsTrigger value="sleep" className="whitespace-nowrap snap-start px-4 md:px-3">Sono</TabsTrigger>
-              <TabsTrigger value="gamification" className="whitespace-nowrap snap-start px-4 md:px-3">Conquistas</TabsTrigger>
+            <TabsList className="flex h-auto w-full flex-wrap items-center gap-2 rounded-lg border border-border/60 bg-background/70 p-1 md:grid md:w-full md:grid-cols-8 md:gap-2 md:p-2">
+              <TabsTrigger value="overview" className="whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">Visão Geral</TabsTrigger>
+              <TabsTrigger value="weight" className="whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">Peso</TabsTrigger>
+              <TabsTrigger value="body" className="whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">Medidas</TabsTrigger>
+              <TabsTrigger value="hydration" className="whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">Hidratação</TabsTrigger>
+              <TabsTrigger value="nutrition" className="whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">Nutrição</TabsTrigger>
+              <TabsTrigger value="activity" className="whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">Atividades</TabsTrigger>
+              <TabsTrigger value="sleep" className="whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">Sono</TabsTrigger>
+              <TabsTrigger value="gamification" className="whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">Conquistas</TabsTrigger>
             </TabsList>
           </div>
         </div>
@@ -183,6 +176,7 @@ export function HealthDashboard() {
               Adicionar Peso
             </Button>
           </div>
+          {weightInsights.length > 0 && <InsightsCard insights={weightInsights} />}
           <WeightChart />
           <WeightCard 
             detailed 
@@ -214,6 +208,7 @@ export function HealthDashboard() {
               Registrar Atividade
             </Button>
           </div>
+          {activityInsights.length > 0 && <InsightsCard insights={activityInsights} />}
           <ActivityChart />
           <ActivityCard 
             detailed 
@@ -230,6 +225,7 @@ export function HealthDashboard() {
               Registrar Sono
             </Button>
           </div>
+          {sleepInsights.length > 0 && <InsightsCard insights={sleepInsights} />}
           <SleepChart />
           <SleepCard 
             detailed 

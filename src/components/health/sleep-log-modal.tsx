@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { SLEEP_QUALITY_LABELS, type SleepQuality, type SleepLog } from '@/types/health'
 import { toast } from 'sonner'
-import { format, subDays } from 'date-fns'
+import { addDays, differenceInMinutes, format, startOfDay } from 'date-fns'
 
 interface SleepLogModalProps {
   open: boolean
@@ -52,48 +52,54 @@ export function SleepLogModal({ open, onOpenChange, editingSleep }: SleepLogModa
 
     try {
       setLoading(true)
-      
+
+      const todayStart = startOfDay(new Date())
+      let bedtimeDate = new Date(`${format(todayStart, 'yyyy-MM-dd')}T${bedtime}:00`)
+      let wakeDate = new Date(`${format(todayStart, 'yyyy-MM-dd')}T${wakeTime}:00`)
+
+      // Se o horário de acordar for anterior/igual ao de dormir, consideramos sono que atravessa a meia-noite
+      if (wakeDate <= bedtimeDate) {
+        bedtimeDate = addDays(bedtimeDate, -1)
+        wakeDate = addDays(wakeDate, 1)
+      }
+
+      const sleepDateForRecord = format(bedtimeDate, 'yyyy-MM-dd')
+
+      const duration = differenceInMinutes(wakeDate, bedtimeDate)
+      if (duration <= 0 || duration > 1440) {
+        toast.error('Duração inválida. Verifique os horários.');
+        setLoading(false)
+        return
+      }
+
       if (editingSleep) {
-        const sleepDate = new Date(editingSleep.sleepDate)
-        const nextDay = new Date(sleepDate)
-        nextDay.setDate(nextDay.getDate() + 1)
-        
-        const bedtimeISO = `${format(sleepDate, 'yyyy-MM-dd')}T${bedtime}:00`
-        const wakeTimeISO = `${format(nextDay, 'yyyy-MM-dd')}T${wakeTime}:00`
-        
         await updateSleepLog(editingSleep.id, {
-          sleepDate: editingSleep.sleepDate,
-          bedtime: bedtimeISO,
-          wakeTime: wakeTimeISO,
+          sleepDate: sleepDateForRecord,
+          bedtime: bedtimeDate.toISOString(),
+          wakeTime: wakeDate.toISOString(),
           quality,
           notes: notes || undefined
         })
         toast.success('Sono atualizado com sucesso!')
       } else {
-        const today = new Date()
-        const yesterday = new Date(today)
-        yesterday.setDate(yesterday.getDate() - 1)
-        
-        const bedtimeISO = `${format(yesterday, 'yyyy-MM-dd')}T${bedtime}:00`
-        const wakeTimeISO = `${format(today, 'yyyy-MM-dd')}T${wakeTime}:00`
-        
         await createSleepLog({
-          sleepDate: format(yesterday, 'yyyy-MM-dd'),
-          bedtime: bedtimeISO,
-          wakeTime: wakeTimeISO,
+          sleepDate: sleepDateForRecord,
+          bedtime: bedtimeDate.toISOString(),
+          wakeTime: wakeDate.toISOString(),
           quality,
           notes: notes || undefined
         })
         toast.success('Sono registrado com sucesso!')
       }
-      
+
       setBedtime('')
       setWakeTime('')
       setNotes('')
       onOpenChange(false)
     } catch (error) {
       console.error('Erro ao salvar sono:', error)
-      toast.error('Erro ao salvar sono')
+      const message = error instanceof Error ? error.message : 'Erro ao salvar sono'
+      toast.error(message)
     } finally {
       setLoading(false)
     }
