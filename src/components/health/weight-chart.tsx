@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts'
 import { Eye, EyeOff, Info } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { format, subDays, subMonths, subYears, startOfWeek, startOfMonth, startOfDay } from 'date-fns'
+import { format, subDays, subMonths, subYears, startOfWeek, startOfMonth, startOfDay, addDays } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 type Period = 'week' | 'month' | 'year' | 'all'
@@ -34,12 +34,14 @@ export function WeightChart() {
       weekdayBuckets[weekday].push(log.weight)
     })
     const weekdayAverages: Record<number, number | undefined> = { 0: undefined, 1: undefined, 2: undefined, 3: undefined, 4: undefined, 5: undefined, 6: undefined }
-    ;(Object.keys(weekdayBuckets) as Array<keyof typeof weekdayBuckets>).forEach(key => {
-      const bucket = weekdayBuckets[key]
-      if (bucket.length > 0) {
-        weekdayAverages[key] = bucket.reduce((a, b) => a + b, 0) / bucket.length
-      }
-    })
+    Object.keys(weekdayBuckets)
+      .map(key => Number(key))
+      .forEach(key => {
+        const bucket = weekdayBuckets[key]
+        if (bucket.length > 0) {
+          weekdayAverages[key] = bucket.reduce((a, b) => a + b, 0) / bucket.length
+        }
+      })
 
     // Filtrar por período
     switch (period) {
@@ -53,13 +55,6 @@ export function WeightChart() {
         filteredLogs = weightLogs.filter(log => {
           const day = normalize(log.recordedAt)
           const start = subMonths(today, 1)
-          return day >= start && day <= today
-        })
-        break
-      case 'year':
-        filteredLogs = weightLogs.filter(log => {
-          const day = normalize(log.recordedAt)
-          const start = subYears(today, 1)
           return day >= start && day <= today
         })
         break
@@ -118,7 +113,7 @@ export function WeightChart() {
       const weekGroups = new Map<string, number[]>()
       filteredLogs.forEach(log => {
         const weekStart = startOfWeek(normalize(log.recordedAt), { locale: ptBR })
-        const key = weekStart.getTime()
+        const key = String(weekStart.getTime())
         if (!weekGroups.has(key)) {
           weekGroups.set(key, [])
         }
@@ -126,16 +121,20 @@ export function WeightChart() {
       })
 
       data = Array.from(weekGroups.entries())
-        .sort((a, b) => a[0] - b[0])
-        .map(([ms, weights]) => ({
-          label: format(new Date(ms), 'dd/MM', { locale: ptBR }),
-          fullDate: format(new Date(ms), "dd 'de' MMMM", { locale: ptBR }),
-          weight: weights.reduce((a, b) => a + b, 0) / weights.length,
-          timestamp: ms
-        }))
+        .sort((a, b) => Number(a[0]) - Number(b[0]))
+        .map(([ms, weights]) => {
+          const weekStart = new Date(Number(ms))
+          const weekLabel = `${format(weekStart, 'dd/MM', { locale: ptBR })} - ${format(addDays(weekStart, 6), 'dd/MM', { locale: ptBR })}`
+          return {
+            label: weekLabel,
+            fullDate: `Semana de ${format(weekStart, "dd 'de' MMMM", { locale: ptBR })}`,
+            weight: weights.reduce((a, b) => a + b, 0) / weights.length,
+            timestamp: Number(ms)
+          }
+        })
     } else {
       // Média por mês
-      const monthGroups = new Map<string, number[]>()
+      const monthGroups = new Map<number, number[]>()
       filteredLogs.forEach(log => {
         const monthStart = startOfMonth(normalize(log.recordedAt))
         const key = monthStart.getTime()
@@ -146,19 +145,18 @@ export function WeightChart() {
       })
 
       data = Array.from(monthGroups.entries())
-        .sort((a, b) => a[0] - b[0])
-        .map(([ms, weights]) => ({
-          label: format(new Date(ms), 'MMM/yy', { locale: ptBR }),
-          fullDate: format(new Date(ms), "MMMM 'de' yyyy", { locale: ptBR }),
-          weight: weights.reduce((a, b) => a + b, 0) / weights.length,
-          timestamp: ms
-        }))
+          .sort((a, b) => a[0] - b[0])
+          .map(([ms, weights]) => ({
+            label: format(new Date(ms), 'MMM', { locale: ptBR }),
+            fullDate: format(new Date(ms), "MMMM 'de' yyyy", { locale: ptBR }),
+            weight: weights.reduce((a, b) => a + b, 0) / weights.length,
+            timestamp: ms
+          }))
     }
 
     // Tendências e projeção curta
     if (data.length > 0) {
       const sorted = [...data].sort((a, b) => a.timestamp - b.timestamp)
-
       const ema = (series: number[], alpha: number) => {
         const out: number[] = []
         series.forEach((v, i) => {
@@ -184,7 +182,7 @@ export function WeightChart() {
           weekdayRecent[wd].push(log.weight)
         })
       const weekdayOffset: Record<number, number | undefined> = { 0: undefined, 1: undefined, 2: undefined, 3: undefined, 4: undefined, 5: undefined, 6: undefined }
-      ;(Object.keys(weekdayRecent) as Array<keyof typeof weekdayRecent>).forEach(k => {
+      Object.keys(weekdayRecent).map(k => Number(k)).forEach(k => {
         const bucket = weekdayRecent[k]
         const recent = bucket.slice(-8)
         if (recent.length > 0) {

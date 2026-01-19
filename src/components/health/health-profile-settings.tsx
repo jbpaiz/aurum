@@ -114,10 +114,13 @@ export function HealthProfileSettings() {
       toast.error('Data de nascimento inválida')
       return
     }
-    if (bodyFat && (Number.isNaN(bodyFatValue) || bodyFatValue < 3 || bodyFatValue > 60)) {
-      toast.error('Percentual de gordura inválido (3% a 60%).')
-      return
+    if (bodyFat) {
+      if (bodyFatValue === null || Number.isNaN(bodyFatValue) || bodyFatValue < 3 || bodyFatValue > 60) {
+        toast.error('Percentual de gordura inválido (3% a 60%).')
+        return
+      }
     }
+    
 
     try {
       setSavingProfile(true)
