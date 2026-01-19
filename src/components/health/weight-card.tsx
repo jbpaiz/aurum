@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
-import { format } from 'date-fns'
+import { addDays, format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import type { WeightLog } from '@/types/health'
 import { toast } from 'sonner'
@@ -221,6 +221,11 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
                   <p className="text-xs text-muted-foreground">ETA</p>
                   <p className="text-sm font-semibold">
                     {weightStats.etaWeeksToGoal ? `~${weightStats.etaWeeksToGoal.toFixed(0)} sem` : 'Indeterminado'}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {weightStats.etaWeeksToGoal
+                      ? `Estimado: ${format(addDays(new Date(), weightStats.etaWeeksToGoal * 7), 'dd/MM/yyyy')}`
+                      : 'Data estimada indisponível'}
                   </p>
                   <p className="text-[11px] text-muted-foreground">Mantendo o ritmo atual</p>
                 </div>
