@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type MouseEvent, type TouchEvent } from 'react'
 import { TrendingUp, TrendingDown, Minus, Edit2, Trash2, Plus, Minus as MinusIcon } from 'lucide-react'
 import { useHealth } from '@/contexts/health-context'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -24,6 +24,13 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
   const [sex, setSex] = useState<string>('')
   const [activityLevel, setActivityLevel] = useState<string>('')
   const [bodyFat, setBodyFat] = useState<string>('')
+  const [barInsight, setBarInsight] = useState<{
+    kind: 'bmi' | 'bmr' | 'tdee'
+    title: string
+    value: string
+    note: string
+    percent: number
+  } | null>(null)
 
   // Carregar perfil do usuário do contexto
   useEffect(() => {
@@ -142,6 +149,53 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
     return { value, clamped, percent, min, max, factor: activityFactor }
   }, [activityFactor, bmrInfo])
 
+  const describeValue = (kind: 'bmi' | 'bmr' | 'tdee', value: number) => {
+    if (kind === 'bmi') {
+      if (value < 18.5) return { title: 'IMC', note: 'Abaixo do peso' }
+      if (value < 25) return { title: 'IMC', note: 'Peso saudável' }
+      if (value < 30) return { title: 'IMC', note: 'Sobrepeso' }
+      if (value < 35) return { title: 'IMC', note: 'Obesidade I' }
+      if (value < 40) return { title: 'IMC', note: 'Obesidade II' }
+      return { title: 'IMC', note: 'Obesidade III' }
+    }
+    if (kind === 'bmr') return { title: 'Taxa metabólica basal', note: 'Estimativa diária em repouso' }
+    return { title: 'Calorias de manutenção (TDEE)', note: 'Inclui nível de atividade' }
+  }
+
+  const handleBarPoint = (kind: 'bmi' | 'bmr' | 'tdee', min: number, max: number) => (
+    event: MouseEvent<HTMLDivElement> | TouchEvent<HTMLDivElement>
+  ) => {
+    const rect = event.currentTarget.getBoundingClientRect()
+    const clientX = 'touches' in event ? event.touches[0]?.clientX : event.clientX
+    if (clientX === undefined) return
+    const percent = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width))
+    const value = min + percent * (max - min)
+    const { title, note } = describeValue(kind, value)
+    setBarInsight({
+      kind,
+      title,
+      note,
+      value: `${kind === 'bmi' ? value.toFixed(1) : value.toFixed(0)} ${kind === 'bmi' ? 'IMC' : 'kcal/dia'}`,
+      percent: percent * 100
+    })
+  }
+
+  const clearBarPoint = () => setBarInsight(null)
+
+  const renderBarInsight = (kind: 'bmi' | 'bmr' | 'tdee') => {
+    if (!barInsight || barInsight.kind !== kind) return null
+    return (
+      <div
+        className="pointer-events-none absolute bottom-full mb-2 z-10 min-w-[180px] rounded-md border bg-background/95 p-2 text-xs shadow-lg"
+        style={{ left: `${barInsight.percent}%`, transform: 'translateX(-50%)' }}
+      >
+        <p className="font-semibold leading-tight">{barInsight.title}</p>
+        <p className="text-sm leading-tight">{barInsight.value}</p>
+        <p className="text-[11px] text-muted-foreground leading-tight">{barInsight.note}</p>
+      </div>
+    )
+  }
+
   // Edição de perfil foi movida para Health → Perfil e metas
 
   const handleDelete = async (id: string) => {
@@ -232,125 +286,6 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
           )}
         </div>
 
-        {/* Perfil e IMC (somente leitura, edição em Perfil e metas) */}
-        <div className="rounded-md border p-3 space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium">Perfil corporal</p>
-              <p className="text-xs text-muted-foreground">Edite em Saúde → Perfil e metas</p>
-            </div>
-            {bmi && bmiStatus && (
-              <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${bmiStatus.color}`}>
-                IMC {bmi} · {bmiStatus.label}
-              </span>
-            )}
-          </div>
-          <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-            <span>Altura: {heightCm || '—'} cm</span>
-            <span>Data de nascimento: {birthDate || '—'}</span>
-            <span>Sexo: {sex || '—'}</span>
-            <span>Nível de atividade: {activityLevel || '—'}</span>
-            <span>% gordura: {bodyFat || '—'}</span>
-          </div>
-          {bmiBar ? (
-            <div className="space-y-1">
-              <div
-                className="relative h-3 rounded-full overflow-hidden"
-                style={{
-                  background: 'linear-gradient(90deg, #bae6fd 0%, #a7f3d0 35%, #fef08a 55%, #fdba74 75%, #fecdd3 100%)'
-                }}
-              >
-                <div
-                  className="absolute top-0 bottom-0 w-[2px] bg-foreground"
-                  style={{ left: `${bmiBar.percent}%`, transform: 'translateX(-50%)' }}
-                />
-              </div>
-              <div className="flex justify-between text-[11px] text-muted-foreground">
-                <span>IMC baixo ~{bmiBar.min}</span>
-                <span>IMC alto ~{bmiBar.max}</span>
-              </div>
-            </div>
-          ) : (
-            <p className="text-[11px] text-muted-foreground">Informe altura e tenha um peso recente para ver o IMC.</p>
-          )}
-          <div className="flex justify-end">
-            <Button size="sm" variant="outline" asChild>
-              <a href="/health/profile">Abrir Perfil e metas</a>
-            </Button>
-          </div>
-        </div>
-
-        {/* BMR */}
-        {bmrInfo ? (
-          <div className="rounded-md border p-3 space-y-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">Taxa metabólica basal</p>
-                <p className="text-xs text-muted-foreground">{bmrInfo.formula === 'katch' ? 'Usando Katch-McArdle (gordura informada)' : 'Usando Mifflin-St Jeor (peso/altura/idade/sexo)'}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-lg font-semibold">{bmrInfo.value} kcal/dia</p>
-                <p className="text-[11px] text-muted-foreground">{bmrInfo.label}</p>
-              </div>
-            </div>
-            <div className="relative h-3 rounded-full bg-gradient-to-r from-sky-200 via-amber-200 to-rose-200 overflow-hidden">
-              <div
-                className="absolute top-0 bottom-0 w-[2px] bg-foreground"
-                style={{ left: `${bmrInfo.percent}%`, transform: 'translateX(-50%)' }}
-              />
-            </div>
-            <div className="flex justify-between text-[11px] text-muted-foreground">
-              <span>Baixo ~{bmrInfo.min} kcal</span>
-              <span>Alto ~{bmrInfo.max} kcal</span>
-            </div>
-          </div>
-        ) : (
-          <div className="rounded-md border p-3 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium">Taxa metabólica basal</p>
-              <p className="text-xs text-muted-foreground">Informe peso, altura + idade + sexo ou % gordura para ver a estimativa.</p>
-            </div>
-            <Button size="sm" variant="outline" asChild>
-              <a href="/health/profile">Completar perfil</a>
-            </Button>
-          </div>
-        )}
-
-        {tdeeInfo ? (
-          <div className="rounded-md border p-3 space-y-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">Calorias de manutenção (TDEE)</p>
-                <p className="text-xs text-muted-foreground">Multiplica BMR pelo nível de atividade</p>
-              </div>
-              <div className="text-right">
-                <p className="text-lg font-semibold">{tdeeInfo.value} kcal/dia</p>
-                <p className="text-[11px] text-muted-foreground">Fator {tdeeInfo.factor.toFixed(2)}</p>
-              </div>
-            </div>
-            <div className="relative h-3 rounded-full bg-gradient-to-r from-emerald-200 via-amber-200 to-rose-300 overflow-hidden">
-              <div
-                className="absolute top-0 bottom-0 w-[2px] bg-foreground"
-                style={{ left: `${tdeeInfo.percent}%`, transform: 'translateX(-50%)' }}
-              />
-            </div>
-            <div className="flex justify-between text-[11px] text-muted-foreground">
-              <span>Baixo ~{tdeeInfo.min} kcal</span>
-              <span>Alto ~{tdeeInfo.max} kcal</span>
-            </div>
-          </div>
-        ) : (
-          <div className="rounded-md border p-3 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium">Calorias de manutenção (TDEE)</p>
-              <p className="text-xs text-muted-foreground">Complete o nível de atividade para estimar as calorias de manutenção.</p>
-            </div>
-            <Button size="sm" variant="outline" asChild>
-              <a href="/health/profile">Definir nível</a>
-            </Button>
-          </div>
-        )}
-
         {/* Stats */}
         <div className="grid grid-cols-3 gap-2 text-center">
           <div className="space-y-1">
@@ -440,7 +375,161 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
           </div>
         )}
 
-        {/* Insights removidos */}
+        {/* Perfil e IMC (somente leitura, edição em Perfil e metas) */}
+        <div className="rounded-md border p-3 space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">Perfil corporal</p>
+              <p className="text-xs text-muted-foreground">Edite em Saúde → Perfil e metas</p>
+            </div>
+            {bmi && bmiStatus && (
+              <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${bmiStatus.color}`}>
+                IMC {bmi} · {bmiStatus.label}
+              </span>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+            <span>Altura: {heightCm || '—'} cm</span>
+            <span>Data de nascimento: {birthDate || '—'}</span>
+            <span>Sexo: {sex || '—'}</span>
+            <span>Nível de atividade: {activityLevel || '—'}</span>
+            <span>% gordura: {bodyFat || '—'}</span>
+          </div>
+          {bmiBar ? (
+            <div className="space-y-1">
+              <div className="relative pb-6">
+                {renderBarInsight('bmi')}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onMouseMove={handleBarPoint('bmi', bmiBar.min, bmiBar.max)}
+                  onTouchStart={handleBarPoint('bmi', bmiBar.min, bmiBar.max)}
+                  onTouchMove={handleBarPoint('bmi', bmiBar.min, bmiBar.max)}
+                  onMouseLeave={clearBarPoint}
+                  onTouchEnd={clearBarPoint}
+                  onTouchCancel={clearBarPoint}
+                  className="relative h-3 rounded-full overflow-hidden cursor-pointer outline-none"
+                  style={{
+                    background: 'linear-gradient(90deg, #bae6fd 0%, #a7f3d0 35%, #fef08a 55%, #fdba74 75%, #fecdd3 100%)'
+                  }}
+                >
+                  <div
+                    className="absolute top-0 bottom-0 w-[2px] bg-foreground"
+                    style={{ left: `${bmiBar.percent}%`, transform: 'translateX(-50%)' }}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-between text-[11px] text-muted-foreground">
+                <span>IMC baixo ~{bmiBar.min}</span>
+                <span>IMC alto ~{bmiBar.max}</span>
+              </div>
+            </div>
+          ) : (
+            <p className="text-[11px] text-muted-foreground">Informe altura e tenha um peso recente para ver o IMC.</p>
+          )}
+          <div className="flex justify-end">
+            <Button size="sm" variant="outline" asChild>
+              <a href="/health/profile">Abrir Perfil e metas</a>
+            </Button>
+          </div>
+        </div>
+
+        {/* BMR */}
+        {bmrInfo ? (
+          <div className="rounded-md border p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">Taxa metabólica basal</p>
+                <p className="text-xs text-muted-foreground">{bmrInfo.formula === 'katch' ? 'Usando Katch-McArdle (gordura informada)' : 'Usando Mifflin-St Jeor (peso/altura/idade/sexo)'}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-lg font-semibold">{bmrInfo.value} kcal/dia</p>
+                <p className="text-[11px] text-muted-foreground">{bmrInfo.label}</p>
+              </div>
+            </div>
+              <div className="relative pb-6">
+                {renderBarInsight('bmr')}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onMouseMove={handleBarPoint('bmr', bmrInfo.min, bmrInfo.max)}
+                  onTouchStart={handleBarPoint('bmr', bmrInfo.min, bmrInfo.max)}
+                  onTouchMove={handleBarPoint('bmr', bmrInfo.min, bmrInfo.max)}
+                  onMouseLeave={clearBarPoint}
+                  onTouchEnd={clearBarPoint}
+                  onTouchCancel={clearBarPoint}
+                  className="relative h-3 rounded-full bg-gradient-to-r from-sky-200 via-amber-200 to-rose-200 overflow-hidden cursor-pointer outline-none"
+                >
+                  <div
+                    className="absolute top-0 bottom-0 w-[2px] bg-foreground"
+                    style={{ left: `${bmrInfo.percent}%`, transform: 'translateX(-50%)' }}
+                  />
+                </div>
+              </div>
+            <div className="flex justify-between text-[11px] text-muted-foreground">
+              <span>Baixo ~{bmrInfo.min} kcal</span>
+              <span>Alto ~{bmrInfo.max} kcal</span>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-md border p-3 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">Taxa metabólica basal</p>
+              <p className="text-xs text-muted-foreground">Informe peso, altura + idade + sexo ou % gordura para ver a estimativa.</p>
+            </div>
+            <Button size="sm" variant="outline" asChild>
+              <a href="/health/profile">Completar perfil</a>
+            </Button>
+          </div>
+        )}
+
+        {tdeeInfo ? (
+          <div className="rounded-md border p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">Calorias de manutenção (TDEE)</p>
+                <p className="text-xs text-muted-foreground">Multiplica BMR pelo nível de atividade</p>
+              </div>
+              <div className="text-right">
+                <p className="text-lg font-semibold">{tdeeInfo.value} kcal/dia</p>
+                <p className="text-[11px] text-muted-foreground">Fator {tdeeInfo.factor.toFixed(2)}</p>
+              </div>
+            </div>
+              <div className="relative pb-6">
+                {renderBarInsight('tdee')}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onMouseMove={handleBarPoint('tdee', tdeeInfo.min, tdeeInfo.max)}
+                  onTouchStart={handleBarPoint('tdee', tdeeInfo.min, tdeeInfo.max)}
+                  onTouchMove={handleBarPoint('tdee', tdeeInfo.min, tdeeInfo.max)}
+                  onMouseLeave={clearBarPoint}
+                  onTouchEnd={clearBarPoint}
+                  onTouchCancel={clearBarPoint}
+                  className="relative h-3 rounded-full bg-gradient-to-r from-emerald-200 via-amber-200 to-rose-300 overflow-hidden cursor-pointer outline-none"
+                >
+                  <div
+                    className="absolute top-0 bottom-0 w-[2px] bg-foreground"
+                    style={{ left: `${tdeeInfo.percent}%`, transform: 'translateX(-50%)' }}
+                  />
+                </div>
+              </div>
+            <div className="flex justify-between text-[11px] text-muted-foreground">
+              <span>Baixo ~{tdeeInfo.min} kcal</span>
+              <span>Alto ~{tdeeInfo.max} kcal</span>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-md border p-3 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">Calorias de manutenção (TDEE)</p>
+              <p className="text-xs text-muted-foreground">Complete o nível de atividade para estimar as calorias de manutenção.</p>
+            </div>
+            <Button size="sm" variant="outline" asChild>
+              <a href="/health/profile">Definir nível</a>
+            </Button>
+          </div>
+        )}
 
         {/* Recent Logs */}
         {detailed && recentLogs.length > 0 && (
