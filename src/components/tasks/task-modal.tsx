@@ -391,7 +391,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
       }}
     >
       <div
-        className="max-h-[95vh] w-full max-w-6xl overflow-y-auto rounded-2xl bg-white dark:bg-gray-800 p-5 shadow-2xl dark:shadow-gray-900/50"
+        className="max-h-[95vh] w-full max-w-6xl overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-5 shadow-2xl dark:shadow-gray-900/50 flex flex-col min-h-0"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
@@ -404,142 +404,144 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
           </Button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="flex h-full flex-1 flex-col gap-4 min-h-0">
           {formError && (
             <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600" role="alert">
               {formError}
             </div>
           )}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <div className="space-y-2">
-              <Label>Título</Label>
-              <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Ex: Implementar fluxo de onboarding" />
+          <div className="flex-1 overflow-y-auto pr-1 space-y-5 min-h-0 scrollbar-themed">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="space-y-2">
+                <Label>Título</Label>
+                <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Ex: Implementar fluxo de onboarding" />
+              </div>
+              <div className="space-y-2">
+                <Label>Subtítulo (opcional)</Label>
+                <Input value={subtitle} onChange={(event) => setSubtitle(event.target.value)} placeholder="Ex: Tela de boas-vindas" />
+              </div>
+              <div className="space-y-2">
+                <Label>Código (ex: JIRA-120)</Label>
+                <Input value={taskKey} onChange={(event) => setTaskKey(event.target.value)} placeholder={task?.key ?? 'AUR-123'} />
+              </div>
             </div>
+
             <div className="space-y-2">
-              <Label>Subtítulo (opcional)</Label>
-              <Input value={subtitle} onChange={(event) => setSubtitle(event.target.value)} placeholder="Ex: Tela de boas-vindas" />
+              <Label>Situação</Label>
+              <Select value={resolvedColumnId} onValueChange={setColumnId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a situação" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableColumns.map((column) => (
+                    <SelectItem key={column.id} value={column.id}>
+                      <span className="inline-flex items-center gap-2">
+                        <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: column.color }} />
+                        {column.name}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <div className="space-y-2">
+                <Label>{priorityField?.fieldName || 'Prioridade'}</Label>
+                <select
+                  value={priority}
+                  onChange={(e) => setPriority(e.target.value as TaskPriority)}
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background dark:bg-gray-800 dark:border-gray-700 dark:text-white px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                >
+                  {priorityField && priorityField.options.length > 0
+                    ? priorityField.options.map((option) => (
+                        <option key={option.optionValue} value={option.optionValue}>
+                          {option.optionLabel}
+                        </option>
+                      ))
+                    : Object.keys(TASK_PRIORITY_COLORS).map((value) => (
+                        <option key={value} value={value}>
+                          {TASK_PRIORITY_LABELS[value as TaskPriority]}
+                        </option>
+                      ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label>Tipo</Label>
+                <select
+                  value={type}
+                  onChange={(e) => setType(e.target.value as TaskType)}
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background dark:bg-gray-800 dark:border-gray-700 dark:text-white px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                >
+                  {TASK_TYPES.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label>Início da tarefa</Label>
+                <Input type="date" value={startDate || ''} onChange={(event) => setStartDate(event.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Fim da tarefa</Label>
+                <Input type="date" value={endDate || ''} onChange={(event) => setEndDate(event.target.value)} />
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Se deixar os campos em branco, o Aurum preenche automaticamente ao mover a tarefa para &quot;Fazendo&quot; (início) e
+              &quot;Concluído&quot; (fim). Você pode ajustar manualmente quando precisar.
+            </p>
+
             <div className="space-y-2">
-              <Label>Código (ex: JIRA-120)</Label>
-              <Input value={taskKey} onChange={(event) => setTaskKey(event.target.value)} placeholder={task?.key ?? 'AUR-123'} />
+              <Label>Etiquetas (separe por vírgula)</Label>
+              <Input value={labelsInput} onChange={(event) => setLabelsInput(event.target.value)} placeholder="Frontend, Urgente" />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Descrição</Label>
+              <textarea
+                className="min-h-[120px] w-full rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white p-3 text-sm focus:border-blue-500 dark:focus:border-blue-600 focus:outline-none"
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                placeholder="Detalhe a tarefa, critérios de aceite, links úteis..."
+              />
+            </div>
+
+            <div>
+              <Label>Checklist</Label>
+              <div className="mt-3 space-y-2">
+                {checklist.length === 0 ? (
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Nenhum item adicionado</p>
+                ) : (
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleChecklistReorder}>
+                    <SortableContext items={checklist.map((item) => item.id)} strategy={verticalListSortingStrategy}>
+                      {checklist.map((item) => (
+                        <ChecklistItemRow
+                          key={item.id}
+                          item={item}
+                          onToggle={toggleChecklistItem}
+                          onRemove={handleRemoveChecklistItem}
+                          onChangeTitle={updateChecklistItemTitle}
+                        />
+                      ))}
+                    </SortableContext>
+                  </DndContext>
+                )}
+              </div>
+              <div className="mt-3 flex gap-2">
+                <Input value={checklistItem} onChange={(event) => setChecklistItem(event.target.value)} placeholder="Adicionar item" />
+                <Button type="button" variant="outline" onClick={handleAddChecklistItem}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Inserir
+                </Button>
+              </div>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label>Situação</Label>
-            <Select value={resolvedColumnId} onValueChange={setColumnId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione a situação" />
-              </SelectTrigger>
-              <SelectContent>
-                {availableColumns.map((column) => (
-                  <SelectItem key={column.id} value={column.id}>
-                    <span className="inline-flex items-center gap-2">
-                      <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: column.color }} />
-                      {column.name}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <div className="space-y-2">
-              <Label>{priorityField?.fieldName || 'Prioridade'}</Label>
-              <select
-                value={priority}
-                onChange={(e) => setPriority(e.target.value as TaskPriority)}
-                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background dark:bg-gray-800 dark:border-gray-700 dark:text-white px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-              >
-                {priorityField && priorityField.options.length > 0
-                  ? priorityField.options.map((option) => (
-                      <option key={option.optionValue} value={option.optionValue}>
-                        {option.optionLabel}
-                      </option>
-                    ))
-                  : Object.keys(TASK_PRIORITY_COLORS).map((value) => (
-                      <option key={value} value={value}>
-                        {TASK_PRIORITY_LABELS[value as TaskPriority]}
-                      </option>
-                    ))}
-              </select>
-            </div>
-            <div className="space-y-2">
-              <Label>Tipo</Label>
-              <select
-                value={type}
-                onChange={(e) => setType(e.target.value as TaskType)}
-                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background dark:bg-gray-800 dark:border-gray-700 dark:text-white px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-              >
-                {TASK_TYPES.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-2">
-              <Label>Início da tarefa</Label>
-              <Input type="date" value={startDate || ''} onChange={(event) => setStartDate(event.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label>Fim da tarefa</Label>
-              <Input type="date" value={endDate || ''} onChange={(event) => setEndDate(event.target.value)} />
-            </div>
-          </div>
-
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            Se deixar os campos em branco, o Aurum preenche automaticamente ao mover a tarefa para &quot;Fazendo&quot; (início) e
-            &quot;Concluído&quot; (fim). Você pode ajustar manualmente quando precisar.
-          </p>
-
-          <div className="space-y-2">
-            <Label>Etiquetas (separe por vírgula)</Label>
-            <Input value={labelsInput} onChange={(event) => setLabelsInput(event.target.value)} placeholder="Frontend, Urgente" />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Descrição</Label>
-            <textarea
-              className="min-h-[120px] w-full rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white p-3 text-sm focus:border-blue-500 dark:focus:border-blue-600 focus:outline-none"
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-              placeholder="Detalhe a tarefa, critérios de aceite, links úteis..."
-            />
-          </div>
-
-          <div>
-            <Label>Checklist</Label>
-            <div className="mt-3 space-y-2">
-              {checklist.length === 0 ? (
-                <p className="text-sm text-gray-500 dark:text-gray-400">Nenhum item adicionado</p>
-              ) : (
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleChecklistReorder}>
-                  <SortableContext items={checklist.map((item) => item.id)} strategy={verticalListSortingStrategy}>
-                    {checklist.map((item) => (
-                      <ChecklistItemRow
-                        key={item.id}
-                        item={item}
-                        onToggle={toggleChecklistItem}
-                        onRemove={handleRemoveChecklistItem}
-                        onChangeTitle={updateChecklistItemTitle}
-                      />
-                    ))}
-                  </SortableContext>
-                </DndContext>
-              )}
-            </div>
-            <div className="mt-3 flex gap-2">
-              <Input value={checklistItem} onChange={(event) => setChecklistItem(event.target.value)} placeholder="Adicionar item" />
-              <Button type="button" variant="outline" onClick={handleAddChecklistItem}>
-                <Plus className="mr-2 h-4 w-4" />
-                Inserir
-              </Button>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-3 border-t border-gray-200 pt-4 dark:border-gray-700 md:flex-row md:items-center md:justify-between">
             <div className="flex gap-2 flex-wrap">
               {isEditing && onDeleteTask && (
                 <Button 

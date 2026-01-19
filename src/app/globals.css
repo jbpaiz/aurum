@@ -101,4 +101,23 @@
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
   }
+
+  /* Themed scrollbar that follows light/dark tokens */
+  .scrollbar-themed {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground)) hsl(var(--muted));
+  }
+
+  .scrollbar-themed::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .scrollbar-themed::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+  }
+
+  .scrollbar-themed::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground));
+    border-radius: 9999px;
+  }
 }
