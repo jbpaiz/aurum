@@ -6,6 +6,8 @@ export type ActivityType = 'walking' | 'gym' | 'cycling' | 'swimming' | 'sport' 
 export type ActivityIntensity = 'low' | 'medium' | 'high'
 export type SleepQuality = 'poor' | 'normal' | 'good'
 export type GoalType = 'weight' | 'activity' | 'sleep'
+export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active' | 'athlete'
+export type UserSex = 'male' | 'female' | 'other'
 
 // ===== WEIGHT LOGS =====
 export interface WeightLog {
@@ -387,6 +389,11 @@ export interface UserStats {
   level: number
   currentStreak: number
   longestStreak: number
+  heightCm?: number | null
+  birthDate?: string | null
+   sex?: UserSex | null
+   activityLevel?: ActivityLevel | null
+   bodyFatPercentage?: number | null
   createdAt: string
   updatedAt: string
 }

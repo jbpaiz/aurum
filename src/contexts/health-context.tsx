@@ -14,6 +14,8 @@ import type {
   Meal,
   NutritionGoal,
   Badge,
+  ActivityLevel,
+  UserSex,
   UserStats,
   Challenge,
   BadgeType,
@@ -57,6 +59,9 @@ interface HealthContextValue {
   badges: Badge[]
   userStats: UserStats | null
   challenges: Challenge[]
+
+  // Perfil
+  updateUserStatsProfile: (input: { heightCm?: number | null; birthDate?: string | null; sex?: UserSex | null; activityLevel?: ActivityLevel | null; bodyFatPercentage?: number | null }) => Promise<void>
   
   // Stats
   weightStats: WeightStats | null
@@ -833,6 +838,32 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, weightLogs, activities, sleepLogs, hydrationLogs, meals, badges, userStats, loadData])
 
+  // ===== USER PROFILE (altura/idade) =====
+  const updateUserStatsProfile = useCallback(
+    async (input: { heightCm?: number | null; birthDate?: string | null; sex?: UserSex | null; activityLevel?: ActivityLevel | null; bodyFatPercentage?: number | null }) => {
+      if (!user) return
+      const payload = {
+        user_id: user.id,
+        height_cm: input.heightCm ?? null,
+        birth_date: input.birthDate ?? null,
+        sex: input.sex ?? null,
+        activity_level: input.activityLevel ?? null,
+        body_fat_percentage: input.bodyFatPercentage ?? null
+      }
+      const { data, error } = await supabase
+        .from('health_user_stats')
+        .upsert(payload, { onConflict: 'user_id' })
+        .select()
+        .single()
+
+      if (error) throw error
+      if (data) {
+        setUserStats(mapUserStats(data))
+      }
+    },
+    [user]
+  )
+
   useEffect(() => {
     if (!user || loading) return
     checkAndAwardBadges().catch((error) => {
@@ -862,6 +893,7 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     badges,
     userStats,
     challenges,
+    updateUserStatsProfile,
     weightStats,
     activityStats,
     sleepStats,
@@ -1058,6 +1090,11 @@ function mapUserStats(data: any): UserStats {
     level: data.level,
     currentStreak: data.current_streak,
     longestStreak: data.longest_streak,
+    heightCm: data.height_cm ?? null,
+    birthDate: data.birth_date ?? null,
+    sex: data.sex ?? null,
+    activityLevel: data.activity_level ?? null,
+    bodyFatPercentage: data.body_fat_percentage ?? null,
     createdAt: data.created_at,
     updatedAt: data.updated_at
   }

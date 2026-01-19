@@ -98,6 +98,11 @@ const healthMenuItems: NavigationItem[] = [
     title: 'Dashboard',
     icon: LayoutDashboard,
     href: '/health'
+  },
+  {
+    title: 'Perfil e metas',
+    icon: Settings,
+    href: '/health/profile'
   }
 ]
 
