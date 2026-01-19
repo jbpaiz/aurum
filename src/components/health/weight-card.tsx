@@ -195,20 +195,52 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
           {weightStats.goalTarget && (
             <div className="space-y-2">
               <Progress value={Math.min(100, Math.max(0, (weightStats.goalProgress || 0) * 100))} />
-              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                <span>Meta: {weightStats.goalTarget} kg</span>
-                {weightStats.goalDate && <span>Até {format(new Date(weightStats.goalDate), 'dd/MM/yyyy')}</span>}
-                <span>Atual: {weightStats.current} kg</span>
-                <span>Restam {weightStats.current !== null && weightStats.goalTarget !== null ? Math.max(0, Math.abs(weightStats.current - weightStats.goalTarget)).toFixed(1) : '—'} kg</span>
-                <span>{weightStats.etaWeeksToGoal ? `ETA ~${weightStats.etaWeeksToGoal} sem` : 'ETA indeterminado'}</span>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="rounded-md border bg-muted/30 p-3">
+                  <p className="text-xs text-muted-foreground">Meta</p>
+                  <p className="text-sm font-semibold">{weightStats.goalTarget} kg</p>
+                  {weightStats.goalDate && (
+                    <p className="text-[11px] text-muted-foreground">Até {format(new Date(weightStats.goalDate), 'dd/MM/yyyy')}</p>
+                  )}
+                </div>
+                <div className="rounded-md border bg-muted/30 p-3">
+                  <p className="text-xs text-muted-foreground">Atual</p>
+                  <p className="text-sm font-semibold">{weightStats.current} kg</p>
+                  <p className="text-[11px] text-muted-foreground">Mede hoje {weightStats.todayCount > 0 ? '✔' : '—'}</p>
+                </div>
+                <div className="rounded-md border bg-muted/30 p-3">
+                  <p className="text-xs text-muted-foreground">Restam</p>
+                  <p className="text-sm font-semibold">
+                    {weightStats.current !== null && weightStats.goalTarget !== null
+                      ? `${Math.max(0, Math.abs(weightStats.current - weightStats.goalTarget)).toFixed(1)} kg`
+                      : '—'}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">Para alcançar a meta</p>
+                </div>
+                <div className="rounded-md border bg-muted/30 p-3">
+                  <p className="text-xs text-muted-foreground">ETA</p>
+                  <p className="text-sm font-semibold">
+                    {weightStats.etaWeeksToGoal ? `~${weightStats.etaWeeksToGoal.toFixed(0)} sem` : 'Indeterminado'}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">Mantendo o ritmo atual</p>
+                </div>
               </div>
+
               {weightStats.goalExpectedToday !== null && weightStats.goalExpectedToday !== undefined && (
-                <div className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground flex flex-wrap gap-2">
-                  <span>Para estar no ritmo: {weightStats.goalExpectedToday.toFixed(1)} kg</span>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-md border bg-muted/30 p-3 space-y-1">
+                    <p className="text-xs text-muted-foreground">Para estar no ritmo</p>
+                    <p className="text-sm font-semibold">{weightStats.goalExpectedToday.toFixed(1)} kg</p>
+                    <p className="text-[11px] text-muted-foreground">Peso esperado para hoje</p>
+                  </div>
                   {weightStats.goalDeltaFromExpected !== null && weightStats.goalDeltaFromExpected !== undefined && (
-                    <span>
-                      Você está {Math.abs(weightStats.goalDeltaFromExpected).toFixed(1)} kg {weightStats.goalDeltaFromExpected > 0 ? 'acima' : 'abaixo'} do esperado hoje
-                    </span>
+                    <div className="rounded-md border bg-muted/30 p-3 space-y-1">
+                      <p className="text-xs text-muted-foreground">Diferença hoje</p>
+                      <p className="text-sm font-semibold">
+                        {Math.abs(weightStats.goalDeltaFromExpected).toFixed(1)} kg {weightStats.goalDeltaFromExpected > 0 ? 'acima' : 'abaixo'}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">Em relação ao esperado</p>
+                    </div>
                   )}
                 </div>
               )}
