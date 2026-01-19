@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Plus } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { Plus, Home, LineChart, Ruler, Droplets, UtensilsCrossed, Dumbbell, Moon, Medal } from 'lucide-react'
 import { useHealth } from '@/contexts/health-context'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -54,6 +54,14 @@ export function HealthDashboard() {
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null)
   const [nutritionGoalsModalOpen, setNutritionGoalsModalOpen] = useState(false)
   const [goalModalOpen, setGoalModalOpen] = useState(false)
+  const tabsListRef = useRef<HTMLDivElement | null>(null)
+
+  const scrollTabs = (direction: 'left' | 'right') => {
+    const el = tabsListRef.current
+    if (!el) return
+    const delta = direction === 'left' ? -el.clientWidth : el.clientWidth
+    el.scrollBy({ left: delta, behavior: 'smooth' })
+  }
 
   const handleEditWeight = (log: WeightLog) => {
     setEditingWeightLog(log)
@@ -134,17 +142,43 @@ export function HealthDashboard() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <div className="w-full">
-          <div className="w-full overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory md:overflow-visible">
-            <TabsList className="flex h-auto w-full flex-nowrap items-center gap-2 rounded-lg border border-border/60 bg-background/70 p-1 md:grid md:w-full md:grid-cols-8 md:gap-2 md:p-2">
-              <TabsTrigger value="overview" className="whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">Visão Geral</TabsTrigger>
-              <TabsTrigger value="weight" className="whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">Peso</TabsTrigger>
-              <TabsTrigger value="body" className="whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">Medidas</TabsTrigger>
-              <TabsTrigger value="hydration" className="whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">Hidratação</TabsTrigger>
-              <TabsTrigger value="nutrition" className="whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">Nutrição</TabsTrigger>
-              <TabsTrigger value="activity" className="whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">Atividades</TabsTrigger>
-              <TabsTrigger value="sleep" className="whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">Sono</TabsTrigger>
-              <TabsTrigger value="gamification" className="whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">Conquistas</TabsTrigger>
-            </TabsList>
+          <div className="relative w-full">
+            <div ref={tabsListRef} className="w-full overflow-x-auto touch-pan-x scrollbar-hide scroll-smooth snap-x snap-mandatory px-4 md:overflow-visible md:px-0">
+              <TabsList className="flex h-auto w-full min-w-max flex-nowrap items-center gap-2 rounded-lg border border-border/60 bg-background/70 px-1 py-2 md:grid md:min-w-full md:w-full md:grid-cols-8 md:gap-2 md:p-2">
+                <TabsTrigger value="overview" className="flex items-center gap-2 whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">
+                  <Home className="h-4 w-4" aria-hidden />
+                  <span>Visão Geral</span>
+                </TabsTrigger>
+                <TabsTrigger value="weight" className="flex items-center gap-2 whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">
+                  <LineChart className="h-4 w-4" aria-hidden />
+                  <span>Peso</span>
+                </TabsTrigger>
+                <TabsTrigger value="body" className="flex items-center gap-2 whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">
+                  <Ruler className="h-4 w-4" aria-hidden />
+                  <span>Medidas</span>
+                </TabsTrigger>
+                <TabsTrigger value="hydration" className="flex items-center gap-2 whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">
+                  <Droplets className="h-4 w-4" aria-hidden />
+                  <span>Hidratação</span>
+                </TabsTrigger>
+                <TabsTrigger value="nutrition" className="flex items-center gap-2 whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">
+                  <UtensilsCrossed className="h-4 w-4" aria-hidden />
+                  <span>Nutrição</span>
+                </TabsTrigger>
+                <TabsTrigger value="activity" className="flex items-center gap-2 whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">
+                  <Dumbbell className="h-4 w-4" aria-hidden />
+                  <span>Atividades</span>
+                </TabsTrigger>
+                <TabsTrigger value="sleep" className="flex items-center gap-2 whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">
+                  <Moon className="h-4 w-4" aria-hidden />
+                  <span>Sono</span>
+                </TabsTrigger>
+                <TabsTrigger value="gamification" className="flex items-center gap-2 whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">
+                  <Medal className="h-4 w-4" aria-hidden />
+                  <span>Conquistas</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
           </div>
         </div>
 
