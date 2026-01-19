@@ -135,7 +135,7 @@ export function HealthDashboard() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <div className="w-full">
           <div className="w-full overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory md:overflow-visible">
-            <TabsList className="flex h-auto w-full flex-wrap items-center gap-2 rounded-lg border border-border/60 bg-background/70 p-1 md:grid md:w-full md:grid-cols-8 md:gap-2 md:p-2">
+            <TabsList className="flex h-auto w-full flex-nowrap items-center gap-2 rounded-lg border border-border/60 bg-background/70 p-1 md:grid md:w-full md:grid-cols-8 md:gap-2 md:p-2">
               <TabsTrigger value="overview" className="whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">Visão Geral</TabsTrigger>
               <TabsTrigger value="weight" className="whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">Peso</TabsTrigger>
               <TabsTrigger value="body" className="whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">Medidas</TabsTrigger>
@@ -165,12 +165,6 @@ export function HealthDashboard() {
 
         {/* Weight Tab */}
         <TabsContent value="weight" className="space-y-6">
-          <div className="flex justify-end">
-            <Button onClick={() => setWeightModalOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Adicionar Peso
-            </Button>
-          </div>
           <WeightChart />
           <WeightCard 
             detailed 
