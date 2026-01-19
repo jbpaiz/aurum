@@ -40,7 +40,7 @@ import type {
   NutritionStats,
   HealthInsight
 } from '@/types/health'
-import { differenceInMinutes, format, startOfDay, subDays } from 'date-fns'
+import { differenceInMinutes, format, startOfDay, startOfWeek, subDays } from 'date-fns'
 
 interface HealthContextValue {
   // Estado
@@ -841,7 +841,7 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
   }, [checkAndAwardBadges, user, loading, weightLogs, activities, sleepLogs, hydrationLogs, meals])
 
   // ===== STATS =====
-  const weightStats: WeightStats | null = calculateWeightStats(weightLogs)
+  const weightStats: WeightStats | null = calculateWeightStats(weightLogs, goals)
   const activityStats: ActivityStats | null = calculateActivityStats(activities, goals)
   const sleepStats: SleepStats | null = calculateSleepStats(sleepLogs)
   const hydrationStats: HydrationStats | null = calculateHydrationStats(hydrationLogs, hydrationGoal)
@@ -1080,7 +1080,7 @@ function mapChallenge(data: any): Challenge {
 }
 
 // ===== CALCULATORS =====
-function calculateWeightStats(logs: WeightLog[]): WeightStats | null {
+function calculateWeightStats(logs: WeightLog[], goals: HealthGoal[]): WeightStats | null {
   if (logs.length === 0) return null
 
   const today = startOfDay(new Date())
@@ -1104,6 +1104,81 @@ function calculateWeightStats(logs: WeightLog[]): WeightStats | null {
       sevenDaysAgo[0].weight < sevenDaysAgo[sevenDaysAgo.length - 1].weight ? 'down' : 'stable'
     : null
 
+  // Weekly / monthly change
+  const latestDate = new Date(logs[0].recordedAt)
+  const weekCutoff = subDays(latestDate, 7)
+  const monthCutoff = subDays(latestDate, 30)
+  const lastWeekLog = logs.find(l => new Date(l.recordedAt) <= weekCutoff)
+  const lastMonthLog = logs.find(l => new Date(l.recordedAt) <= monthCutoff)
+  const weeklyChange = lastWeekLog ? current - lastWeekLog.weight : null
+  const monthlyChange = lastMonthLog ? current - lastMonthLog.weight : null
+
+  // Trend regression (kg/week)
+  const ascLogs = [...logs].sort((a, b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime())
+  const n = ascLogs.length
+  const xs = ascLogs.map((l, idx) => idx) // simple index for spacing
+  const ys = ascLogs.map(l => l.weight)
+  const sumX = xs.reduce((a, b) => a + b, 0)
+  const sumY = ys.reduce((a, b) => a + b, 0)
+  const sumXY = xs.reduce((acc, x, i) => acc + x * ys[i], 0)
+  const sumXX = xs.reduce((acc, x) => acc + x * x, 0)
+  const denom = n * sumXX - sumX * sumX
+  const slopePerSample = denom !== 0 ? (n * sumXY - sumX * sumY) / denom : 0
+  const trendKgPerWeek = slopePerSample * 7 // samples assumed roughly daily order
+
+  // Goal context
+  const weightGoal = goals.find(g => g.goalType === 'weight' && g.isActive)
+  const goalTarget = weightGoal?.targetValue ?? null
+  const goalDate = weightGoal?.targetDate || null
+  let goalProgress: number | null = null
+  if (goalTarget !== null) {
+    const baseline = ascLogs[0].weight
+    const deltaTotal = goalTarget - baseline
+    const deltaCurrent = goalTarget - current
+    goalProgress = deltaTotal !== 0 ? 1 - (deltaCurrent / deltaTotal) : null
+    if (goalProgress !== null) {
+      goalProgress = Math.min(1, Math.max(0, goalProgress))
+    }
+  }
+
+  let goalExpectedToday: number | null = null
+  let goalDeltaFromExpected: number | null = null
+  if (goalTarget !== null && goalDate) {
+    const startWeight = ascLogs[0].weight
+    const startTime = new Date(ascLogs[0].recordedAt).getTime()
+    const goalTime = new Date(goalDate).getTime()
+    const nowTime = Date.now()
+    const span = goalTime - startTime
+    if (span !== 0) {
+      const clampedNow = Math.min(Math.max(nowTime, startTime), goalTime)
+      const progressTime = clampedNow - startTime
+      goalExpectedToday = startWeight + (goalTarget - startWeight) * (progressTime / span)
+      goalDeltaFromExpected = current - goalExpectedToday
+    }
+  }
+
+  let etaWeeksToGoal: number | null = null
+  if (goalTarget !== null && trendKgPerWeek !== 0) {
+    const remaining = goalTarget - current
+    if ((remaining > 0 && trendKgPerWeek > 0) || (remaining < 0 && trendKgPerWeek < 0)) {
+      etaWeeksToGoal = Math.abs(remaining / trendKgPerWeek)
+    }
+  }
+
+  // Best / worst week (net change per week window)
+  const weeklyBuckets: Record<string, { first: number; last: number }> = {}
+  ascLogs.forEach(log => {
+    const weekKey = startOfWeek(new Date(log.recordedAt)).toISOString()
+    if (!weeklyBuckets[weekKey]) {
+      weeklyBuckets[weekKey] = { first: log.weight, last: log.weight }
+    } else {
+      weeklyBuckets[weekKey].last = log.weight
+    }
+  })
+  const weekChanges = Object.values(weeklyBuckets).map(w => w.last - w.first)
+  const bestWeekChange = weekChanges.length > 0 ? Math.min(...weekChanges) : null // most loss
+  const worstWeekChange = weekChanges.length > 0 ? Math.max(...weekChanges) : null // most gain
+
   return {
     current,
     min,
@@ -1112,7 +1187,18 @@ function calculateWeightStats(logs: WeightLog[]): WeightStats | null {
     trend,
     changeFromStart: current - weights[weights.length - 1],
     changeFromYesterday,
-    todayCount: todayLogs.length
+    todayCount: todayLogs.length,
+    weeklyChange,
+    monthlyChange,
+    trendKgPerWeek,
+    etaWeeksToGoal,
+    goalTarget,
+    goalDate,
+    goalProgress,
+    goalExpectedToday,
+    goalDeltaFromExpected,
+    bestWeekChange,
+    worstWeekChange
   }
 }
 

@@ -4,14 +4,14 @@ import { useMemo, useState } from 'react'
 import { useHealth } from '@/contexts/health-context'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts'
 import { format, subDays, subMonths, subYears, startOfWeek, startOfMonth, startOfYear, isSameWeek, isSameMonth, isSameYear } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 type Period = 'week' | 'month' | 'year' | 'all'
 
 export function WeightChart() {
-  const { weightLogs } = useHealth()
+  const { weightLogs, weightStats } = useHealth()
   const [period, setPeriod] = useState<Period>('month')
 
   const chartData = useMemo(() => {
@@ -42,14 +42,16 @@ export function WeightChart() {
         break
     }
 
-    // Agrupar dados conforme período
+    let data: Array<{ date: string; fullDate: string; weight: number; timestamp: number; goalProjection?: number }> = []
+
     if (period === 'week') {
       // Mostrar cada medição
-      return filteredLogs
+      data = filteredLogs
         .map(log => ({
           date: format(new Date(log.recordedAt), 'dd/MM', { locale: ptBR }),
           fullDate: format(new Date(log.recordedAt), "dd/MM 'às' HH:mm", { locale: ptBR }),
-          weight: log.weight
+          weight: log.weight,
+          timestamp: new Date(log.recordedAt).getTime()
         }))
         .reverse()
     } else if (period === 'month') {
@@ -63,12 +65,13 @@ export function WeightChart() {
         dayGroups.get(day)!.push(log.weight)
       })
 
-      return Array.from(dayGroups.entries())
+      data = Array.from(dayGroups.entries())
         .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
         .map(([day, weights]) => ({
           date: format(new Date(day), 'dd/MM', { locale: ptBR }),
           fullDate: format(new Date(day), "dd 'de' MMMM", { locale: ptBR }),
-          weight: weights.reduce((a, b) => a + b, 0) / weights.length
+          weight: weights.reduce((a, b) => a + b, 0) / weights.length,
+          timestamp: new Date(day).getTime()
         }))
     } else if (period === 'year') {
       // Média por semana
@@ -82,12 +85,13 @@ export function WeightChart() {
         weekGroups.get(weekKey)!.push(log.weight)
       })
 
-      return Array.from(weekGroups.entries())
+      data = Array.from(weekGroups.entries())
         .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
         .map(([week, weights]) => ({
           date: format(new Date(week), 'dd/MM', { locale: ptBR }),
           fullDate: format(new Date(week), "dd 'de' MMMM", { locale: ptBR }),
-          weight: weights.reduce((a, b) => a + b, 0) / weights.length
+          weight: weights.reduce((a, b) => a + b, 0) / weights.length,
+          timestamp: new Date(week).getTime()
         }))
     } else {
       // Média por mês
@@ -101,15 +105,33 @@ export function WeightChart() {
         monthGroups.get(monthKey)!.push(log.weight)
       })
 
-      return Array.from(monthGroups.entries())
+      data = Array.from(monthGroups.entries())
         .sort((a, b) => new Date(a[0] + '-01').getTime() - new Date(b[0] + '-01').getTime())
         .map(([month, weights]) => ({
           date: format(new Date(month + '-01'), 'MMM/yy', { locale: ptBR }),
           fullDate: format(new Date(month + '-01'), "MMMM 'de' yyyy", { locale: ptBR }),
-          weight: weights.reduce((a, b) => a + b, 0) / weights.length
+          weight: weights.reduce((a, b) => a + b, 0) / weights.length,
+          timestamp: new Date(month + '-01').getTime()
         }))
     }
-  }, [weightLogs, period])
+
+    // Projeção linear até a meta
+    if (weightStats?.goalTarget && weightStats.goalDate && data.length > 0) {
+      const startWeight = data[0].weight
+      const startTime = data[0].timestamp
+      const goalTime = new Date(weightStats.goalDate).getTime()
+      const span = goalTime - startTime
+      if (span !== 0) {
+        data = data.map(point => {
+          const clamped = Math.min(Math.max(point.timestamp, startTime), goalTime)
+          const projected = startWeight + (weightStats.goalTarget! - startWeight) * ((clamped - startTime) / span)
+          return { ...point, goalProjection: projected }
+        })
+      }
+    }
+
+    return data
+  }, [weightLogs, period, weightStats?.goalDate, weightStats?.goalTarget])
 
   if (weightLogs.length === 0) {
     return (
@@ -190,20 +212,38 @@ export function WeightChart() {
                   borderRadius: '6px'
                 }}
                 labelStyle={{ color: 'hsl(var(--foreground))' }}
-                formatter={(value: number) => [`${value.toFixed(1)} kg`, 'Peso']}
-                labelFormatter={(label: string) => {
-                  const data = chartData.find(d => d.date === label)
-                  return data ? data.fullDate : label
-                }}
+                formatter={(value: number, name: string) => [`${value.toFixed(1)} kg`, name]}
+                labelFormatter={(_, payload) => payload?.[0]?.payload.fullDate || ''}
               />
               <Line 
                 type="monotone" 
                 dataKey="weight" 
+                name="Peso"
                 stroke="hsl(var(--primary))" 
                 strokeWidth={2}
                 dot={{ fill: 'hsl(var(--primary))', r: 4 }}
                 activeDot={{ r: 6 }}
               />
+              {weightStats?.goalTarget && weightStats.goalDate && (
+                <Line
+                  type="monotone"
+                  dataKey="goalProjection"
+                  name="Projeção para meta"
+                  stroke="hsl(var(--muted-foreground))"
+                  strokeDasharray="5 5"
+                  strokeWidth={2}
+                  dot={false}
+                  connectNulls
+                />
+              )}
+              {weightStats?.goalTarget && (
+                <ReferenceLine
+                  y={weightStats.goalTarget}
+                  stroke="hsl(var(--destructive))"
+                  strokeDasharray="4 4"
+                  label={{ value: `Meta: ${weightStats.goalTarget} kg`, position: 'insideTopRight', fill: 'hsl(var(--destructive))', fontSize: 10 }}
+                />
+              )}
             </LineChart>
           </ResponsiveContainer>
         </div>

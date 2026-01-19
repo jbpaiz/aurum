@@ -126,6 +126,17 @@ export interface WeightStats {
   changeFromStart: number | null
   changeFromYesterday: number | null
   todayCount: number
+  weeklyChange?: number | null
+  monthlyChange?: number | null
+  trendKgPerWeek?: number | null
+  etaWeeksToGoal?: number | null
+  goalTarget?: number | null
+  goalDate?: string | null
+  goalProgress?: number | null
+  goalExpectedToday?: number | null
+  goalDeltaFromExpected?: number | null
+  bestWeekChange?: number | null
+  worstWeekChange?: number | null
 }
 
 export interface ActivityStats {
