@@ -247,13 +247,13 @@ export function KanbanView() {
   }
 
   return (
-    <div className="flex flex-col gap-3 p-4 md:gap-3 md:p-3">
+    <div className="flex flex-col gap-3 p-0 md:gap-3 md:p-0">
       {/* Header moderno com gradiente sutil */}
       <div className="relative overflow-hidden rounded-2xl border border-gray-200/80 dark:border-gray-700/50 bg-gradient-to-br from-white via-white to-gray-50/30 dark:from-gray-800 dark:via-gray-800 dark:to-gray-900/50 shadow-sm backdrop-blur-sm">
         {/* Decoração de fundo sutil */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-transparent dark:from-blue-500/10 dark:via-purple-500/10 pointer-events-none" />
         
-        <div className="relative p-4 sm:p-6 space-y-4">
+        <div className="relative p-4 sm:p-5 space-y-4">
           {/* Linha 1: Título com dropdown de quadros e Ações */}
           <div className="flex items-center justify-between gap-4">
             {/* Título clicável com dropdown de quadros */}
@@ -426,7 +426,7 @@ export function KanbanView() {
         </div>
       ) : viewMode === 'kanban' ? (
         <div 
-          className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-x-auto max-w-full md:max-w-[calc(100vw-280px)] h-[calc(100vh-205px)] [scrollbar-width:thin] [scrollbar-color:#CBD5E1_#F1F5F9] dark:[scrollbar-color:#4B5563_#1F2937]"
+          className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-x-auto w-full h-[calc(100vh-205px)] [scrollbar-width:thin] [scrollbar-color:#CBD5E1_#F1F5F9] dark:[scrollbar-color:#4B5563_#1F2937]"
         >
           <div className="p-3 sm:p-4 min-w-min h-full">
             <KanbanBoard
