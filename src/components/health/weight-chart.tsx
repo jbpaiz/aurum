@@ -5,7 +5,7 @@ import { useHealth } from '@/contexts/health-context'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts'
-import { format, subDays, subMonths, subYears, startOfWeek, startOfMonth, startOfYear, isSameWeek, isSameMonth, isSameYear } from 'date-fns'
+import { format, subDays, subMonths, subYears, startOfWeek, startOfMonth, startOfDay } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 type Period = 'week' | 'month' | 'year' | 'all'
@@ -17,101 +17,128 @@ export function WeightChart() {
   const chartData = useMemo(() => {
     if (weightLogs.length === 0) return []
 
+    const normalize = (value: string | Date) => startOfDay(new Date(value))
+    const asDate = (value: string | Date) => new Date(value)
+
     const now = new Date()
+    const today = startOfDay(now)
     let filteredLogs = weightLogs
+
+    // Médias por dia da semana (usa todo o histórico para dar base estável)
+    const weekdayBuckets: Record<number, number[]> = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] }
+    weightLogs.forEach(log => {
+      const weekday = asDate(log.recordedAt).getDay()
+      weekdayBuckets[weekday].push(log.weight)
+    })
+    const weekdayAverages: Record<number, number | undefined> = { 0: undefined, 1: undefined, 2: undefined, 3: undefined, 4: undefined, 5: undefined, 6: undefined }
+    ;(Object.keys(weekdayBuckets) as Array<keyof typeof weekdayBuckets>).forEach(key => {
+      const bucket = weekdayBuckets[key]
+      if (bucket.length > 0) {
+        weekdayAverages[key] = bucket.reduce((a, b) => a + b, 0) / bucket.length
+      }
+    })
 
     // Filtrar por período
     switch (period) {
       case 'week':
-        filteredLogs = weightLogs.filter(log => 
-          new Date(log.recordedAt) >= subDays(now, 7)
-        )
+        filteredLogs = weightLogs.filter(log => {
+          const day = normalize(log.recordedAt)
+          return day >= subDays(today, 7) && day <= today
+        })
         break
       case 'month':
-        filteredLogs = weightLogs.filter(log => 
-          new Date(log.recordedAt) >= subMonths(now, 1)
-        )
+        filteredLogs = weightLogs.filter(log => {
+          const day = normalize(log.recordedAt)
+          const start = subMonths(today, 1)
+          return day >= start && day <= today
+        })
         break
       case 'year':
-        filteredLogs = weightLogs.filter(log => 
-          new Date(log.recordedAt) >= subYears(now, 1)
-        )
+        filteredLogs = weightLogs.filter(log => {
+          const day = normalize(log.recordedAt)
+          const start = subYears(today, 1)
+          return day >= start && day <= today
+        })
         break
       case 'all':
         filteredLogs = weightLogs
         break
     }
 
-    let data: Array<{ date: string; fullDate: string; weight: number; timestamp: number; goalProjection?: number }> = []
+    let data: Array<{ label: string; fullDate: string; weight: number; timestamp: number; goalProjection?: number; weekdayTrend?: number }> = []
 
     if (period === 'week') {
       // Mostrar cada medição
       data = filteredLogs
         .map(log => ({
-          date: format(new Date(log.recordedAt), 'dd/MM', { locale: ptBR }),
-          fullDate: format(new Date(log.recordedAt), "dd/MM 'às' HH:mm", { locale: ptBR }),
+          label: `${format(asDate(log.recordedAt), 'EEE', { locale: ptBR })} ${format(asDate(log.recordedAt), 'dd/MM', { locale: ptBR })}`,
+          fullDate: format(asDate(log.recordedAt), "EEEE, dd/MM 'às' HH:mm", { locale: ptBR }),
           weight: log.weight,
-          timestamp: new Date(log.recordedAt).getTime()
+          timestamp: asDate(log.recordedAt).getTime()
         }))
         .reverse()
     } else if (period === 'month') {
       // Média por dia
-      const dayGroups = new Map<string, number[]>()
+      const dayGroups = new Map<number, number[]>()
       filteredLogs.forEach(log => {
-        const day = format(new Date(log.recordedAt), 'yyyy-MM-dd')
-        if (!dayGroups.has(day)) {
-          dayGroups.set(day, [])
+        const dayDate = normalize(log.recordedAt)
+        const key = dayDate.getTime()
+        if (!dayGroups.has(key)) {
+          dayGroups.set(key, [])
         }
-        dayGroups.get(day)!.push(log.weight)
+        dayGroups.get(key)!.push(log.weight)
       })
 
       data = Array.from(dayGroups.entries())
-        .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
-        .map(([day, weights]) => ({
-          date: format(new Date(day), 'dd/MM', { locale: ptBR }),
-          fullDate: format(new Date(day), "dd 'de' MMMM", { locale: ptBR }),
-          weight: weights.reduce((a, b) => a + b, 0) / weights.length,
-          timestamp: new Date(day).getTime()
-        }))
+        .sort((a, b) => a[0] - b[0])
+        .map(([ms, weights]) => {
+          const dayDate = new Date(ms)
+          return {
+            label: `${format(dayDate, 'EEE', { locale: ptBR })} ${format(dayDate, 'dd/MM', { locale: ptBR })}`,
+            fullDate: format(dayDate, "EEEE, dd 'de' MMMM", { locale: ptBR }),
+            weight: weights.reduce((a, b) => a + b, 0) / weights.length,
+            timestamp: ms
+          }
+        })
     } else if (period === 'year') {
       // Média por semana
       const weekGroups = new Map<string, number[]>()
       filteredLogs.forEach(log => {
-        const weekStart = startOfWeek(new Date(log.recordedAt), { locale: ptBR })
-        const weekKey = format(weekStart, 'yyyy-MM-dd')
-        if (!weekGroups.has(weekKey)) {
-          weekGroups.set(weekKey, [])
+        const weekStart = startOfWeek(normalize(log.recordedAt), { locale: ptBR })
+        const key = weekStart.getTime()
+        if (!weekGroups.has(key)) {
+          weekGroups.set(key, [])
         }
-        weekGroups.get(weekKey)!.push(log.weight)
+        weekGroups.get(key)!.push(log.weight)
       })
 
       data = Array.from(weekGroups.entries())
-        .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
-        .map(([week, weights]) => ({
-          date: format(new Date(week), 'dd/MM', { locale: ptBR }),
-          fullDate: format(new Date(week), "dd 'de' MMMM", { locale: ptBR }),
+        .sort((a, b) => a[0] - b[0])
+        .map(([ms, weights]) => ({
+          label: format(new Date(ms), 'dd/MM', { locale: ptBR }),
+          fullDate: format(new Date(ms), "dd 'de' MMMM", { locale: ptBR }),
           weight: weights.reduce((a, b) => a + b, 0) / weights.length,
-          timestamp: new Date(week).getTime()
+          timestamp: ms
         }))
     } else {
       // Média por mês
       const monthGroups = new Map<string, number[]>()
       filteredLogs.forEach(log => {
-        const monthStart = startOfMonth(new Date(log.recordedAt))
-        const monthKey = format(monthStart, 'yyyy-MM')
-        if (!monthGroups.has(monthKey)) {
-          monthGroups.set(monthKey, [])
+        const monthStart = startOfMonth(normalize(log.recordedAt))
+        const key = monthStart.getTime()
+        if (!monthGroups.has(key)) {
+          monthGroups.set(key, [])
         }
-        monthGroups.get(monthKey)!.push(log.weight)
+        monthGroups.get(key)!.push(log.weight)
       })
 
       data = Array.from(monthGroups.entries())
-        .sort((a, b) => new Date(a[0] + '-01').getTime() - new Date(b[0] + '-01').getTime())
-        .map(([month, weights]) => ({
-          date: format(new Date(month + '-01'), 'MMM/yy', { locale: ptBR }),
-          fullDate: format(new Date(month + '-01'), "MMMM 'de' yyyy", { locale: ptBR }),
+        .sort((a, b) => a[0] - b[0])
+        .map(([ms, weights]) => ({
+          label: format(new Date(ms), 'MMM/yy', { locale: ptBR }),
+          fullDate: format(new Date(ms), "MMMM 'de' yyyy", { locale: ptBR }),
           weight: weights.reduce((a, b) => a + b, 0) / weights.length,
-          timestamp: new Date(month + '-01').getTime()
+          timestamp: ms
         }))
     }
 
@@ -128,6 +155,15 @@ export function WeightChart() {
           return { ...point, goalProjection: projected }
         })
       }
+    }
+
+    // Tendência por dia da semana (usa média histórica daquele dia)
+    if (data.length > 0) {
+      data = data.map(point => {
+        const weekday = new Date(point.timestamp).getDay()
+        const weekdayTrend = weekdayAverages[weekday]
+        return { ...point, weekdayTrend }
+      })
     }
 
     return data
@@ -194,7 +230,7 @@ export function WeightChart() {
             <LineChart data={chartData} margin={{ top: 5, right: 5, left: -10, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis 
-                dataKey="date" 
+                dataKey="label" 
                 className="text-xs"
                 tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
                 interval="preserveStartEnd"
@@ -224,6 +260,19 @@ export function WeightChart() {
                 dot={{ fill: 'hsl(var(--primary))', r: 4 }}
                 activeDot={{ r: 6 }}
               />
+              {chartData.some(point => point.weekdayTrend !== undefined) && (
+                <Line
+                  type="monotone"
+                  dataKey="weekdayTrend"
+                  name="Tendência por dia"
+                  stroke="#f97316"
+                  strokeDasharray="4 6"
+                  strokeWidth={1.5}
+                  dot={false}
+                  connectNulls
+                  opacity={0.9}
+                />
+              )}
               {weightStats?.goalTarget && weightStats.goalDate && (
                 <Line
                   type="monotone"
