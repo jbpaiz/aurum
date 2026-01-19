@@ -391,7 +391,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
       }}
     >
       <div
-        className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-2xl dark:shadow-gray-900/50"
+        className="max-h-[95vh] w-full max-w-6xl overflow-y-auto rounded-2xl bg-white dark:bg-gray-800 p-5 shadow-2xl dark:shadow-gray-900/50"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
@@ -404,7 +404,7 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
           </Button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {formError && (
             <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600" role="alert">
               {formError}
