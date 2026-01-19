@@ -57,7 +57,7 @@ export const resolveHubId = (pathname: string | null | undefined): HubId => {
     // Tentar recuperar o último hub acessado do localStorage
     if (typeof window !== 'undefined') {
       const lastHub = localStorage.getItem('aurum.lastActiveHub') as HubId | null
-      if (lastHub === 'finance' || lastHub === 'tasks' || lastHub === 'health') {
+      if (lastHub === 'finance' || lastHub === 'tasks' || lastHub === 'health' || lastHub === 'vehicles') {
         return lastHub
       }
     }

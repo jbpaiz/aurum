@@ -112,12 +112,17 @@ export function VehiclesPage() {
     }
 
     const isEdit = Boolean(form.id)
+    if (isEdit && !form.id) {
+      toast({ title: 'ID do veículo ausente', variant: 'destructive' })
+      setSaving(false)
+      return
+    }
 
     const { data, error } = isEdit
       ? await supabase
         .from('vehicles')
         .update(payload)
-        .eq('id', form.id)
+        .eq('id', form.id as string)
         .select('*')
         .single()
       : await supabase

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { supabase } from '@/lib/supabase'
-import type { UserPreferences, UserPreferencesInput } from '@/types/preferences'
+import type { HubId, UserPreferences, UserPreferencesInput } from '@/types/preferences'
 
 const PREFERENCES_TABLE = 'user_preferences'
 
@@ -52,7 +52,7 @@ export function useUserPreferences() {
 
     // Tentar migrar do localStorage
     const localTheme = localStorage.getItem('theme') as 'light' | 'dark' | 'system' | null
-    const localHub = localStorage.getItem('aurum.lastActiveHub') as 'finance' | 'tasks' | null
+    const localHub = localStorage.getItem('aurum.lastActiveHub') as HubId | null
     const localViewMode = localStorage.getItem('aurum.tasks.viewMode') as 'kanban' | 'list' | 'metrics' | null
     const localAdaptiveWidth = localStorage.getItem('aurum.tasks.adaptiveWidth') === 'true'
     const localAdaptiveWidthList = localStorage.getItem('aurum.tasks.adaptiveWidthList') === 'true'

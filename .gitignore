@@ -112,6 +112,10 @@ build/Release
 
 # Supabase local development
 .supabase
+supabase/.temp/
+
+# Supabase generated temp artifacts
+src/lib/database.types.tssupabase
 
 # Temporary files
 tmp/
