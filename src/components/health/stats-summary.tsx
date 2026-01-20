@@ -14,11 +14,18 @@ export function StatsSummary() {
   const stats = useMemo(() => {
     const now = new Date()
     
+    console.log('=== DEBUG STATS ===')
+    console.log('Data atual:', now)
+    console.log('Atividades totais:', activities.length)
+    console.log('Sleep logs totais:', sleepLogs.length)
+    
     // Semanas
-    const thisWeekStart = startOfWeek(now, { locale: ptBR })
-    const thisWeekEnd = endOfWeek(now, { locale: ptBR })
-    const lastWeekStart = startOfWeek(subWeeks(now, 1), { locale: ptBR })
-    const lastWeekEnd = endOfWeek(subWeeks(now, 1), { locale: ptBR })
+    const thisWeekStart = startOfWeek(now, { locale: ptBR, weekStartsOn: 1 })
+    const thisWeekEnd = endOfWeek(now, { locale: ptBR, weekStartsOn: 1 })
+    const lastWeekStart = startOfWeek(subWeeks(now, 1), { locale: ptBR, weekStartsOn: 1 })
+    const lastWeekEnd = endOfWeek(subWeeks(now, 1), { locale: ptBR, weekStartsOn: 1 })
+    
+    console.log('Semana atual:', thisWeekStart, 'até', thisWeekEnd)
     
     // Meses
     const thisMonthStart = startOfMonth(now)
@@ -51,13 +58,17 @@ export function StatsSummary() {
     const thisWeekActivities = activities.filter(a => {
       const [year, month, day] = a.activityDate.split('-').map(Number)
       const date = new Date(year, month - 1, day)
-      return date >= thisWeekStart && date <= thisWeekEnd
+      const isInWeek = date >= thisWeekStart && date <= thisWeekEnd
+      console.log(`Atividade ${a.activityDate}:`, date, 'na semana?', isInWeek)
+      return isInWeek
     })
     const lastWeekActivities = activities.filter(a => {
       const [year, month, day] = a.activityDate.split('-').map(Number)
       const date = new Date(year, month - 1, day)
       return date >= lastWeekStart && date <= lastWeekEnd
     })
+    
+    console.log('Atividades desta semana:', thisWeekActivities.length)
     
     const thisWeekActivityMinutes = thisWeekActivities.reduce((sum, a) => sum + a.durationMinutes, 0)
     const lastWeekActivityMinutes = lastWeekActivities.reduce((sum, a) => sum + a.durationMinutes, 0)
@@ -72,13 +83,17 @@ export function StatsSummary() {
     const thisWeekSleep = sleepLogs.filter(s => {
       const [year, month, day] = s.sleepDate.split('-').map(Number)
       const date = new Date(year, month - 1, day)
-      return date >= thisWeekStart && date <= thisWeekEnd
+      const isInWeek = date >= thisWeekStart && date <= thisWeekEnd
+      console.log(`Sono ${s.sleepDate}:`, date, 'na semana?', isInWeek)
+      return isInWeek
     })
     const lastWeekSleep = sleepLogs.filter(s => {
       const [year, month, day] = s.sleepDate.split('-').map(Number)
       const date = new Date(year, month - 1, day)
       return date >= lastWeekStart && date <= lastWeekEnd
     })
+    
+    console.log('Sleep logs desta semana:', thisWeekSleep.length)
     
     const avgSleepThisWeek = thisWeekSleep.length > 0
       ? thisWeekSleep.reduce((sum, s) => sum + s.durationMinutes, 0) / thisWeekSleep.length
