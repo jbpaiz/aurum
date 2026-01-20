@@ -4,7 +4,7 @@ import { useMemo } from 'react'
 import { useHealth } from '@/contexts/health-context'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { TrendingUp, TrendingDown, Minus, Calendar, Flame, Moon, Activity as ActivityIcon, Target } from 'lucide-react'
-import { startOfWeek, startOfMonth, endOfWeek, endOfMonth, subWeeks, subMonths, differenceInDays, addDays } from 'date-fns'
+import { startOfWeek, startOfMonth, endOfWeek, endOfMonth, subWeeks, subMonths, differenceInDays, addDays, startOfDay } from 'date-fns'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
@@ -49,11 +49,13 @@ export function StatsSummary() {
 
     // Atividades - Semana
     const thisWeekActivities = activities.filter(a => {
-      const date = new Date(a.activityDate)
+      const [year, month, day] = a.activityDate.split('-').map(Number)
+      const date = new Date(year, month - 1, day)
       return date >= thisWeekStart && date <= thisWeekEnd
     })
     const lastWeekActivities = activities.filter(a => {
-      const date = new Date(a.activityDate)
+      const [year, month, day] = a.activityDate.split('-').map(Number)
+      const date = new Date(year, month - 1, day)
       return date >= lastWeekStart && date <= lastWeekEnd
     })
     
@@ -68,11 +70,13 @@ export function StatsSummary() {
 
     // Sono - Semana
     const thisWeekSleep = sleepLogs.filter(s => {
-      const date = new Date(s.sleepDate)
+      const [year, month, day] = s.sleepDate.split('-').map(Number)
+      const date = new Date(year, month - 1, day)
       return date >= thisWeekStart && date <= thisWeekEnd
     })
     const lastWeekSleep = sleepLogs.filter(s => {
-      const date = new Date(s.sleepDate)
+      const [year, month, day] = s.sleepDate.split('-').map(Number)
+      const date = new Date(year, month - 1, day)
       return date >= lastWeekStart && date <= lastWeekEnd
     })
     
@@ -240,7 +244,21 @@ export function StatsSummary() {
                 Data Estimada da Meta
               </p>
               <div className="flex flex-col gap-1 mt-1">
-                {weightStats?.goalTarget && weightStats.goalDate && weightLogs.length >= 2 ? (() => {
+                {(() => {
+                  if (!weightStats?.goalTarget || !weightStats?.goalDate || weightLogs.length < 2) {
+                    return (
+                      <>
+                        <span className="text-2xl font-bold text-muted-foreground">--</span>
+                        <p className="text-xs text-muted-foreground">
+                          {!weightStats?.goalTarget || !weightStats?.goalDate 
+                            ? 'Configure uma meta de peso'
+                            : 'Adicione mais registros de peso'
+                          }
+                        </p>
+                      </>
+                    )
+                  }
+                  
                   // Calcular regressão linear
                   const sorted = [...weightLogs].sort((a, b) => 
                     new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime()
@@ -248,13 +266,17 @@ export function StatsSummary() {
                   const weights = sorted.map(w => w.weight)
                   const timestamps = sorted.map(w => new Date(w.recordedAt).getTime())
                   
-                  const xMean = timestamps.reduce((a, b) => a + b, 0) / timestamps.length
+                  // Normalizar timestamps (subtrair o primeiro) para evitar problemas numéricos
+                  const baseTime = timestamps[0]
+                  const normalizedTimestamps = timestamps.map(t => t - baseTime)
+                  
+                  const xMean = normalizedTimestamps.reduce((a, b) => a + b, 0) / normalizedTimestamps.length
                   const yMean = weights.reduce((a, b) => a + b, 0) / weights.length
                   
                   let numerator = 0
                   let denominator = 0
-                  for (let i = 0; i < timestamps.length; i++) {
-                    const dx = timestamps[i] - xMean
+                  for (let i = 0; i < normalizedTimestamps.length; i++) {
+                    const dx = normalizedTimestamps[i] - xMean
                     numerator += dx * (weights[i] - yMean)
                     denominator += dx * dx
                   }
@@ -262,8 +284,8 @@ export function StatsSummary() {
                   const slope = denominator !== 0 ? numerator / denominator : 0
                   const intercept = yMean - slope * xMean
                   
-                  // Se a inclinação for praticamente zero, não há tendência
-                  if (Math.abs(slope) < 0.000001) {
+                  // Se a inclinação for zero (peso não está mudando), não há tendência
+                  if (slope === 0) {
                     return (
                       <>
                         <span className="text-2xl font-bold text-muted-foreground">--</span>
@@ -272,8 +294,9 @@ export function StatsSummary() {
                     )
                   }
                   
-                  // Calcular quando atingirá a meta
-                  const estimatedTimestamp = (weightStats.goalTarget - intercept) / slope
+                  // Calcular quando atingirá a meta (usando tempo normalizado)
+                  const normalizedEstimatedTime = (weightStats.goalTarget - intercept) / slope
+                  const estimatedTimestamp = baseTime + normalizedEstimatedTime
                   const estimatedDate = new Date(estimatedTimestamp)
                   const goalDate = new Date(weightStats.goalDate)
                   const currentWeight = weights[weights.length - 1]
@@ -325,17 +348,7 @@ export function StatsSummary() {
                       </p>
                     </>
                   )
-                })() : (
-                  <>
-                    <span className="text-2xl font-bold text-muted-foreground">--</span>
-                    <p className="text-xs text-muted-foreground">
-                      {!weightStats?.goalTarget || !weightStats.goalDate 
-                        ? 'Configure uma meta de peso'
-                        : 'Adicione mais registros de peso'
-                      }
-                    </p>
-                  </>
-                )}
+                })()}
               </div>
             </div>
           </div>
