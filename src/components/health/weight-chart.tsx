@@ -370,7 +370,7 @@ export function WeightChart() {
       <CardContent className={isFullscreen ? 'flex-1 flex flex-col px-3 py-2 pb-3' : ''}>
         <div className={isFullscreen ? 'flex-1 w-full min-h-0' : 'h-[250px] sm:h-[300px] w-full'}>
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 5, right: 5, left: 12, bottom: 5 }}>
+            <LineChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis 
                 dataKey="label" 
@@ -383,7 +383,7 @@ export function WeightChart() {
                 tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
                 domain={['dataMin - 2', 'dataMax + 2']}
                 tickFormatter={(value: number) => value.toFixed(1)}
-                width={40}
+                width={42}
               />
               <Tooltip 
                 contentStyle={{
