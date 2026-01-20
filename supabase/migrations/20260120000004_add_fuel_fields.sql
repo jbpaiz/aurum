@@ -7,6 +7,13 @@ ALTER TABLE public.fuel_logs
 ADD COLUMN IF NOT EXISTS bandeira TEXT,
 ADD COLUMN IF NOT EXISTS tipo_combustivel TEXT;
 
+-- Drop existing constraints if they exist
+ALTER TABLE public.fuel_logs
+DROP CONSTRAINT IF EXISTS check_bandeira_values;
+
+ALTER TABLE public.fuel_logs
+DROP CONSTRAINT IF EXISTS check_tipo_combustivel_values;
+
 -- Add check constraints for valid values
 ALTER TABLE public.fuel_logs
 ADD CONSTRAINT check_bandeira_values 

@@ -6,6 +6,10 @@
 ALTER TABLE public.vehicles
 ADD COLUMN IF NOT EXISTS tipo TEXT DEFAULT 'carro';
 
+-- Drop existing constraint if it exists
+ALTER TABLE public.vehicles
+DROP CONSTRAINT IF EXISTS check_tipo_values;
+
 -- Add check constraint for valid values
 ALTER TABLE public.vehicles
 ADD CONSTRAINT check_tipo_values 
