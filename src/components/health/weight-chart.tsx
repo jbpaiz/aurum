@@ -246,87 +246,28 @@ export function WeightChart() {
     return data
   }, [weightLogs, period, weightStats?.goalDate, weightStats?.goalTarget])
 
-  const handleFullscreen = async () => {
-    if (!chartContainerRef.current) return
-
-    if (!isFullscreen) {
+  const handleFullscreen = () => {
+    // Safari iOS não suporta Fullscreen API para elementos HTML
+    // Usamos CSS para criar um "pseudo-fullscreen"
+    setIsFullscreen(!isFullscreen)
+    
+    // Tentar rotacionar tela em landscape no mobile
+    if (!isFullscreen && screen.orientation && 'lock' in screen.orientation) {
       try {
-        const elem = chartContainerRef.current as any
-        
-        // Tentar diferentes APIs de fullscreen (suporte multi-browser)
-        if (elem.requestFullscreen) {
-          await elem.requestFullscreen()
-        } else if (elem.webkitRequestFullscreen) {
-          await elem.webkitRequestFullscreen()
-        } else if (elem.mozRequestFullScreen) {
-          await elem.mozRequestFullScreen()
-        } else if (elem.msRequestFullscreen) {
-          await elem.msRequestFullscreen()
-        }
-        
-        setIsFullscreen(true)
-        
-        // Sugerir rotação da tela em mobile
-        if (screen.orientation && 'lock' in screen.orientation) {
-          try {
-            await (screen.orientation as any).lock('landscape')
-          } catch (e) {
-            // Silenciosamente falhar se não suportado
-          }
-        }
-      } catch (err) {
-        console.error('Erro ao entrar em fullscreen:', err)
+        (screen.orientation as any).lock('landscape').catch(() => {
+          // Ignorar erros silenciosamente
+        })
+      } catch (e) {
+        // Ignorar erros silenciosamente
       }
-    } else {
+    } else if (isFullscreen && screen.orientation && 'unlock' in screen.orientation) {
       try {
-        const doc = document as any
-        
-        if (doc.exitFullscreen) {
-          await doc.exitFullscreen()
-        } else if (doc.webkitExitFullscreen) {
-          await doc.webkitExitFullscreen()
-        } else if (doc.mozCancelFullScreen) {
-          await doc.mozCancelFullScreen()
-        } else if (doc.msExitFullscreen) {
-          await doc.msExitFullscreen()
-        }
-        
-        setIsFullscreen(false)
-        
-        if (screen.orientation && 'unlock' in screen.orientation) {
-          (screen.orientation as any).unlock()
-        }
-      } catch (err) {
-        console.error('Erro ao sair de fullscreen:', err)
+        (screen.orientation as any).unlock()
+      } catch (e) {
+        // Ignorar erros silenciosamente
       }
     }
   }
-
-  // Listener para mudanças de fullscreen (quando user pressiona ESC)
-  useMemo(() => {
-    const handleFullscreenChange = () => {
-      const doc = document as any
-      const isFullscreenNow = !!(
-        doc.fullscreenElement ||
-        doc.webkitFullscreenElement ||
-        doc.mozFullScreenElement ||
-        doc.msFullscreenElement
-      )
-      setIsFullscreen(isFullscreenNow)
-    }
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange)
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange)
-    document.addEventListener('mozfullscreenchange', handleFullscreenChange)
-    document.addEventListener('MSFullscreenChange', handleFullscreenChange)
-    
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange)
-      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange)
-      document.removeEventListener('mozfullscreenchange', handleFullscreenChange)
-      document.removeEventListener('MSFullscreenChange', handleFullscreenChange)
-    }
-  }, [])
 
   if (weightLogs.length === 0) {
     return (
@@ -340,8 +281,8 @@ export function WeightChart() {
   }
 
   return (
-    <Card ref={chartContainerRef} className={isFullscreen ? 'fixed inset-0 z-50 rounded-none flex flex-col' : ''}>
-      <CardHeader>
+    <Card ref={chartContainerRef} className={isFullscreen ? 'fixed inset-0 z-50 rounded-none flex flex-col bg-background' : ''}>
+      <CardHeader className={isFullscreen ? 'shrink-0' : ''}>
         <div className="flex flex-col gap-4">
           <div className="flex items-start justify-between gap-3">
             <div>
