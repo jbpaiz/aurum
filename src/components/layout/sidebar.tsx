@@ -192,8 +192,8 @@ export function Sidebar({ children }: SidebarProps) {
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-950">
-      {/* Desktop Sidebar */}
-      <div className="hidden md:flex md:w-64 md:flex-col h-screen">
+      {/* Desktop Sidebar - apenas em dispositivos sem touch */}
+      <div className="hidden no-touch:flex no-touch:w-64 no-touch:flex-col h-screen">
         <div className="flex flex-col h-full bg-white shadow-sm dark:bg-gray-900 dark:shadow-gray-800/50">
           {/* Brand + Hub selector */}
           <div className="flex-shrink-0 relative px-4 pt-5 pb-4 border-b border-gray-100 dark:border-gray-800">
@@ -313,7 +313,7 @@ export function Sidebar({ children }: SidebarProps) {
 
       {/* Mobile Sidebar */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-40 md:hidden">
+        <div className="fixed inset-0 z-40 touch:block no-touch:hidden">
           <div className="fixed inset-0 bg-gray-600 bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-80" onClick={() => setIsMobileMenuOpen(false)} />
           <div className="relative flex flex-col w-64 h-full bg-white shadow-xl dark:bg-gray-900 dark:shadow-gray-950/50">
             <div className="flex items-center gap-3 px-6 pt-8 pb-4">
@@ -424,7 +424,7 @@ export function Sidebar({ children }: SidebarProps) {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden bg-gray-50 dark:bg-gray-950">
-        <div className="flex-shrink-0 md:hidden border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-900">
+        <div className="flex-shrink-0 touch:flex no-touch:hidden border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-900">
           <div className="flex items-center justify-between">
             <button
               type="button"
@@ -446,7 +446,7 @@ export function Sidebar({ children }: SidebarProps) {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 md:p-4">
+        <div className="flex-1 overflow-y-auto p-4 no-touch:p-4">
           {children}
         </div>
       </div>

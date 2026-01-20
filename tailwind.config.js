@@ -15,6 +15,16 @@ module.exports = {
   			'2xl': '1400px'
   		}
   	},
+  	screens: {
+  		'sm': '640px',
+  		'md': '768px',
+  		'lg': '1024px',
+  		'xl': '1280px',
+  		'2xl': '1536px',
+  		// Detecta dispositivos móveis independente da orientação
+  		'touch': { 'raw': '(hover: none) and (pointer: coarse)' },
+  		'no-touch': { 'raw': '(hover: hover) and (pointer: fine)' },
+  	},
   	extend: {
   		colors: {
   			border: 'hsl(var(--border))',
