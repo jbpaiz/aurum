@@ -280,7 +280,7 @@ export function AuthModal({ onClose, showCloseButton = true }: AuthModalProps) {
                 variant="outline" 
                 onClick={handleGoogleSignIn} 
                 disabled={loading} 
-                className="w-full h-12 border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-medium text-base"
+                className="w-full h-12 border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-medium text-base bg-white dark:bg-white dark:text-blue-600 dark:border-blue-600 dark:hover:bg-blue-50"
               >
                 <Chrome className="mr-2 h-5 w-5" /> 
                 Entrar com Google
@@ -373,7 +373,7 @@ export function AuthModal({ onClose, showCloseButton = true }: AuthModalProps) {
               </div>
             )}
 
-            <Button type="submit" className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-base font-medium" disabled={loading}>
+            <Button type="submit" className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-base font-medium text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
               {mode === 'signin' && 'Entrar'}
               {mode === 'signup' && 'Criar conta'}
@@ -392,7 +392,7 @@ export function AuthModal({ onClose, showCloseButton = true }: AuthModalProps) {
                 size="sm"
                 onClick={triggerPasswordReset}
                 disabled={loading || !email || resendTimer > 0}
-                className="mt-3 w-full"
+                className="mt-3 w-full bg-white dark:bg-white dark:text-gray-900 dark:border-gray-300"
               >
                 {resendTimer > 0 ? `Reenviar em ${resendTimer}s` : 'Reenviar link'}
               </Button>
