@@ -198,7 +198,7 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
         supabase
           .from('health_hydration_goals')
           .select('*')
-          .single(),
+          .maybeSingle(),
         
         supabase
           .from('health_meals')
@@ -210,7 +210,7 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
         supabase
           .from('health_nutrition_goals')
           .select('*')
-          .single(),
+          .maybeSingle(),
         
         supabase
           .from('health_badges')
@@ -220,7 +220,7 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
         supabase
           .from('health_user_stats')
           .select('*')
-          .single(),
+          .maybeSingle(),
         
         supabase
           .from('health_challenges')
