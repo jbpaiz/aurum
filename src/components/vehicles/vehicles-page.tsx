@@ -111,7 +111,7 @@ export function VehiclesPage() {
       renavam: form.renavam.trim() || null,
       modelo: form.modelo.trim(),
       ano: form.ano ? Number(form.ano) : null,
-      tipo: form.tipo,
+      tipo: form.tipo as any, // será adicionado pela migration
       categoria: form.categoria.trim() || null,
       status: form.status,
       odometro_atual: form.odometro ? Number(form.odometro) : null,

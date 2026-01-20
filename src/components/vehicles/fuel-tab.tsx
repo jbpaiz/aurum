@@ -441,6 +441,30 @@ export function FuelTab() {
                 <div className="flex gap-2"><span className="font-semibold text-foreground">Odômetro:</span> {log.odometro} km</div>
                 <div className="flex gap-2"><span className="font-semibold text-foreground">Litros:</span> {log.litros}</div>
                 <div className="flex gap-2"><span className="font-semibold text-foreground">Valor:</span> R$ {log.valorTotal.toFixed(2)}</div>
+                {log.posto && <div className="flex gap-2"><span className="font-semibold text-foreground">Posto:</span> {log.posto}</div>}
+                {log.bandeira && (
+                  <div className="flex gap-2 items-center">
+                    <span className="font-semibold text-foreground">Bandeira:</span>
+                    {log.bandeira === 'shell' && <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-yellow-400 border-2 border-red-600" /><span>Shell</span></div>}
+                    {log.bandeira === 'petrobras' && <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-green-500" /><span>Petrobras</span></div>}
+                    {log.bandeira === 'ipiranga' && <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-blue-500" /><span>Ipiranga</span></div>}
+                    {log.bandeira === 'raizen' && <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-red-500" /><span>Raizen</span></div>}
+                    {log.bandeira === 'ale' && <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-orange-500" /><span>Ale</span></div>}
+                    {log.bandeira === 'bp' && <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-green-600" /><span>BP</span></div>}
+                    {log.bandeira === 'outro' && <span>Outro</span>}
+                  </div>
+                )}
+                {log.tipoCombustivel && (
+                  <div className="flex gap-2">
+                    <span className="font-semibold text-foreground">Combustível:</span>
+                    {log.tipoCombustivel === 'gasolina' && 'Gasolina'}
+                    {log.tipoCombustivel === 'gasolina_aditivada' && 'Gasolina Aditivada'}
+                    {log.tipoCombustivel === 'etanol' && 'Etanol'}
+                    {log.tipoCombustivel === 'diesel' && 'Diesel'}
+                    {log.tipoCombustivel === 'diesel_s10' && 'Diesel S10'}
+                    {log.tipoCombustivel === 'gnv' && 'GNV'}
+                  </div>
+                )}
                 {deltaKm !== null && deltaKm !== undefined && (
                   <div className="flex gap-3 flex-wrap text-xs text-muted-foreground">
                     <span>Rodados desde último: {deltaKm} km</span>
