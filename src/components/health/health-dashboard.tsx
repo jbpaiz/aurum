@@ -161,10 +161,10 @@ export function HealthDashboard() {
                   <Droplets className="h-4 w-4" aria-hidden />
                   <span>Hidratação</span>
                 </TabsTrigger>
-                <TabsTrigger value="nutrition" className="flex items-center gap-2 whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">
+                {/* <TabsTrigger value="nutrition" className="flex items-center gap-2 whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">
                   <UtensilsCrossed className="h-4 w-4" aria-hidden />
                   <span>Nutrição</span>
-                </TabsTrigger>
+                </TabsTrigger> */}
                 <TabsTrigger value="activity" className="flex items-center gap-2 whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">
                   <Dumbbell className="h-4 w-4" aria-hidden />
                   <span>Atividades</span>
@@ -173,10 +173,10 @@ export function HealthDashboard() {
                   <Moon className="h-4 w-4" aria-hidden />
                   <span>Sono</span>
                 </TabsTrigger>
-                <TabsTrigger value="gamification" className="flex items-center gap-2 whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">
+                {/* <TabsTrigger value="gamification" className="flex items-center gap-2 whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">
                   <Medal className="h-4 w-4" aria-hidden />
                   <span>Conquistas</span>
-                </TabsTrigger>
+                </TabsTrigger> */}
               </TabsList>
             </div>
           </div>
