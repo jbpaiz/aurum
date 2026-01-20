@@ -101,9 +101,19 @@ export function FuelTab() {
     }
 
     setSaving(true)
+    
+    // Obter user_id
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      toast({ title: 'Usuário não autenticado', variant: 'destructive' })
+      setSaving(false)
+      return
+    }
+    
     const litros = Number(form.litros)
     const valorTotal = Number(form.valorTotal)
     const payload: TablesInsert<'fuel_logs'> = {
+      user_id: user.id,
       vehicle_id: form.vehicleId,
       odometro: Number(form.odometro),
       litros,

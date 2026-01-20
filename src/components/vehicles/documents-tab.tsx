@@ -98,7 +98,17 @@ export function DocumentsTab() {
     }
 
     setSaving(true)
+    
+    // Obter user_id
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      toast({ title: 'Usuário não autenticado', variant: 'destructive' })
+      setSaving(false)
+      return
+    }
+    
     const payload: TablesInsert<'documents'> = {
+      user_id: user.id,
       vehicle_id: form.vehicleId,
       tipo: form.tipo,
       numero: form.numero || null,

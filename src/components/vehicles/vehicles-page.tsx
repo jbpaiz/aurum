@@ -56,6 +56,7 @@ export function VehiclesPage() {
 
   const fetchVehicles = async () => {
     setLoading(true)
+    // RLS filtra automaticamente por user_id
     const { data, error } = await supabase
       .from('vehicles')
       .select('*')
@@ -94,7 +95,17 @@ export function VehiclesPage() {
 
   const handleSave = async () => {
     setSaving(true)
+    
+    // Obter user_id
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      toast({ title: 'Usuário não autenticado', variant: 'destructive' })
+      setSaving(false)
+      return
+    }
+    
     const payload: TablesInsert<'vehicles'> = {
+      user_id: user.id,
       placa: form.placa.trim().toUpperCase(),
       renavam: form.renavam.trim() || null,
       modelo: form.modelo.trim(),

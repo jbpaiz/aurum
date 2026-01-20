@@ -124,7 +124,17 @@ export function MaintenanceTab() {
     }
 
     setSaving(true)
+    
+    // Obter user_id
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      toast({ title: 'Usuário não autenticado', variant: 'destructive' })
+      setSaving(false)
+      return
+    }
+    
     const payload: TablesInsert<'maintenance_events'> = {
+      user_id: user.id,
       vehicle_id: form.vehicleId,
       titulo: form.titulo,
       status: form.status,

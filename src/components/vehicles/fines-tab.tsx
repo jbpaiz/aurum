@@ -104,7 +104,17 @@ export function FinesTab() {
     }
 
     setSaving(true)
+    
+    // Obter user_id
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      toast({ title: 'Usuário não autenticado', variant: 'destructive' })
+      setSaving(false)
+      return
+    }
+    
     const payload: TablesInsert<'fines'> = {
+      user_id: user.id,
       vehicle_id: form.vehicleId,
       data: form.data,
       valor: Number(form.valor),
