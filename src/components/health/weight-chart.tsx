@@ -251,16 +251,27 @@ export function WeightChart() {
 
     if (!isFullscreen) {
       try {
-        if (chartContainerRef.current.requestFullscreen) {
-          await chartContainerRef.current.requestFullscreen()
-          setIsFullscreen(true)
-          // Sugerir rotação da tela em mobile
-          if (screen.orientation && 'lock' in screen.orientation) {
-            try {
-              await (screen.orientation as any).lock('landscape')
-            } catch (e) {
-              // Silenciosamente falhar se não suportado
-            }
+        const elem = chartContainerRef.current as any
+        
+        // Tentar diferentes APIs de fullscreen (suporte multi-browser)
+        if (elem.requestFullscreen) {
+          await elem.requestFullscreen()
+        } else if (elem.webkitRequestFullscreen) {
+          await elem.webkitRequestFullscreen()
+        } else if (elem.mozRequestFullScreen) {
+          await elem.mozRequestFullScreen()
+        } else if (elem.msRequestFullscreen) {
+          await elem.msRequestFullscreen()
+        }
+        
+        setIsFullscreen(true)
+        
+        // Sugerir rotação da tela em mobile
+        if (screen.orientation && 'lock' in screen.orientation) {
+          try {
+            await (screen.orientation as any).lock('landscape')
+          } catch (e) {
+            // Silenciosamente falhar se não suportado
           }
         }
       } catch (err) {
@@ -268,12 +279,22 @@ export function WeightChart() {
       }
     } else {
       try {
-        if (document.exitFullscreen) {
-          await document.exitFullscreen()
-          setIsFullscreen(false)
-          if (screen.orientation && 'unlock' in screen.orientation) {
-            (screen.orientation as any).unlock()
-          }
+        const doc = document as any
+        
+        if (doc.exitFullscreen) {
+          await doc.exitFullscreen()
+        } else if (doc.webkitExitFullscreen) {
+          await doc.webkitExitFullscreen()
+        } else if (doc.mozCancelFullScreen) {
+          await doc.mozCancelFullScreen()
+        } else if (doc.msExitFullscreen) {
+          await doc.msExitFullscreen()
+        }
+        
+        setIsFullscreen(false)
+        
+        if (screen.orientation && 'unlock' in screen.orientation) {
+          (screen.orientation as any).unlock()
         }
       } catch (err) {
         console.error('Erro ao sair de fullscreen:', err)
@@ -284,11 +305,27 @@ export function WeightChart() {
   // Listener para mudanças de fullscreen (quando user pressiona ESC)
   useMemo(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement)
+      const doc = document as any
+      const isFullscreenNow = !!(
+        doc.fullscreenElement ||
+        doc.webkitFullscreenElement ||
+        doc.mozFullScreenElement ||
+        doc.msFullscreenElement
+      )
+      setIsFullscreen(isFullscreenNow)
     }
 
     document.addEventListener('fullscreenchange', handleFullscreenChange)
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange)
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange)
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange)
+    
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange)
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange)
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange)
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange)
+    }
   }, [])
 
   if (weightLogs.length === 0) {
