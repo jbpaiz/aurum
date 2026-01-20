@@ -282,12 +282,12 @@ export function WeightChart() {
 
   return (
     <Card ref={chartContainerRef} className={isFullscreen ? 'fixed inset-0 z-50 rounded-none flex flex-col bg-background' : ''}>
-      <CardHeader className={isFullscreen ? 'shrink-0' : ''}>
-        <div className="flex flex-col gap-4">
+      <CardHeader className={isFullscreen ? 'shrink-0 px-3 py-2' : ''}>
+        <div className={isFullscreen ? 'flex flex-col gap-1' : 'flex flex-col gap-4'}>
           <div className="flex items-start justify-between gap-3">
             <div>
-              <CardTitle>Evolução do Peso</CardTitle>
-              <CardDescription>Acompanhe seu progresso ao longo do tempo</CardDescription>
+              <CardTitle className={isFullscreen ? 'text-base' : ''}>Evolução do Peso</CardTitle>
+              {!isFullscreen && <CardDescription>Acompanhe seu progresso ao longo do tempo</CardDescription>}
             </div>
             <div className="flex gap-1">
               <Dialog>
@@ -331,44 +331,44 @@ export function WeightChart() {
             </div>
           </div>
           
-          <div className="flex flex-wrap gap-2 items-center">
+          <div className="flex flex-wrap gap-1.5 items-center">
             <Button
-              size="sm"
+              size={isFullscreen ? 'sm' : 'sm'}
               variant={period === 'week' ? 'default' : 'outline'}
               onClick={() => setPeriod('week')}
-              className="flex-1 sm:flex-none"
+              className={isFullscreen ? 'px-2 py-1 h-7 text-xs' : 'flex-1 sm:flex-none'}
             >
               Semana
             </Button>
             <Button
-              size="sm"
+              size={isFullscreen ? 'sm' : 'sm'}
               variant={period === 'month' ? 'default' : 'outline'}
               onClick={() => setPeriod('month')}
-              className="flex-1 sm:flex-none"
+              className={isFullscreen ? 'px-2 py-1 h-7 text-xs' : 'flex-1 sm:flex-none'}
             >
               Mês
             </Button>
             <Button
-              size="sm"
+              size={isFullscreen ? 'sm' : 'sm'}
               variant={period === 'year' ? 'default' : 'outline'}
               onClick={() => setPeriod('year')}
-              className="flex-1 sm:flex-none"
+              className={isFullscreen ? 'px-2 py-1 h-7 text-xs' : 'flex-1 sm:flex-none'}
             >
               Ano
             </Button>
             <Button
-              size="sm"
+              size={isFullscreen ? 'sm' : 'sm'}
               variant={period === 'all' ? 'default' : 'outline'}
               onClick={() => setPeriod('all')}
-              className="flex-1 sm:flex-none"
+              className={isFullscreen ? 'px-2 py-1 h-7 text-xs' : 'flex-1 sm:flex-none'}
             >
               Meta
             </Button>
           </div>
         </div>
       </CardHeader>
-      <CardContent className={isFullscreen ? 'flex-1 flex flex-col' : ''}>
-        <div className={isFullscreen ? 'flex-1 w-full' : 'h-[250px] sm:h-[300px] w-full'}>
+      <CardContent className={isFullscreen ? 'flex-1 flex flex-col px-3 py-2 pb-3' : ''}>
+        <div className={isFullscreen ? 'flex-1 w-full min-h-0' : 'h-[250px] sm:h-[300px] w-full'}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 5, right: 5, left: 12, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
