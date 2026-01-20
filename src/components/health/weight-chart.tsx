@@ -1,11 +1,11 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useRef } from 'react'
 import { useHealth } from '@/contexts/health-context'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { Info } from 'lucide-react'
+import { Info, Maximize2, Minimize2 } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { format, subDays, subMonths, subYears, startOfWeek, startOfMonth, startOfDay, addDays } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -15,6 +15,8 @@ type Period = 'week' | 'month' | 'year' | 'all'
 export function WeightChart() {
   const { weightLogs, weightStats } = useHealth()
   const [period, setPeriod] = useState<Period>('month')
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const chartContainerRef = useRef<HTMLDivElement>(null)
 
   const chartData = useMemo(() => {
     if (weightLogs.length === 0) return []
@@ -244,6 +246,51 @@ export function WeightChart() {
     return data
   }, [weightLogs, period, weightStats?.goalDate, weightStats?.goalTarget])
 
+  const handleFullscreen = async () => {
+    if (!chartContainerRef.current) return
+
+    if (!isFullscreen) {
+      try {
+        if (chartContainerRef.current.requestFullscreen) {
+          await chartContainerRef.current.requestFullscreen()
+          setIsFullscreen(true)
+          // Sugerir rotação da tela em mobile
+          if (screen.orientation && 'lock' in screen.orientation) {
+            try {
+              await (screen.orientation as any).lock('landscape')
+            } catch (e) {
+              // Silenciosamente falhar se não suportado
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao entrar em fullscreen:', err)
+      }
+    } else {
+      try {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen()
+          setIsFullscreen(false)
+          if (screen.orientation && 'unlock' in screen.orientation) {
+            (screen.orientation as any).unlock()
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao sair de fullscreen:', err)
+      }
+    }
+  }
+
+  // Listener para mudanças de fullscreen (quando user pressiona ESC)
+  useMemo(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement)
+    }
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
+  }, [])
+
   if (weightLogs.length === 0) {
     return (
       <Card>
@@ -256,7 +303,7 @@ export function WeightChart() {
   }
 
   return (
-    <Card>
+    <Card ref={chartContainerRef} className={isFullscreen ? 'fixed inset-0 z-50 rounded-none flex flex-col' : ''}>
       <CardHeader>
         <div className="flex flex-col gap-4">
           <div className="flex items-start justify-between gap-3">
@@ -264,36 +311,48 @@ export function WeightChart() {
               <CardTitle>Evolução do Peso</CardTitle>
               <CardDescription>Acompanhe seu progresso ao longo do tempo</CardDescription>
             </div>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Abrir legenda do gráfico">
-                  <Info className="h-4 w-4" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-lg">
-                <DialogHeader>
-                  <DialogTitle>Legenda do gráfico</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-3 text-sm text-muted-foreground">
-                  <p className="flex items-center gap-2">
-                    <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: 'hsl(var(--primary))' }} />
-                    <strong>Peso Atual:</strong> Linha sólida azul com pontos mostrando seus dados reais até hoje
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#22c55e' }} />
-                    <strong>Meta:</strong> Linha verde tracejada conectando seu peso inicial até o peso da meta na data alvo
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#f97316' }} />
-                    <strong>Tendência:</strong> Linha laranja tracejada mostrando a projeção futura baseada na sua evolução atual (regressão linear)
-                  </p>
-                  <p className="text-xs mt-4 text-foreground">
-                    💡 <strong>Dica:</strong> Compare a linha de tendência (laranja) com a linha da meta (verde) para saber se você está no caminho certo!
-                  </p>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <div className="flex gap-1">
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Abrir legenda do gráfico">
+                    <Info className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle>Legenda do gráfico</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-3 text-sm text-muted-foreground">
+                    <p className="flex items-center gap-2">
+                      <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: 'hsl(var(--primary))' }} />
+                      <strong>Peso Atual:</strong> Linha sólida azul com pontos mostrando seus dados reais até hoje
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#22c55e' }} />
+                      <strong>Meta:</strong> Linha verde tracejada conectando seu peso inicial até o peso da meta na data alvo
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#f97316' }} />
+                      <strong>Tendência:</strong> Linha laranja tracejada mostrando a projeção futura baseada na sua evolução atual (regressão linear)
+                    </p>
+                    <p className="text-xs mt-4 text-foreground">
+                      💡 <strong>Dica:</strong> Compare a linha de tendência (laranja) com a linha da meta (verde) para saber se você está no caminho certo!
+                    </p>
+                  </div>
+                </DialogContent>
+              </Dialog>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 md:hidden" 
+                onClick={handleFullscreen}
+                aria-label={isFullscreen ? "Sair do modo tela cheia" : "Expandir gráfico em tela cheia"}
+              >
+                {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              </Button>
+            </div>
           </div>
+          
           <div className="flex flex-wrap gap-2 items-center">
             <Button
               size="sm"
@@ -330,8 +389,8 @@ export function WeightChart() {
           </div>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="h-[250px] sm:h-[300px] w-full">
+      <CardContent className={isFullscreen ? 'flex-1 flex flex-col' : ''}>
+        <div className={isFullscreen ? 'flex-1 w-full' : 'h-[250px] sm:h-[300px] w-full'}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 5, right: 5, left: 12, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
@@ -383,18 +442,18 @@ export function WeightChart() {
                   dot={(props: any) => {
                     // Mostrar marcador apenas no primeiro ponto que atinge a meta
                     const goalValue = props.payload.goalLine
-                    if (!goalValue || !weightStats.goalTarget) return null
+                    if (!goalValue || !weightStats.goalTarget) return <></>
                     
                     // Verifica se está próximo ao peso da meta (tolerância de 0.5kg)
                     const isAtGoal = Math.abs(goalValue - weightStats.goalTarget) < 0.5
-                    if (!isAtGoal) return null
+                    if (!isAtGoal) return <></>
                     
                     // Verificar se é o primeiro ponto que atinge a meta
                     const currentIndex = props.index
                     if (currentIndex > 0) {
                       const prevValue = chartData[currentIndex - 1]?.goalLine
                       if (prevValue && Math.abs(prevValue - weightStats.goalTarget) < 0.5) {
-                        return null // Já teve um marcador antes
+                        return <></> // Já teve um marcador antes
                       }
                     }
                     
@@ -425,18 +484,18 @@ export function WeightChart() {
                   dot={(props: any) => {
                     // Mostrar marcador apenas no primeiro ponto que atinge a meta
                     const trendValue = props.payload.trendProjection
-                    if (!trendValue || !weightStats.goalTarget) return null
+                    if (!trendValue || !weightStats.goalTarget) return <></>
                     
                     // Verifica se está próximo ao peso da meta (tolerância de 0.5kg)
                     const isAtGoal = Math.abs(trendValue - weightStats.goalTarget) < 0.5
-                    if (!isAtGoal) return null
+                    if (!isAtGoal) return <></>
                     
                     // Verificar se é o primeiro ponto que atinge a meta
                     const currentIndex = props.index
                     if (currentIndex > 0) {
                       const prevValue = chartData[currentIndex - 1]?.trendProjection
                       if (prevValue && Math.abs(prevValue - weightStats.goalTarget) < 0.5) {
-                        return null // Já teve um marcador antes
+                        return <></> // Já teve um marcador antes
                       }
                     }
                     
