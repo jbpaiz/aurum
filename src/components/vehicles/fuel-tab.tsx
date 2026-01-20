@@ -21,6 +21,8 @@ interface FuelFormState {
   litros: string
   valorTotal: string
   posto: string
+  bandeira: string
+  tipoCombustivel: string
   metodoPagamento: string
   data: string
   notas: string
@@ -32,6 +34,8 @@ const emptyFuelForm = (): FuelFormState => ({
   litros: '',
   valorTotal: '',
   posto: '',
+  bandeira: '',
+  tipoCombustivel: '',
   metodoPagamento: '',
   data: new Date().toISOString().slice(0, 16),
   notas: ''
@@ -96,8 +100,8 @@ export function FuelTab() {
   }, [])
 
   const handleSave = async () => {
-    if (!form.vehicleId || !form.litros || !form.valorTotal || !form.odometro) {
-      toast({ title: 'Preencha veículo, odômetro, litros e valor' })
+    if (!form.vehicleId || !form.litros || !form.valorTotal) {
+      toast({ title: 'Preencha veículo, litros e valor' })
       return
     }
 
@@ -116,11 +120,13 @@ export function FuelTab() {
     const payload = {
       user_id: user.id,
       vehicle_id: form.vehicleId,
-      odometro: Number(form.odometro),
+      odometro: form.odometro ? Number(form.odometro) : null,
       litros,
       valor_total: valorTotal,
       preco_litro: litros > 0 ? valorTotal / litros : null,
       posto: form.posto || null,
+      bandeira: form.bandeira || null,
+      tipo_combustivel: form.tipoCombustivel || null,
       metodo_pagamento: form.metodoPagamento || null,
       data: form.data ? new Date(form.data).toISOString() : new Date().toISOString(),
       notas: form.notas || null
@@ -146,12 +152,14 @@ export function FuelTab() {
       return
     }
 
-    // Atualiza odômetro via tabela de leituras
-    await supabase.from('odometer_readings').insert({
-      vehicle_id: payload.vehicle_id,
-      valor: payload.odometro,
-      fonte: 'abastecimento'
-    })
+    // Atualiza odômetro via tabela de leituras apenas se fornecido
+    if (form.odometro && Number(form.odometro) > 0) {
+      await supabase.from('odometer_readings').insert({
+        vehicle_id: payload.vehicle_id,
+        valor: Number(form.odometro),
+        fonte: 'abastecimento'
+      })
+    }
 
     const mapped: FuelLog = {
       id: data.id,
@@ -183,10 +191,12 @@ export function FuelTab() {
     setForm({
       id: log.id,
       vehicleId: log.vehicleId,
-      odometro: log.odometro.toString(),
+      odometro: log.odometro?.toString() || '',
       litros: log.litros.toString(),
       valorTotal: log.valorTotal.toString(),
       posto: log.posto || '',
+      bandeira: '',
+      tipoCombustivel: '',
       metodoPagamento: log.metodoPagamento || '',
       data: new Date(log.data).toISOString().slice(0, 16),
       notas: log.notas || ''
@@ -262,7 +272,7 @@ export function FuelTab() {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Odômetro (km)</Label>
+            <Label>Odômetro (km) <span className="text-muted-foreground text-xs">(opcional)</span></Label>
             <Input
               type="number"
               value={form.odometro}
@@ -287,6 +297,39 @@ export function FuelTab() {
               onChange={(e) => setForm((f) => ({ ...f, valorTotal: e.target.value }))}
               placeholder="300"
             />
+          </div>
+          <div className="space-y-2">
+            <Label>Bandeira</Label>
+            <Select value={form.bandeira} onValueChange={(value) => setForm((f) => ({ ...f, bandeira: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="shell">Shell</SelectItem>
+                <SelectItem value="petrobras">Petrobras</SelectItem>
+                <SelectItem value="ipiranga">Ipiranga</SelectItem>
+                <SelectItem value="raizen">Raízen</SelectItem>
+                <SelectItem value="ale">Ale</SelectItem>
+                <SelectItem value="bp">BP</SelectItem>
+                <SelectItem value="outro">Outro</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Tipo de combustível</Label>
+            <Select value={form.tipoCombustivel} onValueChange={(value) => setForm((f) => ({ ...f, tipoCombustivel: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="gasolina">Gasolina</SelectItem>
+                <SelectItem value="etanol">Etanol</SelectItem>
+                <SelectItem value="diesel">Diesel</SelectItem>
+                <SelectItem value="diesel_s10">Diesel S10</SelectItem>
+                <SelectItem value="gnv">GNV</SelectItem>
+                <SelectItem value="gasolina_aditivada">Gasolina Aditivada</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label>Posto</Label>

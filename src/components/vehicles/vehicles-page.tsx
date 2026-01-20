@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Car, MapPin, Plus, RefreshCw, Wrench, Pencil, Trash2, Tags } from 'lucide-react'
+import { Car, Plus, RefreshCw, Wrench, Pencil, Trash2, Tags } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -23,7 +23,6 @@ interface VehicleFormState {
   categoria: string
   status: VehicleStatus
   odometro: string
-  local: string
   tags: string
 }
 
@@ -35,7 +34,6 @@ const emptyForm: VehicleFormState = {
   categoria: '',
   status: 'ativo',
   odometro: '',
-  local: '',
   tags: ''
 }
 
@@ -190,7 +188,6 @@ export function VehiclesPage() {
       categoria: vehicle.categoria || '',
       status: vehicle.status,
       odometro: vehicle.odometroAtual ? String(vehicle.odometroAtual) : '',
-      local: vehicle.localAtual || '',
       tags: vehicle.tags?.join(', ') || ''
     })
     setOpen(true)
@@ -326,14 +323,6 @@ export function VehiclesPage() {
                     placeholder="0"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Local atual</Label>
-                  <Input
-                    value={form.local}
-                    onChange={e => setForm(f => ({ ...f, local: e.target.value }))}
-                    placeholder="Garagem, Filial..."
-                  />
-                </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label>Tags (separe com vírgula)</Label>
                   <Input
@@ -433,10 +422,6 @@ export function VehiclesPage() {
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Wrench className="h-4 w-4" />
                   <span>Odômetro: {vehicle.odometroAtual ?? '—'} km</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <MapPin className="h-4 w-4" />
-                  <span>Local: {vehicle.localAtual || '—'}</span>
                 </div>
                 {renderTagList(vehicle.tags)}
               </CardContent>

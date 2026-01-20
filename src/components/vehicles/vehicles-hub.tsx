@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef } from 'react'
-import { ClipboardList, Fuel, Gavel, Layers, Sparkle, Wrench } from 'lucide-react'
+import { ClipboardList, Fuel, Gavel, Layers, Sparkle, Wrench, BarChart3 } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { VehiclesPage } from '@/components/vehicles/vehicles-page'
 import { FuelTab } from '@/components/vehicles/fuel-tab'
@@ -9,6 +9,7 @@ import { MaintenanceTab } from '@/components/vehicles/maintenance-tab'
 import { DocumentsTab } from '@/components/vehicles/documents-tab'
 import { FinesTab } from '@/components/vehicles/fines-tab'
 import { DriversTab } from '@/components/vehicles/drivers-tab'
+import { ReportsTab } from '@/components/vehicles/reports-tab'
 
 export function VehiclesHub() {
   const tabsListRef = useRef<HTMLDivElement | null>(null)
@@ -33,7 +34,7 @@ export function VehiclesHub() {
               ref={tabsListRef}
               className="w-full overflow-x-auto touch-pan-x scrollbar-hide scroll-smooth snap-x snap-mandatory px-4 md:overflow-visible md:px-0"
             >
-              <TabsList className="flex h-auto w-full min-w-max flex-nowrap items-center gap-2 rounded-md md:rounded-lg border border-border/60 bg-background/70 px-1 py-2 md:grid md:min-w-full md:w-full md:grid-cols-6 md:gap-2 md:p-2">
+              <TabsList className="flex h-auto w-full min-w-max flex-nowrap items-center gap-2 rounded-md md:rounded-lg border border-border/60 bg-background/70 px-1 py-2 md:grid md:min-w-full md:w-full md:grid-cols-7 md:gap-2 md:p-2">
                 <TabsTrigger value="cadastro" className="flex items-center gap-2 whitespace-nowrap snap-start h-10 rounded-sm md:rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">
                   <ClipboardList className="h-4 w-4" />
                   <span>Cadastro</span>
@@ -57,6 +58,10 @@ export function VehiclesHub() {
                 <TabsTrigger value="condutores" className="flex items-center gap-2 whitespace-nowrap snap-start h-10 rounded-sm md:rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">
                   <ClipboardList className="h-4 w-4" />
                   <span>Condutores</span>
+                </TabsTrigger>
+                <TabsTrigger value="relatorios" className="flex items-center gap-2 whitespace-nowrap snap-start h-10 rounded-sm md:rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">
+                  <BarChart3 className="h-4 w-4" />
+                  <span>Relatórios</span>
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -85,6 +90,10 @@ export function VehiclesHub() {
 
         <TabsContent value="condutores">
           <DriversTab />
+        </TabsContent>
+
+        <TabsContent value="relatorios">
+          <ReportsTab />
         </TabsContent>
       </Tabs>
     </div>
