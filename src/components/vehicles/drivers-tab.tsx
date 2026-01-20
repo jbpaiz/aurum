@@ -76,7 +76,17 @@ export function DriversTab() {
     }
 
     setSaving(true)
-    const payload: TablesInsert<'drivers'> = {
+    
+    // Obter user_id
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      toast({ title: 'Usuário não autenticado', variant: 'destructive' })
+      setSaving(false)
+      return
+    }
+    
+    const payload = {
+      user_id: user.id,
       nome: form.nome,
       cnh_numero: form.cnhNumero || null,
       cnh_categoria: form.cnhCategoria || null,
