@@ -204,27 +204,27 @@ export function AuthModal({ onClose, showCloseButton = true }: AuthModalProps) {
   }, [resendTimer])
 
   return (
-    <div className="fixed inset-0 z-50 flex bg-white">
+    <div className="fixed inset-0 z-50 flex bg-white dark:bg-white">
       {/* Close Button */}
       {showCloseButton && onClose && (
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-6 top-6 z-10 rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
+          className="absolute right-6 top-6 z-10 rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 dark:text-gray-400 dark:hover:bg-gray-100 dark:hover:text-gray-600"
         >
           <X className="h-5 w-5" />
         </button>
       )}
 
       {/* Left Side - Illustration */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 items-center justify-center p-12">
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-50 dark:via-indigo-50 dark:to-purple-50 items-center justify-center p-12">
         <div className="max-w-lg space-y-8">
           <div className="space-y-4">
             <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
               <DollarSign className="h-8 w-8 text-white" />
             </div>
-            <h1 className="text-5xl font-bold text-gray-900">Aurum</h1>
-            <p className="text-xl text-gray-600">
+            <h1 className="text-5xl font-bold text-gray-900 dark:text-gray-900">Aurum</h1>
+            <p className="text-xl text-gray-600 dark:text-gray-600">
               Controle financeiro inteligente e produtividade em um só lugar
             </p>
           </div>
@@ -240,8 +240,8 @@ export function AuthModal({ onClose, showCloseButton = true }: AuthModalProps) {
                   {item.icon}
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">{item.title}</h3>
-                  <p className="text-sm text-gray-600">{item.desc}</p>
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-900">{item.title}</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-600">{item.desc}</p>
                 </div>
               </div>
             ))}
@@ -257,16 +257,16 @@ export function AuthModal({ onClose, showCloseButton = true }: AuthModalProps) {
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 mb-4">
               <DollarSign className="h-6 w-6 text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900">Aurum</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-900">Aurum</h2>
           </div>
 
           <div>
-            <h2 className="text-3xl font-bold text-gray-900">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-900">
               {mode === 'signin' && 'Bem-vindo de volta'}
               {mode === 'signup' && 'Criar sua conta'}
               {mode === 'forgot' && 'Recuperar senha'}
             </h2>
-            <p className="mt-2 text-gray-600">
+            <p className="mt-2 text-gray-600 dark:text-gray-600">
               {mode === 'signin' && 'Entre para continuar no Aurum'}
               {mode === 'signup' && 'Comece a organizar suas finanças hoje'}
               {mode === 'forgot' && 'Vamos ajudar você a recuperar o acesso'}
@@ -300,7 +300,7 @@ export function AuthModal({ onClose, showCloseButton = true }: AuthModalProps) {
           <form onSubmit={handleSubmit} className="space-y-5">
             {mode === 'signup' && (
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Nome completo</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-700">Nome completo</label>
                 <div className="relative">
                   <User className="absolute left-3.5 top-3.5 h-5 w-5 text-gray-400" />
                   <Input
@@ -308,7 +308,7 @@ export function AuthModal({ onClose, showCloseButton = true }: AuthModalProps) {
                     placeholder="Seu nome completo"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="h-12 pl-11 text-base border-gray-300"
+                    className="h-12 pl-11 text-base border-gray-300 bg-white dark:bg-white dark:text-gray-900 dark:border-gray-300"
                     required
                   />
                 </div>
@@ -316,7 +316,7 @@ export function AuthModal({ onClose, showCloseButton = true }: AuthModalProps) {
             )}
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Email</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-700">Email</label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-3.5 h-5 w-5 text-gray-400" />
                 <Input
@@ -324,7 +324,7 @@ export function AuthModal({ onClose, showCloseButton = true }: AuthModalProps) {
                   placeholder="seu@email.com"
                   value={email}
                   onChange={(e) => handleEmailChange(e.target.value)}
-                  className="h-12 pl-11 text-base border-gray-300"
+                  className="h-12 pl-11 text-base border-gray-300 bg-white dark:bg-white dark:text-gray-900 dark:border-gray-300"
                   required
                 />
               </div>
@@ -332,7 +332,7 @@ export function AuthModal({ onClose, showCloseButton = true }: AuthModalProps) {
 
             {mode !== 'forgot' && (
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Senha</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-700">Senha</label>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-3.5 h-5 w-5 text-gray-400" />
                   <Input
@@ -340,14 +340,14 @@ export function AuthModal({ onClose, showCloseButton = true }: AuthModalProps) {
                     placeholder="Mínimo 6 caracteres"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="h-12 pl-11 pr-11 text-base border-gray-300"
+                    className="h-12 pl-11 pr-11 text-base border-gray-300 bg-white dark:bg-white dark:text-gray-900 dark:border-gray-300"
                     required
                     minLength={6}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-3.5 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3.5 top-3.5 text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-600"
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
@@ -357,7 +357,7 @@ export function AuthModal({ onClose, showCloseButton = true }: AuthModalProps) {
 
             {mode === 'signup' && (
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Confirmar senha</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-700">Confirmar senha</label>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-3.5 h-5 w-5 text-gray-400" />
                   <Input
@@ -365,7 +365,7 @@ export function AuthModal({ onClose, showCloseButton = true }: AuthModalProps) {
                     placeholder="Repita sua senha"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="h-12 pl-11 text-base border-gray-300"
+                    className="h-12 pl-11 text-base border-gray-300 bg-white dark:bg-white dark:text-gray-900 dark:border-gray-300"
                     required
                     minLength={6}
                   />
@@ -382,8 +382,8 @@ export function AuthModal({ onClose, showCloseButton = true }: AuthModalProps) {
           </form>
 
           {mode === 'forgot' && resetStatus === 'sent' && (
-            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-              <p className="text-sm text-gray-700">
+            <div className="rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-50 dark:border-blue-200 p-4">
+              <p className="text-sm text-gray-700 dark:text-gray-700">
                 Link enviado para <strong>{email}</strong>. Verifique sua caixa de entrada.
               </p>
               <Button
@@ -404,16 +404,16 @@ export function AuthModal({ onClose, showCloseButton = true }: AuthModalProps) {
               <div className="space-y-3">
                 <button 
                   type="button" 
-                  className="text-blue-600 hover:text-blue-700 font-medium hover:underline" 
+                  className="text-blue-600 hover:text-blue-700 dark:text-blue-600 dark:hover:text-blue-700 font-medium hover:underline" 
                   onClick={() => switchMode('forgot')}
                 >
                   Esqueceu a senha?
                 </button>
-                <div className="text-gray-600">
+                <div className="text-gray-600 dark:text-gray-600">
                   Não tem conta?{' '}
                   <button 
                     type="button" 
-                    className="text-blue-600 hover:text-blue-700 font-medium hover:underline" 
+                    className="text-blue-600 hover:text-blue-700 dark:text-blue-600 dark:hover:text-blue-700 font-medium hover:underline" 
                     onClick={() => switchMode('signup')}
                   >
                     Criar conta gratuita
@@ -422,11 +422,11 @@ export function AuthModal({ onClose, showCloseButton = true }: AuthModalProps) {
               </div>
             )}
             {mode === 'signup' && (
-              <div className="text-gray-600">
+              <div className="text-gray-600 dark:text-gray-600">
                 Já tem uma conta?{' '}
                 <button 
                   type="button" 
-                  className="text-blue-600 hover:text-blue-700 font-medium hover:underline" 
+                  className="text-blue-600 hover:text-blue-700 dark:text-blue-600 dark:hover:text-blue-700 font-medium hover:underline" 
                   onClick={() => switchMode('signin')}
                 >
                   Entrar
@@ -434,11 +434,11 @@ export function AuthModal({ onClose, showCloseButton = true }: AuthModalProps) {
               </div>
             )}
             {mode === 'forgot' && (
-              <div className="text-gray-600">
+              <div className="text-gray-600 dark:text-gray-600">
                 Lembrou a senha?{' '}
                 <button 
                   type="button" 
-                  className="text-blue-600 hover:text-blue-700 font-medium hover:underline" 
+                  className="text-blue-600 hover:text-blue-700 dark:text-blue-600 dark:hover:text-blue-700 font-medium hover:underline" 
                   onClick={() => switchMode('signin')}
                 >
                   Voltar ao login
