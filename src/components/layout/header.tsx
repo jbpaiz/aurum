@@ -15,7 +15,8 @@ export function Header() {
 
   return (
     <header className="border-b border-gray-100 bg-white/90 backdrop-blur px-4 py-3 shadow-sm sm:px-6 dark:border-gray-800 dark:bg-gray-900/90">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-end sm:justify-between gap-4">
+        {/* Hub ativo - visível apenas em desktop (sm e acima) */}
         <div className="hidden sm:flex items-center gap-3">
           <span className={`flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br text-white ${hub.accent}`}>
             <HubIcon className="h-5 w-5" />
@@ -27,7 +28,8 @@ export function Header() {
           </div>
         </div>
 
-        <div className="flex items-center gap-1 rounded-2xl border border-gray-100 bg-gray-50 px-2 py-1 dark:border-gray-700 dark:bg-gray-800 ml-auto sm:ml-0">
+        {/* Botões de ação - sempre visíveis */}
+        <div className="flex items-center gap-1 rounded-2xl border border-gray-100 bg-gray-50 px-2 py-1 dark:border-gray-700 dark:bg-gray-800">
           <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 dark:text-gray-400">
             <Bell className="h-4 w-4" />
           </Button>
