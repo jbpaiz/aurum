@@ -3,13 +3,13 @@
 import { useMemo } from 'react'
 import { useHealth } from '@/contexts/health-context'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { TrendingUp, TrendingDown, Minus, Calendar, Flame, Moon, Activity as ActivityIcon } from 'lucide-react'
-import { startOfWeek, startOfMonth, endOfWeek, endOfMonth, subWeeks, subMonths, differenceInDays } from 'date-fns'
+import { TrendingUp, TrendingDown, Minus, Calendar, Flame, Moon, Activity as ActivityIcon, Target } from 'lucide-react'
+import { startOfWeek, startOfMonth, endOfWeek, endOfMonth, subWeeks, subMonths, differenceInDays, addDays } from 'date-fns'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 export function StatsSummary() {
-  const { weightLogs, activities, sleepLogs } = useHealth()
+  const { weightLogs, activities, sleepLogs, weightStats } = useHealth()
 
   const stats = useMemo(() => {
     const now = new Date()
@@ -232,21 +232,109 @@ export function StatsSummary() {
           <CardDescription>Esta semana vs semana passada</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Peso */}
+          {/* Data Estimada da Meta */}
           <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
             <div className="flex-1">
-              <p className="text-sm font-medium">Peso Médio</p>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-2xl font-bold">
-                  {stats.week.weight.current ? `${stats.week.weight.current.toFixed(1)} kg` : 'N/A'}
-                </span>
-                {stats.week.weight.change !== null && (
-                  <div className="flex items-center gap-1">
-                    {getTrendIcon(stats.week.weight.change)}
-                    <span className={`text-sm ${getTrendColor(stats.week.weight.change)}`}>
-                      {Math.abs(stats.week.weight.change).toFixed(1)} kg
-                    </span>
-                  </div>
+              <p className="text-sm font-medium flex items-center gap-2">
+                <Target className="h-4 w-4" />
+                Data Estimada da Meta
+              </p>
+              <div className="flex flex-col gap-1 mt-1">
+                {weightStats?.goalTarget && weightStats.goalDate && weightLogs.length >= 2 ? (() => {
+                  // Calcular regressão linear
+                  const sorted = [...weightLogs].sort((a, b) => 
+                    new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime()
+                  )
+                  const weights = sorted.map(w => w.weight)
+                  const timestamps = sorted.map(w => new Date(w.recordedAt).getTime())
+                  
+                  const xMean = timestamps.reduce((a, b) => a + b, 0) / timestamps.length
+                  const yMean = weights.reduce((a, b) => a + b, 0) / weights.length
+                  
+                  let numerator = 0
+                  let denominator = 0
+                  for (let i = 0; i < timestamps.length; i++) {
+                    const dx = timestamps[i] - xMean
+                    numerator += dx * (weights[i] - yMean)
+                    denominator += dx * dx
+                  }
+                  
+                  const slope = denominator !== 0 ? numerator / denominator : 0
+                  const intercept = yMean - slope * xMean
+                  
+                  // Se a inclinação for praticamente zero, não há tendência
+                  if (Math.abs(slope) < 0.000001) {
+                    return (
+                      <>
+                        <span className="text-2xl font-bold text-muted-foreground">--</span>
+                        <p className="text-xs text-muted-foreground">Sem tendência detectada</p>
+                      </>
+                    )
+                  }
+                  
+                  // Calcular quando atingirá a meta
+                  const estimatedTimestamp = (weightStats.goalTarget - intercept) / slope
+                  const estimatedDate = new Date(estimatedTimestamp)
+                  const goalDate = new Date(weightStats.goalDate)
+                  const currentWeight = weights[weights.length - 1]
+                  
+                  // Verificar se está indo na direção certa
+                  const isGainingWeight = slope > 0
+                  const needsToGain = weightStats.goalTarget > currentWeight
+                  const isWrongDirection = isGainingWeight !== needsToGain
+                  
+                  if (isWrongDirection) {
+                    return (
+                      <>
+                        <span className="text-2xl font-bold text-orange-500">⚠️ Revertido</span>
+                        <p className="text-xs text-orange-500">
+                          Tendência contrária à meta
+                        </p>
+                      </>
+                    )
+                  }
+                  
+                  // Verificar se já passou da data
+                  if (estimatedDate < new Date()) {
+                    return (
+                      <>
+                        <span className="text-2xl font-bold text-muted-foreground">--</span>
+                        <p className="text-xs text-muted-foreground">Data já passou</p>
+                      </>
+                    )
+                  }
+                  
+                  const daysUntilEstimated = differenceInDays(estimatedDate, new Date())
+                  const daysUntilGoal = differenceInDays(goalDate, new Date())
+                  const isOnTrack = daysUntilEstimated <= daysUntilGoal
+                  
+                  return (
+                    <>
+                      <span className={`text-2xl font-bold ${
+                        isOnTrack ? 'text-green-500' : 'text-orange-500'
+                      }`}>
+                        {format(estimatedDate, "dd 'de' MMM", { locale: ptBR })}
+                      </span>
+                      <p className={`text-xs ${
+                        isOnTrack ? 'text-green-500' : 'text-orange-500'
+                      }`}>
+                        {isOnTrack 
+                          ? `✓ ${Math.abs(daysUntilGoal - daysUntilEstimated)} dias antes da meta` 
+                          : `⚠ ${Math.abs(daysUntilGoal - daysUntilEstimated)} dias após a meta`
+                        }
+                      </p>
+                    </>
+                  )
+                })() : (
+                  <>
+                    <span className="text-2xl font-bold text-muted-foreground">--</span>
+                    <p className="text-xs text-muted-foreground">
+                      {!weightStats?.goalTarget || !weightStats.goalDate 
+                        ? 'Configure uma meta de peso'
+                        : 'Adicione mais registros de peso'
+                      }
+                    </p>
+                  </>
                 )}
               </div>
             </div>

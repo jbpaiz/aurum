@@ -4,8 +4,8 @@ import { useMemo, useState } from 'react'
 import { useHealth } from '@/contexts/health-context'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts'
-import { Eye, EyeOff, Info } from 'lucide-react'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { Info } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { format, subDays, subMonths, subYears, startOfWeek, startOfMonth, startOfDay, addDays } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -15,7 +15,6 @@ type Period = 'week' | 'month' | 'year' | 'all'
 export function WeightChart() {
   const { weightLogs, weightStats } = useHealth()
   const [period, setPeriod] = useState<Period>('month')
-  const [showAdvanced, setShowAdvanced] = useState(false)
 
   const chartData = useMemo(() => {
     if (weightLogs.length === 0) return []
@@ -26,22 +25,6 @@ export function WeightChart() {
     const now = new Date()
     const today = startOfDay(now)
     let filteredLogs = weightLogs
-
-    // Médias por dia da semana (usa todo o histórico para dar base estável)
-    const weekdayBuckets: Record<number, number[]> = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] }
-    weightLogs.forEach(log => {
-      const weekday = asDate(log.recordedAt).getDay()
-      weekdayBuckets[weekday].push(log.weight)
-    })
-    const weekdayAverages: Record<number, number | undefined> = { 0: undefined, 1: undefined, 2: undefined, 3: undefined, 4: undefined, 5: undefined, 6: undefined }
-    Object.keys(weekdayBuckets)
-      .map(key => Number(key))
-      .forEach(key => {
-        const bucket = weekdayBuckets[key]
-        if (bucket.length > 0) {
-          weekdayAverages[key] = bucket.reduce((a, b) => a + b, 0) / bucket.length
-        }
-      })
 
     // Filtrar por período
     switch (period) {
@@ -58,6 +41,12 @@ export function WeightChart() {
           return day >= start && day <= today
         })
         break
+      case 'year':
+        filteredLogs = weightLogs.filter(log => {
+          const day = normalize(log.recordedAt)
+          return day >= subYears(today, 1)
+        })
+        break
       case 'all':
         filteredLogs = weightLogs
         break
@@ -68,11 +57,8 @@ export function WeightChart() {
       fullDate: string
       weight: number | null
       timestamp: number
-      goalProjection?: number
-      weekdaySeasonal?: number
-      emaShort?: number
-      emaLong?: number
-      projection7d?: number
+      goalLine?: number
+      trendProjection?: number
     }> = []
 
     if (period === 'week') {
@@ -133,134 +119,125 @@ export function WeightChart() {
           }
         })
     } else {
-      // Média por mês
-      const monthGroups = new Map<number, number[]>()
-      filteredLogs.forEach(log => {
-        const monthStart = startOfMonth(normalize(log.recordedAt))
-        const key = monthStart.getTime()
-        if (!monthGroups.has(key)) {
-          monthGroups.set(key, [])
-        }
-        monthGroups.get(key)!.push(log.weight)
-      })
-
-      data = Array.from(monthGroups.entries())
-          .sort((a, b) => a[0] - b[0])
-          .map(([ms, weights]) => ({
-            label: format(new Date(ms), 'MMM', { locale: ptBR }),
-            fullDate: format(new Date(ms), "MMMM 'de' yyyy", { locale: ptBR }),
-            weight: weights.reduce((a, b) => a + b, 0) / weights.length,
-            timestamp: ms
-          }))
+      // Modo "Meta" (all): Mostrar todos os registros individuais para cálculo preciso da tendência
+      data = filteredLogs
+        .map(log => ({
+          label: format(asDate(log.recordedAt), 'dd/MM', { locale: ptBR }),
+          fullDate: format(asDate(log.recordedAt), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }),
+          weight: log.weight,
+          timestamp: asDate(log.recordedAt).getTime()
+        }))
+        .sort((a, b) => a.timestamp - b.timestamp)
     }
 
-    // Tendências e projeção curta
-    if (data.length > 0) {
+    // Se temos meta definida, calcular as 3 linhas
+    if (weightStats?.goalTarget && weightStats.goalDate && data.length > 0) {
       const sorted = [...data].sort((a, b) => a.timestamp - b.timestamp)
-      const ema = (series: number[], alpha: number) => {
-        const out: number[] = []
-        series.forEach((v, i) => {
-          if (i === 0) out.push(v)
-          else out.push(alpha * v + (1 - alpha) * out[i - 1])
-        })
-        return out
-      }
+      const startWeight = sorted[0].weight ?? 0
+      const startTime = sorted[0].timestamp
+      const goalTime = new Date(weightStats.goalDate).getTime()
+      const goalWeight = weightStats.goalTarget
 
+      // 1. LINHA DA META: do peso inicial até o peso da meta na data da meta
+      const goalSpan = goalTime - startTime
+      
+      // 2. REGRESSÃO LINEAR: calcular tendência baseada nos dados atuais
       const weightsOnly = sorted.map(p => p.weight ?? 0)
-      const emaShortSeries = ema(weightsOnly, 2 / (10 + 1))
-      const emaLongSeries = ema(weightsOnly, 2 / (30 + 1))
-
-      const globalMean =
-        weightsOnly.reduce((a, b) => a + b, 0) / Math.max(1, weightsOnly.length)
-
-      const weekdayRecent: Record<number, number[]> = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] }
-      filteredLogs
-        .slice()
-        .sort((a, b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime())
-        .forEach(log => {
-          const wd = asDate(log.recordedAt).getDay()
-          weekdayRecent[wd].push(log.weight)
-        })
-      const weekdayOffset: Record<number, number | undefined> = { 0: undefined, 1: undefined, 2: undefined, 3: undefined, 4: undefined, 5: undefined, 6: undefined }
-      Object.keys(weekdayRecent).map(k => Number(k)).forEach(k => {
-        const bucket = weekdayRecent[k]
-        const recent = bucket.slice(-8)
-        if (recent.length > 0) {
-          const avg = recent.reduce((a, b) => a + b, 0) / recent.length
-          weekdayOffset[k] = avg - globalMean
-        }
-      })
-
-      const dayMs = 24 * 60 * 60 * 1000
-      const lastTs = sorted[sorted.length - 1].timestamp
-      const regressionWindowStart = lastTs - 30 * dayMs
-      const regPoints = sorted.filter(p => p.timestamp >= regressionWindowStart)
-      let slope = 0
-      let intercept = sorted[sorted.length - 1].weight ?? 0
-      if (regPoints.length >= 2) {
-        const xs = regPoints.map(p => p.timestamp)
-        const ys = regPoints.map(p => p.weight ?? 0)
-        const xMean = xs.reduce((a, b) => a + b, 0) / xs.length
-        const yMean = ys.reduce((a, b) => a + b, 0) / ys.length
-        let num = 0
-        let den = 0
-        for (let i = 0; i < xs.length; i++) {
-          const dx = xs[i] - xMean
-          num += dx * (ys[i] - yMean)
-          den += dx * dx
-        }
-        slope = den !== 0 ? num / den : 0
-        intercept = yMean - slope * xMean
+      const timestamps = sorted.map(p => p.timestamp)
+      
+      // Calcular média
+      const xMean = timestamps.reduce((a, b) => a + b, 0) / timestamps.length
+      const yMean = weightsOnly.reduce((a, b) => a + b, 0) / weightsOnly.length
+      
+      // Calcular slope (inclinação) e intercept
+      let numerator = 0
+      let denominator = 0
+      for (let i = 0; i < timestamps.length; i++) {
+        const dx = timestamps[i] - xMean
+        numerator += dx * (weightsOnly[i] - yMean)
+        denominator += dx * dx
       }
+      const slope = denominator !== 0 ? numerator / denominator : 0
+      const intercept = yMean - slope * xMean
 
-      const enhanced = sorted.map((point, idx) => {
-        const emaShort = emaShortSeries[idx]
-        const emaLong = emaLongSeries[idx]
-        const weekday = new Date(point.timestamp).getDay()
-        const seasonal = weekdayOffset[weekday] ?? 0
-        const weekdaySeasonal = (emaLong ?? point.weight ?? 0) + seasonal
+      // Calcular data estimada de atingimento da meta
+      const estimatedTimestamp = Math.abs(slope) > 0.000001 
+        ? (goalWeight - intercept) / slope 
+        : goalTime
+      
+      // Verificar se está indo na direção certa
+      const currentWeight = weightsOnly[weightsOnly.length - 1]
+      const isGainingWeight = slope > 0
+      const needsToGain = goalWeight > currentWeight
+      const isWrongDirection = isGainingWeight !== needsToGain
+
+      // Aplicar as linhas aos pontos existentes
+      data = sorted.map(point => {
+        // Linha da meta (linear do início até a meta na data alvo)
+        let goalLine: number | undefined
+        if (goalSpan !== 0 && point.timestamp <= goalTime) {
+          const progress = (point.timestamp - startTime) / goalSpan
+          goalLine = startWeight + (goalWeight - startWeight) * progress
+        } else if (point.timestamp > goalTime) {
+          // Após a data da meta, manter o peso da meta constante
+          goalLine = goalWeight
+        }
+
+        // Linha de tendência (regressão linear)
+        const trendProjection = intercept + slope * point.timestamp
+
         return {
           ...point,
-          emaShort,
-          emaLong,
-          weekdaySeasonal,
-          projection7d: intercept + slope * point.timestamp
+          goalLine,
+          trendProjection
         }
       })
 
-      const futureTs = lastTs + 7 * dayMs
-      const futureDate = new Date(futureTs)
-      const futureWeekday = futureDate.getDay()
-      const seasonal = weekdayOffset[futureWeekday] ?? 0
-      const futureProjection = intercept + slope * futureTs + seasonal
-
-      const futurePoint = {
-        label: `${format(futureDate, 'EEE', { locale: ptBR })} ${format(futureDate, 'dd/MM', { locale: ptBR })}`,
-        fullDate: format(futureDate, "EEEE, dd 'de' MMMM", { locale: ptBR }),
-        weight: null,
-        timestamp: futureTs,
-        projection7d: futureProjection,
-        weekdaySeasonal: (emaLongSeries[emaLongSeries.length - 1] ?? weightsOnly[weightsOnly.length - 1]) + seasonal,
-        emaShort: undefined,
-        emaLong: undefined,
-        goalProjection: undefined
-      }
-
-      data = [...enhanced, futurePoint]
-    }
-
-    // Projeção linear até a meta
-    if (weightStats?.goalTarget && weightStats.goalDate && data.length > 0) {
-      const startWeight = data[0].weight ?? 0
-      const startTime = data[0].timestamp
-      const goalTime = new Date(weightStats.goalDate).getTime()
-      const span = goalTime - startTime
-      if (span !== 0) {
-        data = data.map(point => {
-          const clamped = Math.min(Math.max(point.timestamp, startTime), goalTime)
-          const projected = startWeight + (weightStats.goalTarget! - startWeight) * ((clamped - startTime) / span)
-          return { ...point, goalProjection: projected }
-        })
+      // Se estamos no modo "Meta" (all), adicionar pontos futuros até a data estimada
+      if (period === 'all' && !isWrongDirection) {
+        const lastDataTime = sorted[sorted.length - 1].timestamp
+        let finalTime = estimatedTimestamp
+        
+        // Limitar a projeção se for muito distante
+        if (estimatedTimestamp > goalTime + (365 * 24 * 60 * 60 * 1000)) {
+          finalTime = goalTime + (90 * 24 * 60 * 60 * 1000) // 3 meses após a meta
+        }
+        
+        // Se a data estimada é futura, adicionar pontos
+        if (finalTime > lastDataTime) {
+          const dayMs = 24 * 60 * 60 * 1000
+          const daysToFinal = Math.ceil((finalTime - lastDataTime) / dayMs)
+          
+          // Adicionar pontos intermediários (a cada 3 dias para ter mais precisão nos marcadores)
+          const pointsToAdd = Math.ceil(daysToFinal / 3)
+          const interval = (finalTime - lastDataTime) / pointsToAdd
+          
+          for (let i = 1; i <= pointsToAdd; i++) {
+            const futureTime = lastDataTime + interval * i
+            const futureDate = new Date(futureTime)
+            
+            // Linha da meta
+            let goalLine: number | undefined
+            if (futureTime <= goalTime) {
+              const progress = (futureTime - startTime) / goalSpan
+              goalLine = startWeight + (goalWeight - startWeight) * progress
+            } else {
+              goalLine = goalWeight
+            }
+            
+            // Projeção de tendência (continua a regressão linear normalmente)
+            const trendProjection = intercept + slope * futureTime
+            
+            data.push({
+              label: format(futureDate, 'dd/MM', { locale: ptBR }),
+              fullDate: format(futureDate, "dd 'de' MMMM", { locale: ptBR }),
+              weight: null,
+              timestamp: futureTime,
+              goalLine,
+              trendProjection
+            })
+          }
+        }
       }
     }
 
@@ -300,25 +277,19 @@ export function WeightChart() {
                 <div className="space-y-3 text-sm text-muted-foreground">
                   <p className="flex items-center gap-2">
                     <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: 'hsl(var(--primary))' }} />
-                    Peso: pontos e linha sólida principal. Meta: linha vermelha tracejada horizontal.
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: 'hsl(var(--muted-foreground))' }} />
-                    Projeção para meta: linha cinza tracejada ligada à data alvo informada.
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#60a5fa' }} />
-                    Tendência curta (EMA10): linha azul clara; Tendência longa (EMA30): linha cinza tracejada (visão detalhada).
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#f97316' }} />
-                    Sazonal semanal: linha laranja tracejada, ajusta pela rotina de dias da semana (visão detalhada).
+                    <strong>Peso Atual:</strong> Linha sólida azul com pontos mostrando seus dados reais até hoje
                   </p>
                   <p className="flex items-center gap-2">
                     <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#22c55e' }} />
-                    Projeção +7d: linha verde tracejada, prolonga tendência recente (visão detalhada).
+                    <strong>Meta:</strong> Linha verde tracejada conectando seu peso inicial até o peso da meta na data alvo
                   </p>
-                  <p className="text-xs">Use o ícone do olho para alternar entre visão limpa (peso + meta) e visão completa.</p>
+                  <p className="flex items-center gap-2">
+                    <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#f97316' }} />
+                    <strong>Tendência:</strong> Linha laranja tracejada mostrando a projeção futura baseada na sua evolução atual (regressão linear)
+                  </p>
+                  <p className="text-xs mt-4 text-foreground">
+                    💡 <strong>Dica:</strong> Compare a linha de tendência (laranja) com a linha da meta (verde) para saber se você está no caminho certo!
+                  </p>
                 </div>
               </DialogContent>
             </Dialog>
@@ -354,17 +325,7 @@ export function WeightChart() {
               onClick={() => setPeriod('all')}
               className="flex-1 sm:flex-none"
             >
-              Total
-            </Button>
-            <Button
-              size="sm"
-              variant={showAdvanced ? 'default' : 'outline'}
-              onClick={() => setShowAdvanced(!showAdvanced)}
-              className="flex-1 sm:flex-none"
-              title={showAdvanced ? 'Mostrar menos linhas' : 'Mostrar todas as linhas'}
-            >
-              {showAdvanced ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-              <span className="sr-only">Alternar detalhes</span>
+              Meta
             </Button>
           </div>
         </div>
@@ -384,6 +345,7 @@ export function WeightChart() {
                 className="text-xs"
                 tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
                 domain={['dataMin - 2', 'dataMax + 2']}
+                tickFormatter={(value: number) => value.toFixed(1)}
                 width={40}
               />
               <Tooltip 
@@ -396,83 +358,100 @@ export function WeightChart() {
                 formatter={(value: number, name: string) => [`${value.toFixed(1)} kg`, name]}
                 labelFormatter={(_, payload) => payload?.[0]?.payload.fullDate || ''}
               />
+              
+              {/* Linha 1: Peso Atual (dados reais até hoje) */}
               <Line
                 type="monotone"
                 dataKey="weight"
-                name="Peso"
+                name="Peso Atual"
                 stroke="hsl(var(--primary))"
-                strokeWidth={2}
+                strokeWidth={2.5}
                 dot={{ fill: 'hsl(var(--primary))', r: 4 }}
                 activeDot={{ r: 6 }}
+                connectNulls={false}
               />
-              {showAdvanced && chartData.some(point => point.emaShort !== undefined) && (
-                <Line
-                  type="monotone"
-                  dataKey="emaShort"
-                  name="Tendência curta (EMA10)"
-                  stroke="#60a5fa"
-                  strokeOpacity={0.9}
-                  strokeWidth={2}
-                  dot={false}
-                  connectNulls
-                />
-              )}
-              {showAdvanced && chartData.some(point => point.emaLong !== undefined) && (
-                <Line
-                  type="monotone"
-                  dataKey="emaLong"
-                  name="Tendência longa (EMA30)"
-                  stroke="hsl(var(--muted-foreground))"
-                  strokeDasharray="6 4"
-                  strokeWidth={2}
-                  dot={false}
-                  connectNulls
-                />
-              )}
-              {showAdvanced && chartData.some(point => point.weekdaySeasonal !== undefined) && (
-                <Line
-                  type="monotone"
-                  dataKey="weekdaySeasonal"
-                  name="Sazonal semanal"
-                  stroke="#f97316"
-                  strokeDasharray="4 6"
-                  strokeWidth={1.5}
-                  dot={false}
-                  connectNulls
-                  opacity={0.9}
-                />
-              )}
-              {showAdvanced && chartData.some(point => point.projection7d !== undefined) && (
-                <Line
-                  type="monotone"
-                  dataKey="projection7d"
-                  name="Projeção +7d"
-                  stroke="#22c55e"
-                  strokeDasharray="5 7"
-                  strokeWidth={1.5}
-                  dot={false}
-                  connectNulls
-                  opacity={0.9}
-                />
-              )}
+              
+              {/* Linha 2: Meta (peso inicial até peso da meta na data da meta) */}
               {weightStats?.goalTarget && weightStats.goalDate && (
                 <Line
                   type="monotone"
-                  dataKey="goalProjection"
-                  name="Projeção para meta"
-                  stroke="hsl(var(--muted-foreground))"
+                  dataKey="goalLine"
+                  name="Meta"
+                  stroke="#22c55e"
                   strokeDasharray="5 5"
                   strokeWidth={2}
-                  dot={false}
+                  dot={(props: any) => {
+                    // Mostrar marcador apenas no primeiro ponto que atinge a meta
+                    const goalValue = props.payload.goalLine
+                    if (!goalValue || !weightStats.goalTarget) return null
+                    
+                    // Verifica se está próximo ao peso da meta (tolerância de 0.5kg)
+                    const isAtGoal = Math.abs(goalValue - weightStats.goalTarget) < 0.5
+                    if (!isAtGoal) return null
+                    
+                    // Verificar se é o primeiro ponto que atinge a meta
+                    const currentIndex = props.index
+                    if (currentIndex > 0) {
+                      const prevValue = chartData[currentIndex - 1]?.goalLine
+                      if (prevValue && Math.abs(prevValue - weightStats.goalTarget) < 0.5) {
+                        return null // Já teve um marcador antes
+                      }
+                    }
+                    
+                    return (
+                      <circle
+                        cx={props.cx}
+                        cy={props.cy}
+                        r={6}
+                        fill="#22c55e"
+                        stroke="#fff"
+                        strokeWidth={2}
+                      />
+                    )
+                  }}
                   connectNulls
                 />
               )}
-              {weightStats?.goalTarget && (
-                <ReferenceLine
-                  y={weightStats.goalTarget}
-                  stroke="hsl(var(--destructive))"
-                  strokeDasharray="4 4"
-                  label={{ value: `Meta: ${weightStats.goalTarget} kg`, position: 'insideTopRight', fill: 'hsl(var(--destructive))', fontSize: 10 }}
+              
+              {/* Linha 3: Tendência (regressão linear projetando até a data da meta) */}
+              {weightStats?.goalTarget && weightStats.goalDate && (
+                <Line
+                  type="monotone"
+                  dataKey="trendProjection"
+                  name="Tendência"
+                  stroke="#f97316"
+                  strokeDasharray="8 4"
+                  strokeWidth={2}
+                  dot={(props: any) => {
+                    // Mostrar marcador apenas no primeiro ponto que atinge a meta
+                    const trendValue = props.payload.trendProjection
+                    if (!trendValue || !weightStats.goalTarget) return null
+                    
+                    // Verifica se está próximo ao peso da meta (tolerância de 0.5kg)
+                    const isAtGoal = Math.abs(trendValue - weightStats.goalTarget) < 0.5
+                    if (!isAtGoal) return null
+                    
+                    // Verificar se é o primeiro ponto que atinge a meta
+                    const currentIndex = props.index
+                    if (currentIndex > 0) {
+                      const prevValue = chartData[currentIndex - 1]?.trendProjection
+                      if (prevValue && Math.abs(prevValue - weightStats.goalTarget) < 0.5) {
+                        return null // Já teve um marcador antes
+                      }
+                    }
+                    
+                    return (
+                      <circle
+                        cx={props.cx}
+                        cy={props.cy}
+                        r={6}
+                        fill="#f97316"
+                        stroke="#fff"
+                        strokeWidth={2}
+                      />
+                    )
+                  }}
+                  connectNulls
                 />
               )}
             </LineChart>
