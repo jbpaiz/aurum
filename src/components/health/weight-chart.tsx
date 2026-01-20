@@ -459,6 +459,7 @@ export function WeightChart() {
                     
                     return (
                       <circle
+                        key={`goal-marker-${currentIndex}`}
                         cx={props.cx}
                         cy={props.cy}
                         r={6}
@@ -501,6 +502,7 @@ export function WeightChart() {
                     
                     return (
                       <circle
+                        key={`trend-marker-${currentIndex}`}
                         cx={props.cx}
                         cy={props.cy}
                         r={6}
