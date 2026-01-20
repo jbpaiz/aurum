@@ -305,13 +305,48 @@ export function FuelTab() {
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="shell">Shell</SelectItem>
-                <SelectItem value="petrobras">Petrobras</SelectItem>
-                <SelectItem value="ipiranga">Ipiranga</SelectItem>
-                <SelectItem value="raizen">Raízen</SelectItem>
-                <SelectItem value="ale">Ale</SelectItem>
-                <SelectItem value="bp">BP</SelectItem>
-                <SelectItem value="outro">Outro</SelectItem>
+                <SelectItem value="shell">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded-full bg-yellow-400 border-2 border-red-600" />
+                    <span>Shell</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="petrobras">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded-full bg-green-600" />
+                    <span>Petrobras</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="ipiranga">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded-full bg-blue-600" />
+                    <span>Ipiranga</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="raizen">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded-full bg-red-600" />
+                    <span>Raízen</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="ale">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded-full bg-orange-500" />
+                    <span>Ale</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="bp">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded-full bg-green-500" />
+                    <span>BP</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="outro">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded-full bg-gray-400" />
+                    <span>Outro</span>
+                  </div>
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>

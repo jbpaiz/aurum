@@ -20,6 +20,7 @@ interface VehicleFormState {
   renavam: string
   modelo: string
   ano: string
+  tipo: 'carro' | 'moto'
   categoria: string
   status: VehicleStatus
   odometro: string
@@ -31,6 +32,7 @@ const emptyForm: VehicleFormState = {
   renavam: '',
   modelo: '',
   ano: '',
+  tipo: 'carro',
   categoria: '',
   status: 'ativo',
   odometro: '',
@@ -73,6 +75,7 @@ export function VehiclesPage() {
       renavam: row.renavam,
       modelo: row.modelo,
       ano: row.ano,
+      tipo: row.tipo || 'carro',
       categoria: row.categoria,
       status: row.status as VehicleStatus,
       odometroAtual: row.odometro_atual,
@@ -108,6 +111,7 @@ export function VehiclesPage() {
       renavam: form.renavam.trim() || null,
       modelo: form.modelo.trim(),
       ano: form.ano ? Number(form.ano) : null,
+      tipo: form.tipo,
       categoria: form.categoria.trim() || null,
       status: form.status,
       odometro_atual: form.odometro ? Number(form.odometro) : null,
@@ -185,6 +189,7 @@ export function VehiclesPage() {
       renavam: vehicle.renavam || '',
       modelo: vehicle.modelo,
       ano: vehicle.ano ? String(vehicle.ano) : '',
+      tipo: vehicle.tipo || 'carro',
       categoria: vehicle.categoria || '',
       status: vehicle.status,
       odometro: vehicle.odometroAtual ? String(vehicle.odometroAtual) : '',
@@ -291,6 +296,30 @@ export function VehiclesPage() {
                     onChange={e => setForm(f => ({ ...f, ano: e.target.value }))}
                     placeholder="2022"
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label>Tipo</Label>
+                  <Select value={form.tipo} onValueChange={value => setForm(f => ({ ...f, tipo: value as 'carro' | 'moto' }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="carro">
+                        <div className="flex items-center gap-2">
+                          <Car className="h-4 w-4" />
+                          <span>Carro</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="moto">
+                        <div className="flex items-center gap-2">
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                          <span>Moto</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>Categoria</Label>
