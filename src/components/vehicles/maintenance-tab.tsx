@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { CalendarClock, CheckCheck, Loader2, RefreshCw, Wrench } from 'lucide-react'
+import { CalendarClock, CheckCheck, Loader2, RefreshCw, Wrench, Pencil, Trash2 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,6 +15,7 @@ import type { Tables, TablesInsert } from '@/lib/database.types'
 import type { MaintenanceEvent, MaintenanceStatus, Vehicle } from '@/types/vehicles'
 
 interface MaintenanceForm {
+  id?: string
   vehicleId: string
   titulo: string
   status: MaintenanceStatus
@@ -144,11 +145,19 @@ export function MaintenanceTab() {
       notas: form.notas || null
     } as TablesInsert<'maintenance_events'>
 
-    const { data, error } = await supabase
-      .from('maintenance_events')
-      .insert(payload)
-      .select('*')
-      .single()
+    const isEdit = Boolean(form.id)
+    const { data, error } = isEdit
+      ? await supabase
+          .from('maintenance_events')
+          .update(payload)
+          .eq('id', form.id!)
+          .select('*')
+          .single()
+      : await supabase
+          .from('maintenance_events')
+          .insert(payload)
+          .select('*')
+          .single()
 
     if (error) {
       toast({ title: 'Erro ao registrar manutenção', description: error.message, variant: 'destructive' })
@@ -171,10 +180,46 @@ export function MaintenanceTab() {
       createdAt: data.created_at
     }
 
-    setEvents((prev) => [mapped, ...prev])
+    if (isEdit) {
+      setEvents((prev) => prev.map(e => e.id === mapped.id ? mapped : e))
+      toast({ title: 'Manutenção atualizada' })
+    } else {
+      setEvents((prev) => [mapped, ...prev])
+      toast({ title: 'Manutenção registrada' })
+    }
+    
     setForm(emptyMaintenanceForm)
-    toast({ title: 'Manutenção registrada' })
     setSaving(false)
+  }
+
+  const handleEdit = (event: MaintenanceEvent) => {
+    setForm({
+      id: event.id,
+      vehicleId: event.vehicleId,
+      titulo: event.titulo,
+      status: event.status,
+      dataPrevista: event.dataPrevista || '',
+      odometroPrevisto: event.odometroPrevisto?.toString() || '',
+      custo: event.custo?.toString() || '',
+      notas: event.notas || ''
+    })
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Deseja realmente excluir esta manutenção?')) return
+
+    const { error } = await supabase
+      .from('maintenance_events')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      toast({ title: 'Erro ao excluir', description: error.message, variant: 'destructive' })
+      return
+    }
+
+    setEvents((prev) => prev.filter(e => e.id !== id))
+    toast({ title: 'Manutenção excluída' })
   }
 
   const statusBadge = (status: MaintenanceStatus) => {
@@ -264,10 +309,10 @@ export function MaintenanceTab() {
             <Textarea value={form.notas} onChange={(e) => setForm((f) => ({ ...f, notas: e.target.value }))} placeholder="Checklist de entrega/devolução, peças, rodízio de pneus, recall..." />
           </div>
           <div className="md:col-span-2 lg:col-span-3 flex flex-col gap-2 sm:flex-row sm:justify-end">
-            <Button variant="outline" onClick={() => setForm(emptyMaintenanceForm)} className="w-full sm:w-auto">Limpar</Button>
+            <Button variant="outline" onClick={() => setForm(emptyMaintenanceForm)} className="w-full sm:w-auto">{form.id ? 'Cancelar' : 'Limpar'}</Button>
             <Button onClick={handleSave} disabled={saving} className="gap-2 w-full sm:w-auto">
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-              Salvar
+              {form.id ? 'Atualizar' : 'Salvar'}
             </Button>
           </div>
         </CardContent>
@@ -290,21 +335,43 @@ export function MaintenanceTab() {
             ) : (
               events.map((event) => (
                 <div key={event.id} className="rounded-lg sm:rounded-xl border border-gray-200 dark:border-gray-800 p-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-foreground">{event.titulo}</p>
-                      <p className="text-xs text-muted-foreground">{vehicleLabel(event.vehicleId)}</p>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div>
+                          <p className="font-semibold text-foreground">{event.titulo}</p>
+                          <p className="text-xs text-muted-foreground">{vehicleLabel(event.vehicleId)}</p>
+                        </div>
+                        <Badge className={statusBadge(event.status)} variant="outline">{event.status}</Badge>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                        <span>Prevista: {event.dataPrevista || '—'}</span>
+                        <span>Odo previsto: {event.odometroPrevisto ?? '—'}</span>
+                        <span>Realizado: {event.dataRealizada || '—'}</span>
+                        <span>Odo real: {event.odometroRealizado ?? '—'}</span>
+                        <span>Custo: {event.custo ? `R$ ${event.custo.toFixed(2)}` : '—'}</span>
+                      </div>
+                      {event.notas && <p className="mt-2 text-xs text-muted-foreground">{event.notas}</p>}
                     </div>
-                    <Badge className={statusBadge(event.status)} variant="outline">{event.status}</Badge>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => handleEdit(event)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                        onClick={() => handleDelete(event.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                    <span>Prevista: {event.dataPrevista || '—'}</span>
-                    <span>Odo previsto: {event.odometroPrevisto ?? '—'}</span>
-                    <span>Realizado: {event.dataRealizada || '—'}</span>
-                    <span>Odo real: {event.odometroRealizado ?? '—'}</span>
-                    <span>Custo: {event.custo ? `R$ ${event.custo.toFixed(2)}` : '—'}</span>
-                  </div>
-                  {event.notas && <p className="mt-2 text-xs text-muted-foreground">{event.notas}</p>}
                 </div>
               ))
             )}

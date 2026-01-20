@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Fuel, Loader2, Plus, RefreshCw } from 'lucide-react'
+import { Fuel, Loader2, Plus, RefreshCw, Pencil, Trash2 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,6 +15,7 @@ import type { Tables, TablesInsert } from '@/lib/database.types'
 import type { FuelLog, Vehicle } from '@/types/vehicles'
 
 interface FuelFormState {
+  id?: string
   vehicleId: string
   odometro: string
   litros: string
@@ -125,11 +126,19 @@ export function FuelTab() {
       notas: form.notas || null
     } as TablesInsert<'fuel_logs'>
 
-    const { data, error } = await supabase
-      .from('fuel_logs')
-      .insert(payload)
-      .select('*')
-      .single()
+    const isEdit = Boolean(form.id)
+    const { data, error } = isEdit
+      ? await supabase
+          .from('fuel_logs')
+          .update(payload)
+          .eq('id', form.id!)
+          .select('*')
+          .single()
+      : await supabase
+          .from('fuel_logs')
+          .insert(payload)
+          .select('*')
+          .single()
 
     if (error) {
       toast({ title: 'Erro ao salvar abastecimento', description: error.message, variant: 'destructive' })
@@ -158,10 +167,47 @@ export function FuelTab() {
       notas: data.notas
     }
 
-    setLogs((prev) => [mapped, ...prev])
+    if (isEdit) {
+      setLogs((prev) => prev.map(l => l.id === mapped.id ? mapped : l))
+      toast({ title: 'Abastecimento atualizado' })
+    } else {
+      setLogs((prev) => [mapped, ...prev])
+      toast({ title: 'Abastecimento registrado' })
+    }
+    
     setForm(emptyFuelForm())
-    toast({ title: 'Abastecimento registrado' })
     setSaving(false)
+  }
+
+  const handleEdit = (log: FuelLog) => {
+    setForm({
+      id: log.id,
+      vehicleId: log.vehicleId,
+      odometro: log.odometro.toString(),
+      litros: log.litros.toString(),
+      valorTotal: log.valorTotal.toString(),
+      posto: log.posto || '',
+      metodoPagamento: log.metodoPagamento || '',
+      data: new Date(log.data).toISOString().slice(0, 16),
+      notas: log.notas || ''
+    })
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Deseja realmente excluir este abastecimento?')) return
+
+    const { error } = await supabase
+      .from('fuel_logs')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      toast({ title: 'Erro ao excluir', description: error.message, variant: 'destructive' })
+      return
+    }
+
+    setLogs((prev) => prev.filter(l => l.id !== id))
+    toast({ title: 'Abastecimento excluído' })
   }
 
   const vehicleLabel = (vehicleId: string) => {
@@ -263,10 +309,10 @@ export function FuelTab() {
             <Textarea value={form.notas} onChange={(e) => setForm((f) => ({ ...f, notas: e.target.value }))} placeholder="Observações, comprovante, autorização..." />
           </div>
           <div className="md:col-span-2 lg:col-span-3 flex flex-col gap-2 sm:flex-row sm:justify-end">
-            <Button variant="outline" onClick={() => setForm(emptyFuelForm())} className="w-full sm:w-auto">Limpar</Button>
+            <Button variant="outline" onClick={() => setForm(emptyFuelForm())} className="w-full sm:w-auto">{form.id ? 'Cancelar' : 'Limpar'}</Button>
             <Button onClick={handleSave} disabled={saving} className="gap-2 w-full sm:w-auto">
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-              Registrar
+              {form.id ? 'Atualizar' : 'Registrar'}
             </Button>
           </div>
         </CardContent>
@@ -289,7 +335,27 @@ export function FuelTab() {
                   <CardTitle className="text-base">{vehicleLabel(log.vehicleId)}</CardTitle>
                   <CardDescription>{new Date(log.data).toLocaleString('pt-BR')}</CardDescription>
                 </div>
-                <Badge variant="secondary">{log.metodoPagamento || '—'}</Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary">{log.metodoPagamento || '—'}</Badge>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => handleEdit(log)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={() => handleDelete(log.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="space-y-2 text-sm text-muted-foreground">
                 <div className="flex gap-2"><span className="font-semibold text-foreground">Odômetro:</span> {log.odometro} km</div>

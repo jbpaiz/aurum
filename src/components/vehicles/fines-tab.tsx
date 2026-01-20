@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { AlertTriangle, Gavel, Loader2, RefreshCw } from 'lucide-react'
+import { AlertTriangle, Gavel, Loader2, RefreshCw, Pencil, Trash2 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,6 +15,7 @@ import type { TablesInsert } from '@/lib/database.types'
 import type { Fine, FineStatus, Vehicle } from '@/types/vehicles'
 
 interface FineForm {
+  id?: string
   vehicleId: string
   data: string
   valor: string
@@ -125,11 +126,19 @@ export function FinesTab() {
       comprovante_url: form.comprovanteUrl || null
     } as TablesInsert<'fines'>
 
-    const { data, error } = await supabase
-      .from('fines')
-      .insert(payload)
-      .select('*')
-      .single()
+    const isEdit = Boolean(form.id)
+    const { data, error } = isEdit
+      ? await supabase
+          .from('fines')
+          .update(payload)
+          .eq('id', form.id!)
+          .select('*')
+          .single()
+      : await supabase
+          .from('fines')
+          .insert(payload)
+          .select('*')
+          .single()
 
     if (error) {
       toast({ title: 'Erro ao salvar multa', description: error.message, variant: 'destructive' })
@@ -152,10 +161,48 @@ export function FinesTab() {
       createdAt: data.created_at
     }
 
-    setFines((prev) => [mapped, ...prev])
+    if (isEdit) {
+      setFines((prev) => prev.map(f => f.id === mapped.id ? mapped : f))
+      toast({ title: 'Multa atualizada' })
+    } else {
+      setFines((prev) => [mapped, ...prev])
+      toast({ title: 'Multa cadastrada' })
+    }
+    
     setForm(emptyFineForm)
-    toast({ title: 'Multa cadastrada' })
     setSaving(false)
+  }
+
+  const handleEdit = (fine: Fine) => {
+    setForm({
+      id: fine.id,
+      vehicleId: fine.vehicleId,
+      data: fine.data,
+      valor: fine.valor.toString(),
+      status: fine.status,
+      orgao: fine.orgao || '',
+      autoInfracao: fine.autoInfracao || '',
+      vencimento: fine.vencimento || '',
+      comprovanteUrl: fine.comprovanteUrl || '',
+      notas: fine.notas || ''
+    })
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Deseja realmente excluir esta multa?')) return
+
+    const { error } = await supabase
+      .from('fines')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      toast({ title: 'Erro ao excluir', description: error.message, variant: 'destructive' })
+      return
+    }
+
+    setFines((prev) => prev.filter(f => f.id !== id))
+    toast({ title: 'Multa excluída' })
   }
 
   const statusBadge = (status: FineStatus | string) => {
@@ -193,7 +240,7 @@ export function FinesTab() {
       <Card className="!rounded-lg sm:!rounded-xl dark:bg-gray-900 dark:border-gray-800">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Gavel className="h-5 w-5" /> Registrar multa
+            <Gavel className="h-5 w-5" /> {form.id ? 'Editar multa' : 'Registrar multa'}
           </CardTitle>
           <CardDescription>Controle recurso, pagamento e vínculo ao veículo/condutor.</CardDescription>
         </CardHeader>
@@ -249,10 +296,10 @@ export function FinesTab() {
             <Textarea value={form.notas} onChange={(e) => setForm((f) => ({ ...f, notas: e.target.value }))} placeholder="Status do recurso, protocolos" />
           </div>
           <div className="md:col-span-2 lg:col-span-3 flex flex-col gap-2 sm:flex-row sm:justify-end">
-            <Button variant="outline" onClick={() => setForm(emptyFineForm)} className="w-full sm:w-auto">Limpar</Button>
+            <Button variant="outline" onClick={() => setForm(emptyFineForm)} className="w-full sm:w-auto">{form.id ? 'Cancelar' : 'Limpar'}</Button>
             <Button onClick={handleSave} disabled={saving} className="gap-2 w-full sm:w-auto">
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-              Salvar
+              {form.id ? 'Atualizar' : 'Salvar'}
             </Button>
           </div>
         </CardContent>
@@ -274,22 +321,44 @@ export function FinesTab() {
           ) : (
             fines.map((fine) => (
               <div key={fine.id} className="rounded-lg sm:rounded-xl border border-gray-200 dark:border-gray-800 p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-foreground">{fine.autoInfracao || 'Auto não informado'}</p>
-                    <p className="text-xs text-muted-foreground">{vehicleLabel(fine.vehicleId)}</p>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div>
+                        <p className="font-semibold text-foreground">{fine.autoInfracao || 'Auto não informado'}</p>
+                        <p className="text-xs text-muted-foreground">{vehicleLabel(fine.vehicleId)}</p>
+                      </div>
+                      <Badge variant="outline" className={statusBadge(fine.status)}>{fine.status}</Badge>
+                    </div>
+                    <div className="text-xs text-muted-foreground flex gap-3 flex-wrap">
+                      <span>Data: {fine.data}</span>
+                      <span>Venc.: {fine.vencimento || '—'}</span>
+                      <span>Valor: R$ {fine.valor.toFixed(2)}</span>
+                      {fine.comprovanteUrl && (
+                        <a href={fine.comprovanteUrl} className="text-blue-600" target="_blank" rel="noreferrer">Comprovante</a>
+                      )}
+                    </div>
+                    {fine.orgao && <p className="text-xs text-muted-foreground mt-1">Órgão: {fine.orgao}</p>}
                   </div>
-                  <Badge variant="outline" className={statusBadge(fine.status)}>{fine.status}</Badge>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => handleEdit(fine)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={() => handleDelete(fine.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="mt-2 text-xs text-muted-foreground flex gap-3 flex-wrap">
-                  <span>Data: {fine.data}</span>
-                  <span>Venc.: {fine.vencimento || '—'}</span>
-                  <span>Valor: R$ {fine.valor.toFixed(2)}</span>
-                  {fine.comprovanteUrl && (
-                    <a href={fine.comprovanteUrl} className="text-blue-600" target="_blank" rel="noreferrer">Comprovante</a>
-                  )}
-                </div>
-                {fine.orgao && <p className="text-xs text-muted-foreground mt-1">Órgão: {fine.orgao}</p>}
               </div>
             ))
           )}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { FileCheck2, Loader2, RefreshCw } from 'lucide-react'
+import { FileCheck2, Loader2, RefreshCw, Pencil, Trash2 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,6 +15,7 @@ import type { TablesInsert } from '@/lib/database.types'
 import type { Document, DocumentType, Vehicle } from '@/types/vehicles'
 
 interface DocumentForm {
+  id?: string
   vehicleId: string
   tipo: DocumentType
   numero: string
@@ -118,11 +119,19 @@ export function DocumentsTab() {
       notas: form.notas || null
     } as TablesInsert<'documents'>
 
-    const { data, error } = await supabase
-      .from('documents')
-      .insert(payload)
-      .select('*')
-      .single()
+    const isEdit = Boolean(form.id)
+    const { data, error } = isEdit
+      ? await supabase
+          .from('documents')
+          .update(payload)
+          .eq('id', form.id!)
+          .select('*')
+          .single()
+      : await supabase
+          .from('documents')
+          .insert(payload)
+          .select('*')
+          .single()
 
     if (error) {
       toast({ title: 'Erro ao salvar documento', description: error.message, variant: 'destructive' })
@@ -143,10 +152,46 @@ export function DocumentsTab() {
       createdAt: data.created_at
     }
 
-    setDocs((prev) => [mapped, ...prev])
+    if (isEdit) {
+      setDocs((prev) => prev.map(d => d.id === mapped.id ? mapped : d))
+      toast({ title: 'Documento atualizado' })
+    } else {
+      setDocs((prev) => [mapped, ...prev])
+      toast({ title: 'Documento salvo' })
+    }
+    
     setForm(emptyDocumentForm)
-    toast({ title: 'Documento salvo' })
     setSaving(false)
+  }
+
+  const handleEdit = (doc: Document) => {
+    setForm({
+      id: doc.id,
+      vehicleId: doc.vehicleId || '',
+      tipo: doc.tipo,
+      numero: doc.numero || '',
+      validade: doc.validade || '',
+      arquivoUrl: doc.arquivoUrl || '',
+      status: doc.status || 'válido',
+      notas: doc.notas || ''
+    })
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Deseja realmente excluir este documento?')) return
+
+    const { error } = await supabase
+      .from('documents')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      toast({ title: 'Erro ao excluir', description: error.message, variant: 'destructive' })
+      return
+    }
+
+    setDocs((prev) => prev.filter(d => d.id !== id))
+    toast({ title: 'Documento excluído' })
   }
 
   const vehicleLabel = (vehicleId?: string | null) => {
@@ -250,10 +295,10 @@ export function DocumentsTab() {
             <Textarea value={form.notas} onChange={(e) => setForm((f) => ({ ...f, notas: e.target.value }))} placeholder="Comprovantes de multa/pagamento, anexos extras" />
           </div>
           <div className="md:col-span-2 lg:col-span-3 flex flex-col gap-2 sm:flex-row sm:justify-end">
-            <Button variant="outline" onClick={() => setForm(emptyDocumentForm)} className="w-full sm:w-auto">Limpar</Button>
+            <Button variant="outline" onClick={() => setForm(emptyDocumentForm)} className="w-full sm:w-auto">{form.id ? 'Cancelar' : 'Limpar'}</Button>
             <Button onClick={handleSave} disabled={saving} className="gap-2 w-full sm:w-auto">
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-              Salvar
+              {form.id ? 'Atualizar' : 'Salvar'}
             </Button>
           </div>
         </CardContent>
@@ -275,28 +320,50 @@ export function DocumentsTab() {
           ) : (
             expiryAlerts.map(({ doc, status }) => (
               <div key={doc.id} className="rounded-lg sm:rounded-xl border border-gray-200 dark:border-gray-800 p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-foreground">{doc.tipo}</p>
-                    <p className="text-xs text-muted-foreground">{vehicleLabel(doc.vehicleId)}</p>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div>
+                        <p className="font-semibold text-foreground">{doc.tipo}</p>
+                        <p className="text-xs text-muted-foreground">{vehicleLabel(doc.vehicleId)}</p>
+                      </div>
+                      <Badge variant="outline" className={badgeByExpiry(status)}>
+                        {status === 'vencido' && 'Vencido'}
+                        {status === 'vence_30' && 'Vence em ≤30d'}
+                        {status === 'vence_60' && 'Vence em ≤60d'}
+                        {status === 'ok' && 'Em dia'}
+                        {status === 'indefinido' && 'Sem validade'}
+                      </Badge>
+                    </div>
+                    <div className="text-xs text-muted-foreground flex gap-3 flex-wrap">
+                      <span>Validade: {doc.validade || '—'}</span>
+                      <span>Ref: {doc.numero || '—'}</span>
+                      <span>Status: {doc.status || '—'}</span>
+                      {doc.arquivoUrl && (
+                        <a className="text-blue-600" href={doc.arquivoUrl} target="_blank" rel="noreferrer">Ver arquivo</a>
+                      )}
+                    </div>
+                    {doc.notas && <p className="mt-2 text-xs text-muted-foreground">{doc.notas}</p>}
                   </div>
-                  <Badge variant="outline" className={badgeByExpiry(status)}>
-                    {status === 'vencido' && 'Vencido'}
-                    {status === 'vence_30' && 'Vence em ≤30d'}
-                    {status === 'vence_60' && 'Vence em ≤60d'}
-                    {status === 'ok' && 'Em dia'}
-                    {status === 'indefinido' && 'Sem validade'}
-                  </Badge>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => handleEdit(doc)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={() => handleDelete(doc.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="mt-2 text-xs text-muted-foreground flex gap-3 flex-wrap">
-                  <span>Validade: {doc.validade || '—'}</span>
-                  <span>Ref: {doc.numero || '—'}</span>
-                  <span>Status: {doc.status || '—'}</span>
-                  {doc.arquivoUrl && (
-                    <a className="text-blue-600" href={doc.arquivoUrl} target="_blank" rel="noreferrer">Ver arquivo</a>
-                  )}
-                </div>
-                {doc.notas && <p className="mt-2 text-xs text-muted-foreground">{doc.notas}</p>}
               </div>
             ))
           )}
