@@ -179,7 +179,7 @@ export function FinesTab() {
       vehicleId: fine.vehicleId,
       data: fine.data,
       valor: fine.valor.toString(),
-      status: fine.status,
+      status: fine.status as FineStatus,
       orgao: fine.orgao || '',
       autoInfracao: fine.autoInfracao || '',
       vencimento: fine.vencimento || '',

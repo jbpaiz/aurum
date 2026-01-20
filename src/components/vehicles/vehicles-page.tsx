@@ -75,7 +75,7 @@ export function VehiclesPage() {
       renavam: row.renavam,
       modelo: row.modelo,
       ano: row.ano,
-      tipo: row.tipo || 'carro',
+      tipo: (row as any).tipo || 'carro', // campo será adicionado pela migration
       categoria: row.categoria,
       status: row.status as VehicleStatus,
       odometroAtual: row.odometro_atual,
@@ -115,7 +115,6 @@ export function VehiclesPage() {
       categoria: form.categoria.trim() || null,
       status: form.status,
       odometro_atual: form.odometro ? Number(form.odometro) : null,
-      local_atual: form.local.trim() || null,
       tags: form.tags
         ? form.tags
             .split(',')

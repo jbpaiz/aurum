@@ -11,6 +11,7 @@ export interface Vehicle {
   renavam?: string | null
   modelo: string
   ano?: number | null
+  tipo?: 'carro' | 'moto'
   categoria?: string | null
   status: VehicleStatus
   odometroAtual?: number | null
@@ -118,5 +119,6 @@ export interface Fine {
   status: string
   vencimento?: string | null
   comprovanteUrl?: string | null
+  notas?: string | null
   createdAt?: string | null
 }

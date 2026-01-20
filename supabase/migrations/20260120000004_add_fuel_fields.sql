@@ -7,6 +7,27 @@ ALTER TABLE public.fuel_logs
 ADD COLUMN IF NOT EXISTS bandeira TEXT,
 ADD COLUMN IF NOT EXISTS tipo_combustivel TEXT;
 
+-- Clean up any invalid data before adding constraints
+-- Convert empty strings to NULL
+UPDATE public.fuel_logs
+SET bandeira = NULL
+WHERE bandeira = '';
+
+UPDATE public.fuel_logs
+SET tipo_combustivel = NULL
+WHERE tipo_combustivel = '';
+
+-- Convert any invalid values to NULL
+UPDATE public.fuel_logs
+SET bandeira = NULL
+WHERE bandeira IS NOT NULL 
+  AND bandeira NOT IN ('shell', 'petrobras', 'ipiranga', 'raizen', 'ale', 'bp', 'outro');
+
+UPDATE public.fuel_logs
+SET tipo_combustivel = NULL
+WHERE tipo_combustivel IS NOT NULL 
+  AND tipo_combustivel NOT IN ('gasolina', 'etanol', 'diesel', 'diesel_s10', 'gnv', 'gasolina_aditivada');
+
 -- Drop existing constraints if they exist
 ALTER TABLE public.fuel_logs
 DROP CONSTRAINT IF EXISTS check_bandeira_values;
