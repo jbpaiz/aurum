@@ -16,7 +16,10 @@ import {
   Loader2,
   X,
   CheckCircle2,
-  TrendingUp
+  TrendingUp,
+  Car,
+  Heart,
+  BarChart3
 } from 'lucide-react'
 
 interface AuthModalProps {
@@ -231,9 +234,11 @@ export function AuthModal({ onClose, showCloseButton = true }: AuthModalProps) {
           
           <div className="space-y-4">
             {[
-              { icon: <TrendingUp className="h-5 w-5" />, title: 'Gestão Financeira', desc: 'Controle total de receitas e despesas' },
-              { icon: <CheckCircle2 className="h-5 w-5" />, title: 'Metas e Tarefas', desc: 'Organize sua vida com kanban integrado' },
-              { icon: <DollarSign className="h-5 w-5" />, title: 'Relatórios', desc: 'Visualize seu progresso em tempo real' }
+              { icon: <DollarSign className="h-5 w-5" />, title: 'Gestão Financeira Completa', desc: 'Controle de contas, transações e cartões de crédito' },
+              { icon: <Car className="h-5 w-5" />, title: 'Gestão de Veículos', desc: 'Abastecimento, manutenção, multas e relatórios de custos' },
+              { icon: <Heart className="h-5 w-5" />, title: 'Saúde e Bem-estar', desc: 'Acompanhamento de peso, metas e conquistas' },
+              { icon: <CheckCircle2 className="h-5 w-5" />, title: 'Metas e Tarefas', desc: 'Kanban integrado com sistema de produtividade' },
+              { icon: <BarChart3 className="h-5 w-5" />, title: 'Relatórios Avançados', desc: 'Dashboards e análises em tempo real' }
             ].map((item, i) => (
               <div key={i} className="flex gap-4 items-start">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/80 text-blue-600 shadow-sm">
