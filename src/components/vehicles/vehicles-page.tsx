@@ -386,7 +386,7 @@ export function VehiclesPage() {
         <Card className="!rounded-lg sm:!rounded-xl dark:bg-gray-800 dark:border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">Ativos</CardTitle>
-            <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">{stats.ativos}</Badge>
+            <Badge className="bg-emerald-500 text-white dark:bg-emerald-600 font-semibold">{stats.ativos}</Badge>
           </CardHeader>
           <CardContent>
             <CardDescription>Disponíveis para uso</CardDescription>
@@ -395,7 +395,7 @@ export function VehiclesPage() {
         <Card className="!rounded-lg sm:!rounded-xl dark:bg-gray-800 dark:border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">Manutenção</CardTitle>
-            <Badge className="bg-amber-100 text-amber-800 border-amber-200">{stats.manutencao}</Badge>
+            <Badge className="bg-amber-500 text-white dark:bg-amber-600 font-semibold">{stats.manutencao}</Badge>
           </CardHeader>
           <CardContent>
             <CardDescription>Em oficina ou agendados</CardDescription>
@@ -404,7 +404,7 @@ export function VehiclesPage() {
         <Card className="!rounded-lg sm:!rounded-xl dark:bg-gray-800 dark:border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">Vendidos/Inativos</CardTitle>
-            <Badge className="bg-slate-100 text-slate-800 border-slate-200">{stats.vendidos + stats.inativos}</Badge>
+            <Badge className="bg-slate-500 text-white dark:bg-slate-600 font-semibold">{stats.vendidos + stats.inativos}</Badge>
           </CardHeader>
           <CardContent>
             <CardDescription>Fora de circulação</CardDescription>
@@ -428,7 +428,13 @@ export function VehiclesPage() {
               <CardHeader className="flex flex-row items-start justify-between">
                 <div className="space-y-1">
                   <CardTitle className="text-xl flex items-center gap-2">
-                    <Car className="h-5 w-5 text-blue-500" />
+                    {vehicle.tipo === 'moto' ? (
+                      <svg className="h-5 w-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    ) : (
+                      <Car className="h-5 w-5 text-blue-500" />
+                    )}
                     {vehicle.modelo}
                   </CardTitle>
                   <CardDescription className="flex items-center gap-2">

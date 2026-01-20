@@ -85,6 +85,8 @@ export function FuelTab() {
       valorTotal: Number(row.valor_total),
       precoLitro: row.preco_litro ? Number(row.preco_litro) : null,
       posto: row.posto,
+      bandeira: (row as any).bandeira || null,
+      tipoCombustivel: (row as any).tipo_combustivel || null,
       metodoPagamento: row.metodo_pagamento,
       data: row.data,
       notas: row.notas
@@ -195,8 +197,8 @@ export function FuelTab() {
       litros: log.litros.toString(),
       valorTotal: log.valorTotal.toString(),
       posto: log.posto || '',
-      bandeira: '',
-      tipoCombustivel: '',
+      bandeira: log.bandeira || '',
+      tipoCombustivel: log.tipoCombustivel || '',
       metodoPagamento: log.metodoPagamento || '',
       data: new Date(log.data).toISOString().slice(0, 16),
       notas: log.notas || ''

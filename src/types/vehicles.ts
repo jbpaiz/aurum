@@ -68,6 +68,8 @@ export interface FuelLog {
   valorTotal: number
   precoLitro?: number | null
   posto?: string | null
+  bandeira?: string | null
+  tipoCombustivel?: string | null
   metodoPagamento?: string | null
   data: string
   notas?: string | null
