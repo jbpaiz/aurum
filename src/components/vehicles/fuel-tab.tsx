@@ -112,7 +112,7 @@ export function FuelTab() {
     
     const litros = Number(form.litros)
     const valorTotal = Number(form.valorTotal)
-    const payload: TablesInsert<'fuel_logs'> = {
+    const payload = {
       user_id: user.id,
       vehicle_id: form.vehicleId,
       odometro: Number(form.odometro),
@@ -123,7 +123,7 @@ export function FuelTab() {
       metodo_pagamento: form.metodoPagamento || null,
       data: form.data ? new Date(form.data).toISOString() : new Date().toISOString(),
       notas: form.notas || null
-    }
+    } as TablesInsert<'fuel_logs'>
 
     const { data, error } = await supabase
       .from('fuel_logs')

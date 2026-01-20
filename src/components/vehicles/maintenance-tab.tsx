@@ -133,7 +133,7 @@ export function MaintenanceTab() {
       return
     }
     
-    const payload: TablesInsert<'maintenance_events'> = {
+    const payload = {
       user_id: user.id,
       vehicle_id: form.vehicleId,
       titulo: form.titulo,
@@ -142,7 +142,7 @@ export function MaintenanceTab() {
       odometro_previsto: form.odometroPrevisto ? Number(form.odometroPrevisto) : null,
       custo: form.custo ? Number(form.custo) : null,
       notas: form.notas || null
-    }
+    } as TablesInsert<'maintenance_events'>
 
     const { data, error } = await supabase
       .from('maintenance_events')

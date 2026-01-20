@@ -104,7 +104,7 @@ export function VehiclesPage() {
       return
     }
     
-    const payload: TablesInsert<'vehicles'> = {
+    const payload = {
       user_id: user.id,
       placa: form.placa.trim().toUpperCase(),
       renavam: form.renavam.trim() || null,
@@ -120,7 +120,7 @@ export function VehiclesPage() {
             .map(t => t.trim())
             .filter(Boolean)
         : []
-    }
+    } as TablesInsert<'vehicles'>
 
     const isEdit = Boolean(form.id)
     if (isEdit && !form.id) {

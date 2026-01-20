@@ -113,7 +113,7 @@ export function FinesTab() {
       return
     }
     
-    const payload: TablesInsert<'fines'> = {
+    const payload = {
       user_id: user.id,
       vehicle_id: form.vehicleId,
       data: form.data,
@@ -123,7 +123,7 @@ export function FinesTab() {
       auto_infracao: form.autoInfracao || null,
       vencimento: form.vencimento || null,
       comprovante_url: form.comprovanteUrl || null
-    }
+    } as TablesInsert<'fines'>
 
     const { data, error } = await supabase
       .from('fines')

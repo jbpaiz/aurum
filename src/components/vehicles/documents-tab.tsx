@@ -107,7 +107,7 @@ export function DocumentsTab() {
       return
     }
     
-    const payload: TablesInsert<'documents'> = {
+    const payload = {
       user_id: user.id,
       vehicle_id: form.vehicleId,
       tipo: form.tipo,
@@ -116,7 +116,7 @@ export function DocumentsTab() {
       arquivo_url: form.arquivoUrl || null,
       status: form.status || null,
       notas: form.notas || null
-    }
+    } as TablesInsert<'documents'>
 
     const { data, error } = await supabase
       .from('documents')
