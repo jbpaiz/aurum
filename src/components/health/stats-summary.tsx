@@ -336,9 +336,10 @@ export function StatsSummary() {
                   const trendWeights = sorted.map(w => w.weight)
                   const timestamps = sorted.map(w => new Date(w.recordedAt).getTime())
 
-                  // Normalizar timestamps (subtrair o primeiro) para evitar problemas numéricos
+                  // Normalizar timestamps para dias (subtrair o primeiro e converter ms -> dias) para evitar problemas numéricos
                   const baseTime = timestamps[0]
-                  const normalizedTimestamps = timestamps.map(t => t - baseTime)
+                  const MS_PER_DAY = 1000 * 60 * 60 * 24
+                  const normalizedTimestamps = timestamps.map(t => (t - baseTime) / MS_PER_DAY)
 
                   const xMean = normalizedTimestamps.reduce((a, b) => a + b, 0) / normalizedTimestamps.length
                   const yMean = trendWeights.reduce((a, b) => a + b, 0) / trendWeights.length
@@ -354,8 +355,8 @@ export function StatsSummary() {
                   const slope = denominator !== 0 ? numerator / denominator : 0
                   const intercept = yMean - slope * xMean
 
-                  // Se a inclinação for zero (peso não está mudando), não há tendência
-                  if (slope === 0) {
+                  // Se a inclinação for muito pequena, considerar sem tendência
+                  if (Math.abs(slope) < 1e-4) {
                     return (
                       <>
                         <span className="text-2xl font-bold text-muted-foreground">--</span>
@@ -364,9 +365,9 @@ export function StatsSummary() {
                     )
                   }
 
-                  // Calcular quando atingirá a meta (usando tempo normalizado)
-                  const normalizedEstimatedTime = (weightStats.goalTarget - intercept) / slope
-                  const estimatedTimestamp = baseTime + normalizedEstimatedTime
+                  // Calcular quando atingirá a meta (usando tempo normalizado em dias)
+                  const normalizedEstimatedTime = (weightStats.goalTarget - intercept) / slope // em dias
+                  const estimatedTimestamp = baseTime + normalizedEstimatedTime * MS_PER_DAY
                   const estimatedDate = new Date(estimatedTimestamp)
                   const goalDate = new Date(weightStats.goalDate)
                   const currentWeight = trendWeights[trendWeights.length - 1]
