@@ -3,10 +3,10 @@
 import { useMemo } from 'react'
 import { useHealth } from '@/contexts/health-context'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { TrendingUp, TrendingDown, Minus, Calendar, Flame, Moon, Activity as ActivityIcon, Target } from 'lucide-react'
-import { startOfWeek, startOfMonth, endOfWeek, endOfMonth, subWeeks, subMonths, differenceInDays, addDays, startOfDay } from 'date-fns'
+import { TrendingUp, TrendingDown, Minus, Calendar, Flame, Moon, Activity as ActivityIcon, Target, AlertTriangle } from 'lucide-react'
+import { startOfWeek, startOfMonth, endOfWeek, endOfMonth, subWeeks, subMonths, differenceInDays, addDays, startOfDay, subDays } from 'date-fns'
 import { format } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
+import { ptBR } from 'date-fns/locale/pt-BR'
 
 export function StatsSummary() {
   const { weightLogs, activities, sleepLogs, weightStats } = useHealth()
@@ -33,12 +33,27 @@ export function StatsSummary() {
     const lastMonthStart = startOfMonth(subMonths(now, 1))
     const lastMonthEnd = endOfMonth(subMonths(now, 1))
 
+    // Filtrar apenas o último registro de cada dia
+    const logsByDay: Record<string, typeof weightLogs[0]> = {}
+    weightLogs.forEach(log => {
+      const day = new Date(log.recordedAt).toISOString().slice(0, 10)
+      if (!logsByDay[day] || new Date(log.recordedAt) > new Date(logsByDay[day].recordedAt)) {
+        logsByDay[day] = log
+      }
+    })
+    const dailyLogs = Object.values(logsByDay)
+    // Considerar apenas os últimos 14 dias
+    const last14Days = subDays(now, 14)
+    const recentLogs = dailyLogs.filter(l => new Date(l.recordedAt) >= last14Days)
+    // Se não houver pelo menos 3 registros, usar todos
+    const trendLogs = recentLogs.length >= 3 ? recentLogs : dailyLogs
+    
     // Peso - Semana
-    const thisWeekWeights = weightLogs.filter(w => {
+    const thisWeekWeights = trendLogs.filter(w => {
       const date = new Date(w.recordedAt)
       return date >= thisWeekStart && date <= thisWeekEnd
     })
-    const lastWeekWeights = weightLogs.filter(w => {
+    const lastWeekWeights = trendLogs.filter(w => {
       const date = new Date(w.recordedAt)
       return date >= lastWeekStart && date <= lastWeekEnd
     })
@@ -273,32 +288,72 @@ export function StatsSummary() {
                       </>
                     )
                   }
-                  
+
+                  // Calcular trendLogs localmente
+                  // Filtrar apenas o último registro de cada dia
+                  const logsByDay: Record<string, typeof weightLogs[0]> = {}
+                  weightLogs.forEach(log => {
+                    const day = new Date(log.recordedAt).toISOString().slice(0, 10)
+                    if (!logsByDay[day] || new Date(log.recordedAt) > new Date(logsByDay[day].recordedAt)) {
+                      logsByDay[day] = log
+                    }
+                  })
+                  const dailyLogs = Object.values(logsByDay)
+                  // Considerar apenas os últimos 14 dias
+                  const now = new Date()
+                  const last14Days = subDays(now, 14)
+                  const recentLogs = dailyLogs.filter(l => new Date(l.recordedAt) >= last14Days)
+                  // Se não houver pelo menos 3 registros, usar todos
+
+                  const trendLogs = recentLogs.length >= 3 ? recentLogs : dailyLogs
+
+
+                  // --- NOVA LÓGICA: diferença grande entre último e penúltimo registro ---
+                  const sortedRecent = [...trendLogs].sort((a, b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime())
+                  if (sortedRecent.length >= 2) {
+                    const last = sortedRecent[sortedRecent.length - 1]
+                    const prev = sortedRecent[sortedRecent.length - 2]
+                    const diff = last.weight - prev.weight
+                    const daysDiff = (new Date(last.recordedAt).getTime() - new Date(prev.recordedAt).getTime()) / (1000 * 60 * 60 * 24)
+                    if (Math.abs(diff) > 1 && daysDiff <= 2) {
+                      // Exibir tendência baseada nessa diferença
+                      const tendenciaSemanal = (diff / daysDiff) * 7
+                      return (
+                        <div className="rounded-md border border-orange-400 bg-orange-50 dark:bg-orange-900/30 p-4 flex flex-col items-center text-center">
+                          <AlertTriangle className="h-8 w-8 text-orange-500 mb-2" />
+                          <span className="text-xl font-bold text-orange-600">Mudança brusca detectada</span>
+                          <span className="text-sm font-semibold text-orange-700 mt-1">
+                            Tendência: {tendenciaSemanal > 0 ? '+' : ''}{tendenciaSemanal.toFixed(1)} kg/sem
+                          </span>
+                          <p className="text-xs text-orange-400 mt-1">Última variação: {diff > 0 ? '+' : ''}{diff.toFixed(1)}kg em {daysDiff.toFixed(0)} dia(s).</p>
+                        </div>
+                      )
+                    }
+                  }
+
                   // Calcular regressão linear
-                  const sorted = [...weightLogs].sort((a, b) => 
-                    new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime()
-                  )
-                  const weights = sorted.map(w => w.weight)
+                  const sorted = [...trendLogs].sort((a, b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime())
+                  const trendWeights = sorted.map(w => w.weight)
                   const timestamps = sorted.map(w => new Date(w.recordedAt).getTime())
-                  
+
                   // Normalizar timestamps (subtrair o primeiro) para evitar problemas numéricos
                   const baseTime = timestamps[0]
                   const normalizedTimestamps = timestamps.map(t => t - baseTime)
-                  
+
                   const xMean = normalizedTimestamps.reduce((a, b) => a + b, 0) / normalizedTimestamps.length
-                  const yMean = weights.reduce((a, b) => a + b, 0) / weights.length
-                  
+                  const yMean = trendWeights.reduce((a, b) => a + b, 0) / trendWeights.length
+
                   let numerator = 0
                   let denominator = 0
                   for (let i = 0; i < normalizedTimestamps.length; i++) {
                     const dx = normalizedTimestamps[i] - xMean
-                    numerator += dx * (weights[i] - yMean)
+                    numerator += dx * (trendWeights[i] - yMean)
                     denominator += dx * dx
                   }
-                  
+
                   const slope = denominator !== 0 ? numerator / denominator : 0
                   const intercept = yMean - slope * xMean
-                  
+
                   // Se a inclinação for zero (peso não está mudando), não há tendência
                   if (slope === 0) {
                     return (
@@ -308,30 +363,43 @@ export function StatsSummary() {
                       </>
                     )
                   }
-                  
+
                   // Calcular quando atingirá a meta (usando tempo normalizado)
                   const normalizedEstimatedTime = (weightStats.goalTarget - intercept) / slope
                   const estimatedTimestamp = baseTime + normalizedEstimatedTime
                   const estimatedDate = new Date(estimatedTimestamp)
                   const goalDate = new Date(weightStats.goalDate)
-                  const currentWeight = weights[weights.length - 1]
-                  
+                  const currentWeight = trendWeights[trendWeights.length - 1]
+
                   // Verificar se está indo na direção certa
                   const isGainingWeight = slope > 0
                   const needsToGain = weightStats.goalTarget > currentWeight
                   const isWrongDirection = isGainingWeight !== needsToGain
-                  
+
                   if (isWrongDirection) {
+                    const tendenciaValor = slope * 7;
+                    if (Math.abs(tendenciaValor) < 0.05) {
+                      return (
+                        <div className="rounded-md border border-gray-400 bg-gray-50 dark:bg-gray-900/30 p-4 flex flex-col items-center text-center">
+                          <Minus className="h-8 w-8 text-gray-400 mb-2" />
+                          <span className="text-xl font-bold text-gray-600">Peso estável</span>
+                          <span className="text-sm font-medium text-gray-500 mt-1">Variação semanal: ±0.0 kg/sem</span>
+                          <p className="text-xs text-gray-400 mt-1">Nenhuma tendência significativa detectada.</p>
+                        </div>
+                      )
+                    }
+                    const tendencia = slope > 0 ? `ganhar peso (+${Math.abs(tendenciaValor).toFixed(1)} kg/sem)` : `perder peso (-${Math.abs(tendenciaValor).toFixed(1)} kg/sem)`
                     return (
-                      <>
-                        <span className="text-2xl font-bold text-orange-500">⚠️ Revertido</span>
-                        <p className="text-xs text-orange-500">
-                          Tendência contrária à meta
-                        </p>
-                      </>
+                      <div className="rounded-md border border-orange-400 bg-orange-50 dark:bg-orange-900/30 p-4 flex flex-col items-center text-center">
+                        <AlertTriangle className="h-8 w-8 text-orange-500 mb-2" />
+                        <span className="text-xl font-bold text-orange-600">Atenção</span>
+                        <span className="text-sm text-orange-500 font-medium mt-1">Sua tendência está oposta à meta</span>
+                        <span className="text-sm font-semibold text-orange-700 mt-1">Tendência: {tendencia}</span>
+                        <p className="text-xs text-orange-400 mt-1">Ajuste sua rotina para voltar ao caminho desejado.</p>
+                      </div>
                     )
                   }
-                  
+
                   // Verificar se já passou da data
                   if (estimatedDate < new Date()) {
                     return (
@@ -341,11 +409,11 @@ export function StatsSummary() {
                       </>
                     )
                   }
-                  
+
                   const daysUntilEstimated = differenceInDays(estimatedDate, new Date())
                   const daysUntilGoal = differenceInDays(goalDate, new Date())
                   const isOnTrack = daysUntilEstimated <= daysUntilGoal
-                  
+
                   return (
                     <>
                       <span className={`text-2xl font-bold ${
