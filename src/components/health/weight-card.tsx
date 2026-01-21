@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState, type MouseEvent, type TouchEvent } from 'react'
-import { TrendingUp, TrendingDown, Minus, Edit2, Trash2, Plus, Minus as MinusIcon } from 'lucide-react'
+import { TrendingUp, TrendingDown, Minus, Edit2, Trash2, Plus, Minus as MinusIcon, Target, Scale, Trophy, Clock, CheckCircle2, AlertCircle } from 'lucide-react'
 import { useHealth } from '@/contexts/health-context'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -171,11 +171,20 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
     const percent = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width))
     const value = min + percent * (max - min)
     const { title, note } = describeValue(kind, value)
+    
+    let displayValue = `${kind === 'bmi' ? value.toFixed(1) : value.toFixed(0)} ${kind === 'bmi' ? 'IMC' : 'kcal/dia'}`
+    
+    // Para IMC, adicionar o peso correspondente
+    if (kind === 'bmi' && parsedHeightM) {
+      const weightForBmi = value * (parsedHeightM * parsedHeightM)
+      displayValue = `${value.toFixed(1)} IMC • ${weightForBmi.toFixed(1)} kg`
+    }
+    
     setBarInsight({
       kind,
       title,
       note,
-      value: `${kind === 'bmi' ? value.toFixed(1) : value.toFixed(0)} ${kind === 'bmi' ? 'IMC' : 'kcal/dia'}`,
+      value: displayValue,
       percent: percent * 100
     })
   }
@@ -247,7 +256,7 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
         <CardTitle className="flex items-start justify-between gap-3">
           <span>Peso</span>
           <div className="flex flex-wrap gap-2 justify-end">
-            {[-0.6, -0.5, -0.2, -0.1, 0.1, 0.2, 0.5, 0.6].map(delta => (
+            {[-0.4, -0.3, -0.2, -0.1, 0.1, 0.2, 0.3, 0.4].map(delta => (
               <Button
                 key={delta}
                 size="sm"
@@ -286,22 +295,6 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
           )}
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-2 text-center">
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">Mínimo</p>
-            <p className="text-sm font-medium">{weightStats.min} kg</p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">Média</p>
-            <p className="text-sm font-medium">{weightStats.avg?.toFixed(1)} kg</p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">Máximo</p>
-            <p className="text-sm font-medium">{weightStats.max} kg</p>
-          </div>
-        </div>
-
         {/* Goal Progress (somente leitura, edição no Perfil) */}
         {weightStats.goalTarget && (
           <div className="rounded-md border p-3 space-y-3">
@@ -315,62 +308,153 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
               </Button>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Progress value={Math.min(100, Math.max(0, (weightStats.goalProgress || 0) * 100))} />
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="rounded-md border bg-muted/30 p-3">
-                  <p className="text-xs text-muted-foreground">Meta</p>
-                  <p className="text-sm font-semibold">{weightStats.goalTarget} kg</p>
+              
+              {/* Primeira linha: Meta, Atual, Restam, Perdido */}
+              <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+                <div className="rounded-md border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/30 p-3 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <Target className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">Meta</p>
+                  </div>
+                  <p className="text-lg font-bold text-blue-900 dark:text-blue-100">{weightStats.goalTarget} kg</p>
                   {weightStats.goalDate && (
-                    <p className="text-[11px] text-muted-foreground">Até {format(new Date(weightStats.goalDate), 'dd/MM/yyyy')}</p>
+                    <p className="text-[10px] text-blue-600 dark:text-blue-400">Até {format(new Date(weightStats.goalDate), 'dd/MM/yyyy')}</p>
                   )}
                 </div>
-                <div className="rounded-md border bg-muted/30 p-3">
-                  <p className="text-xs text-muted-foreground">Atual</p>
-                  <p className="text-sm font-semibold">{weightStats.current} kg</p>
-                  <p className="text-[11px] text-muted-foreground">Mede hoje {weightStats.todayCount > 0 ? '✔' : '—'}</p>
+                <div className={`rounded-md border p-3 space-y-1 ${
+                  weightStats.todayCount > 0 
+                    ? 'border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30' 
+                    : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30'
+                }`}>
+                  <div className="flex items-center gap-2">
+                    <Scale className={`h-4 w-4 ${
+                      weightStats.todayCount > 0 
+                        ? 'text-emerald-600 dark:text-emerald-400' 
+                        : 'text-gray-600 dark:text-gray-400'
+                    }`} />
+                    <p className={`text-xs font-medium ${
+                      weightStats.todayCount > 0 
+                        ? 'text-emerald-700 dark:text-emerald-300' 
+                        : 'text-gray-700 dark:text-gray-300'
+                    }`}>Atual</p>
+                  </div>
+                  <p className={`text-lg font-bold ${
+                    weightStats.todayCount > 0 
+                      ? 'text-emerald-900 dark:text-emerald-100' 
+                      : 'text-gray-900 dark:text-gray-100'
+                  }`}>{weightStats.current} kg</p>
+                  <div className="flex items-center gap-1">
+                    {weightStats.todayCount > 0 && <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />}
+                    <p className={`text-[10px] ${
+                      weightStats.todayCount > 0 
+                        ? 'text-emerald-600 dark:text-emerald-400' 
+                        : 'text-gray-600 dark:text-gray-400'
+                    }`}>Mede hoje {weightStats.todayCount > 0 ? '✔' : '—'}</p>
+                  </div>
                 </div>
-                <div className="rounded-md border bg-muted/30 p-3">
-                  <p className="text-xs text-muted-foreground">Restam</p>
-                  <p className="text-sm font-semibold">
+                <div className={`rounded-md border p-3 space-y-1 ${
+                  weightStats.current !== null && weightStats.goalTarget !== null && Math.abs(weightStats.current - weightStats.goalTarget) <= 2
+                    ? 'border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30'
+                    : 'border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/30'
+                }`}>
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className={`h-4 w-4 ${
+                      weightStats.current !== null && weightStats.goalTarget !== null && Math.abs(weightStats.current - weightStats.goalTarget) <= 2
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-amber-600 dark:text-amber-400'
+                    }`} />
+                    <p className={`text-xs font-medium ${
+                      weightStats.current !== null && weightStats.goalTarget !== null && Math.abs(weightStats.current - weightStats.goalTarget) <= 2
+                        ? 'text-emerald-700 dark:text-emerald-300'
+                        : 'text-amber-700 dark:text-amber-300'
+                    }`}>Restam</p>
+                  </div>
+                  <p className={`text-lg font-bold ${
+                    weightStats.current !== null && weightStats.goalTarget !== null && Math.abs(weightStats.current - weightStats.goalTarget) <= 2
+                      ? 'text-emerald-900 dark:text-emerald-100'
+                      : 'text-amber-900 dark:text-amber-100'
+                  }`}>
                     {weightStats.current !== null && weightStats.goalTarget !== null
                       ? `${Math.max(0, Math.abs(weightStats.current - weightStats.goalTarget)).toFixed(1)} kg`
                       : '—'}
                   </p>
-                  <p className="text-[11px] text-muted-foreground">Para alcançar a meta</p>
+                  <p className={`text-[10px] ${
+                    weightStats.current !== null && weightStats.goalTarget !== null && Math.abs(weightStats.current - weightStats.goalTarget) <= 2
+                      ? 'text-emerald-600 dark:text-emerald-400'
+                      : 'text-amber-600 dark:text-amber-400'
+                  }`}>Para alcançar a meta</p>
                 </div>
-                <div className="rounded-md border bg-muted/30 p-3">
-                  <p className="text-xs text-muted-foreground">ETA</p>
-                  <p className="text-sm font-semibold">
-                    {weightStats.etaWeeksToGoal ? `~${weightStats.etaWeeksToGoal.toFixed(0)} sem` : 'Indeterminado'}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground">
-                    {weightStats.etaWeeksToGoal
-                      ? `Estimado: ${format(addDays(new Date(), weightStats.etaWeeksToGoal * 7), 'dd/MM/yyyy')}`
-                      : 'Data estimada indisponível'}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground">Mantendo o ritmo atual</p>
+                <div className="rounded-md border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30 p-3 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <TrendingDown className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    <p className="text-xs text-emerald-700 dark:text-emerald-300 font-medium">Perdido</p>
+                  </div>
+                  <p className="text-lg font-bold text-emerald-900 dark:text-emerald-100">{(weightStats.max - weightStats.current).toFixed(1)} kg</p>
+                  <p className="text-[10px] text-emerald-600 dark:text-emerald-400">Do peso máximo</p>
                 </div>
               </div>
 
-              {weightStats.goalExpectedToday !== null && weightStats.goalExpectedToday !== undefined && (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-md border bg-muted/30 p-3 space-y-1">
-                    <p className="text-xs text-muted-foreground">Para estar no ritmo</p>
-                    <p className="text-sm font-semibold">{weightStats.goalExpectedToday.toFixed(1)} kg</p>
-                    <p className="text-[11px] text-muted-foreground">Peso esperado para hoje</p>
+              {/* Segunda linha: ETA, Esperado, Diferença */}
+              <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
+                <div className="rounded-md border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/30 p-3 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">ETA</p>
                   </div>
-                  {weightStats.goalDeltaFromExpected !== null && weightStats.goalDeltaFromExpected !== undefined && (
-                    <div className="rounded-md border bg-muted/30 p-3 space-y-1">
-                      <p className="text-xs text-muted-foreground">Diferença hoje</p>
-                      <p className="text-sm font-semibold">
-                        {Math.abs(weightStats.goalDeltaFromExpected).toFixed(1)} kg {weightStats.goalDeltaFromExpected > 0 ? 'acima' : 'abaixo'}
-                      </p>
-                      <p className="text-[11px] text-muted-foreground">Em relação ao esperado</p>
-                    </div>
-                  )}
+                  <p className="text-lg font-bold text-blue-900 dark:text-blue-100">
+                    {weightStats.etaWeeksToGoal ? `~${weightStats.etaWeeksToGoal.toFixed(0)} sem` : 'Indeterminado'}
+                  </p>
+                  <p className="text-[10px] text-blue-600 dark:text-blue-400">
+                    {weightStats.etaWeeksToGoal
+                      ? `${format(addDays(new Date(), weightStats.etaWeeksToGoal * 7), 'dd/MM/yyyy')}`
+                      : 'No ritmo atual'}
+                  </p>
                 </div>
-              )}
+                {weightStats.goalExpectedToday !== null && weightStats.goalExpectedToday !== undefined && (
+                  <div className="rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30 p-3 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Target className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                      <p className="text-xs text-gray-700 dark:text-gray-300 font-medium">Para estar no ritmo</p>
+                    </div>
+                    <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{weightStats.goalExpectedToday.toFixed(1)} kg</p>
+                    <p className="text-[10px] text-gray-600 dark:text-gray-400">Peso esperado hoje</p>
+                  </div>
+                )}
+                {weightStats.goalDeltaFromExpected !== null && weightStats.goalDeltaFromExpected !== undefined && (
+                  <div className={`rounded-md border p-3 space-y-1 ${
+                    weightStats.goalDeltaFromExpected <= 0
+                      ? 'border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30'
+                      : 'border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30'
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      {weightStats.goalDeltaFromExpected <= 0 ? (
+                        <Trophy className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                      ) : (
+                        <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                      )}
+                      <p className={`text-xs font-medium ${
+                        weightStats.goalDeltaFromExpected <= 0
+                          ? 'text-emerald-700 dark:text-emerald-300'
+                          : 'text-red-700 dark:text-red-300'
+                      }`}>Diferença hoje</p>
+                    </div>
+                    <p className={`text-lg font-bold ${
+                      weightStats.goalDeltaFromExpected <= 0
+                        ? 'text-emerald-900 dark:text-emerald-100'
+                        : 'text-red-900 dark:text-red-100'
+                    }`}>
+                      {Math.abs(weightStats.goalDeltaFromExpected).toFixed(1)} kg {weightStats.goalDeltaFromExpected > 0 ? 'acima' : 'abaixo'}
+                    </p>
+                    <p className={`text-[10px] ${
+                      weightStats.goalDeltaFromExpected <= 0
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-red-600 dark:text-red-400'
+                    }`}>Do esperado</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
