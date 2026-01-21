@@ -19,6 +19,14 @@ function mapDbToPreferences(data: any): UserPreferences {
     tasksSortDirection: data.tasks_sort_direction || 'asc',
     activeProjectId: data.active_project_id,
     activeBoardId: data.active_board_id,
+    showWeight: data.show_weight ?? true,
+    showBody: data.show_body ?? true,
+    showHydration: data.show_hydration ?? true,
+    showNutrition: data.show_nutrition ?? true,
+    showActivity: data.show_activity ?? true,
+    showSleep: data.show_sleep ?? true,
+    showGoals: data.show_goals ?? true,
+    showAchievements: data.show_achievements ?? true,
     createdAt: data.created_at,
     updatedAt: data.updated_at,
   }
@@ -37,6 +45,14 @@ function mapPreferencesToDb(preferences: UserPreferencesInput): Record<string, a
   if (preferences.tasksSortDirection !== undefined) mapped.tasks_sort_direction = preferences.tasksSortDirection
   if (preferences.activeProjectId !== undefined) mapped.active_project_id = preferences.activeProjectId
   if (preferences.activeBoardId !== undefined) mapped.active_board_id = preferences.activeBoardId
+  if (preferences.showWeight !== undefined) mapped.show_weight = preferences.showWeight
+  if (preferences.showBody !== undefined) mapped.show_body = preferences.showBody
+  if (preferences.showHydration !== undefined) mapped.show_hydration = preferences.showHydration
+  if (preferences.showNutrition !== undefined) mapped.show_nutrition = preferences.showNutrition
+  if (preferences.showActivity !== undefined) mapped.show_activity = preferences.showActivity
+  if (preferences.showSleep !== undefined) mapped.show_sleep = preferences.showSleep
+  if (preferences.showGoals !== undefined) mapped.show_goals = preferences.showGoals
+  if (preferences.showAchievements !== undefined) mapped.show_achievements = preferences.showAchievements
   
   return mapped
 }
@@ -70,6 +86,14 @@ export function useUserPreferences() {
       tasks_sort_direction: 'asc',
       active_project_id: localActiveProjectId,
       active_board_id: localActiveBoardId,
+      show_weight: true,
+      show_body: true,
+      show_hydration: true,
+      show_nutrition: true,
+      show_activity: true,
+      show_sleep: true,
+      show_goals: true,
+      show_achievements: true,
     }
 
     const { data, error } = await (supabase as any)

@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { Plus, Home, LineChart, Ruler, Droplets, UtensilsCrossed, Dumbbell, Moon, Medal } from 'lucide-react'
 import { useHealth } from '@/contexts/health-context'
 import { Button } from '@/components/ui/button'
@@ -34,6 +34,7 @@ import { HydrationGoalModal } from './hydration-goal-modal'
 import { MealModal } from './meal-modal'
 import { NutritionGoalsModal } from './nutrition-goals-modal'
 import { GoalModal } from './goal-modal'
+import { useUserPreferences } from '@/hooks/use-user-preferences'
 import type { WeightLog, Activity, SleepLog, BodyMeasurement, HydrationLog, Meal } from '@/types/health'
 
 export function HealthDashboard() {
@@ -55,6 +56,29 @@ export function HealthDashboard() {
   const [nutritionGoalsModalOpen, setNutritionGoalsModalOpen] = useState(false)
   const [goalModalOpen, setGoalModalOpen] = useState(false)
   const tabsListRef = useRef<HTMLDivElement | null>(null)
+
+  const { preferences, loading: preferencesLoading } = useUserPreferences()
+  const showWeight = preferences?.showWeight ?? true
+  const showBody = preferences?.showBody ?? true
+  const showHydration = preferences?.showHydration ?? true
+  const showNutrition = preferences?.showNutrition ?? true
+  const showActivity = preferences?.showActivity ?? true
+  const showSleep = preferences?.showSleep ?? true
+  const showGoals = preferences?.showGoals ?? true
+  const showAchievements = preferences?.showAchievements ?? true
+
+  // Garantir que, se o usuário desativar uma seção, não permaneça com a tab ativa daquela seção
+  useEffect(() => {
+    if (!preferencesLoading && preferences) {
+      if (activeTab === 'nutrition' && !preferences.showNutrition) setActiveTab('overview')
+      if (activeTab === 'gamification' && !preferences.showAchievements) setActiveTab('overview')
+      if (activeTab === 'weight' && !preferences.showWeight) setActiveTab('overview')
+      if (activeTab === 'body' && !preferences.showBody) setActiveTab('overview')
+      if (activeTab === 'hydration' && !preferences.showHydration) setActiveTab('overview')
+      if (activeTab === 'activity' && !preferences.showActivity) setActiveTab('overview')
+      if (activeTab === 'sleep' && !preferences.showSleep) setActiveTab('overview')
+    }
+  }, [preferences, preferencesLoading, activeTab])
 
   const scrollTabs = (direction: 'left' | 'right') => {
     const el = tabsListRef.current
@@ -149,34 +173,48 @@ export function HealthDashboard() {
                   <Home className="h-4 w-4" aria-hidden />
                   <span>Visão Geral</span>
                 </TabsTrigger>
-                <TabsTrigger value="weight" className="flex items-center gap-2 whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">
-                  <LineChart className="h-4 w-4" aria-hidden />
-                  <span>Peso</span>
-                </TabsTrigger>
-                <TabsTrigger value="body" className="flex items-center gap-2 whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">
-                  <Ruler className="h-4 w-4" aria-hidden />
-                  <span>Medidas</span>
-                </TabsTrigger>
-                <TabsTrigger value="hydration" className="flex items-center gap-2 whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">
-                  <Droplets className="h-4 w-4" aria-hidden />
-                  <span>Hidratação</span>
-                </TabsTrigger>
-                {/* <TabsTrigger value="nutrition" className="flex items-center gap-2 whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">
-                  <UtensilsCrossed className="h-4 w-4" aria-hidden />
-                  <span>Nutrição</span>
-                </TabsTrigger> */}
-                <TabsTrigger value="activity" className="flex items-center gap-2 whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">
-                  <Dumbbell className="h-4 w-4" aria-hidden />
-                  <span>Atividades</span>
-                </TabsTrigger>
-                <TabsTrigger value="sleep" className="flex items-center gap-2 whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">
-                  <Moon className="h-4 w-4" aria-hidden />
-                  <span>Sono</span>
-                </TabsTrigger>
-                {/* <TabsTrigger value="gamification" className="flex items-center gap-2 whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">
-                  <Medal className="h-4 w-4" aria-hidden />
-                  <span>Conquistas</span>
-                </TabsTrigger> */}
+                {showWeight && (
+                  <TabsTrigger value="weight" className="flex items-center gap-2 whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">
+                    <LineChart className="h-4 w-4" aria-hidden />
+                    <span>Peso</span>
+                  </TabsTrigger>
+                )}
+                {showBody && (
+                  <TabsTrigger value="body" className="flex items-center gap-2 whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">
+                    <Ruler className="h-4 w-4" aria-hidden />
+                    <span>Medidas</span>
+                  </TabsTrigger>
+                )}
+                {showHydration && (
+                  <TabsTrigger value="hydration" className="flex items-center gap-2 whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">
+                    <Droplets className="h-4 w-4" aria-hidden />
+                    <span>Hidratação</span>
+                  </TabsTrigger>
+                )}
+                {showNutrition && (
+                  <TabsTrigger value="nutrition" className="flex items-center gap-2 whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">
+                    <UtensilsCrossed className="h-4 w-4" aria-hidden />
+                    <span>Nutrição</span>
+                  </TabsTrigger>
+                )}
+                {showActivity && (
+                  <TabsTrigger value="activity" className="flex items-center gap-2 whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">
+                    <Dumbbell className="h-4 w-4" aria-hidden />
+                    <span>Atividades</span>
+                  </TabsTrigger>
+                )}
+                {showSleep && (
+                  <TabsTrigger value="sleep" className="flex items-center gap-2 whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">
+                    <Moon className="h-4 w-4" aria-hidden />
+                    <span>Sono</span>
+                  </TabsTrigger>
+                )}
+                {showAchievements && (
+                  <TabsTrigger value="gamification" className="flex items-center gap-2 whitespace-nowrap snap-start h-10 rounded-md px-3 text-sm font-medium border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/30">
+                    <Medal className="h-4 w-4" aria-hidden />
+                    <span>Conquistas</span>
+                  </TabsTrigger>
+                )}
               </TabsList>
             </div>
           </div>
@@ -186,15 +224,17 @@ export function HealthDashboard() {
         <TabsContent value="overview" className="space-y-6">
           <StatsSummary />
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            <WeightCard onAddClick={() => setWeightModalOpen(true)} />
-            <ActivityCard onAddClick={() => setActivityModalOpen(true)} />
-            <SleepCard onAddClick={() => setSleepModalOpen(true)} />
+            {showWeight && <WeightCard onAddClick={() => setWeightModalOpen(true)} />}
+            {showActivity && <ActivityCard onAddClick={() => setActivityModalOpen(true)} />}
+            {showSleep && <SleepCard onAddClick={() => setSleepModalOpen(true)} />}
           </div>
-          <BodyMeasurementsCard 
-            onAddClick={() => setMeasurementsModalOpen(true)}
-            onEditClick={handleEditMeasurement}
-          />
-          <GoalsCard onAddClick={() => setGoalModalOpen(true)} />
+          {showBody && (
+            <BodyMeasurementsCard 
+              onAddClick={() => setMeasurementsModalOpen(true)}
+              onEditClick={handleEditMeasurement}
+            />
+          )}
+          {showGoals && <GoalsCard onAddClick={() => setGoalModalOpen(true)} />}
         </TabsContent>
 
         {/* Weight Tab */}
@@ -274,37 +314,41 @@ export function HealthDashboard() {
         </TabsContent>
 
         {/* Nutrition Tab */}
-        <TabsContent value="nutrition" className="space-y-6">
-          <div className="flex justify-end">
-            <Button onClick={() => setMealModalOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Registrar Refeição
-            </Button>
-          </div>
-          <div className="grid gap-6 lg:grid-cols-2">
-            <DailyNutritionSummary 
+        {showNutrition && (
+          <TabsContent value="nutrition" className="space-y-6">
+            <div className="flex justify-end">
+              <Button onClick={() => setMealModalOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Registrar Refeição
+              </Button>
+            </div>
+            <div className="grid gap-6 lg:grid-cols-2">
+              <DailyNutritionSummary 
+                onGoalClick={() => setNutritionGoalsModalOpen(true)}
+                onAddMealClick={() => setMealModalOpen(true)}
+              />
+              <MacroBreakdownChart />
+            </div>
+            <MealCard 
+              detailed
+              onAddClick={() => setMealModalOpen(true)}
+              onEditClick={handleEditMeal}
               onGoalClick={() => setNutritionGoalsModalOpen(true)}
-              onAddMealClick={() => setMealModalOpen(true)}
             />
-            <MacroBreakdownChart />
-          </div>
-          <MealCard 
-            detailed
-            onAddClick={() => setMealModalOpen(true)}
-            onEditClick={handleEditMeal}
-            onGoalClick={() => setNutritionGoalsModalOpen(true)}
-          />
-          <MealHistory onEditClick={handleEditMeal} />
-        </TabsContent>
+            <MealHistory onEditClick={handleEditMeal} />
+          </TabsContent>
+        )}
 
         {/* Gamification Tab */}
-        <TabsContent value="gamification" className="space-y-6">
-          <div className="grid gap-6 lg:grid-cols-2">
-            <PointsDisplay />
-            <AchievementsCard />
-          </div>
-          <ChallengesCard />
-        </TabsContent>
+        {showAchievements && (
+          <TabsContent value="gamification" className="space-y-6">
+            <div className="grid gap-6 lg:grid-cols-2">
+              <PointsDisplay />
+              <AchievementsCard />
+            </div>
+            <ChallengesCard />
+          </TabsContent>
+        )}
       </Tabs>
 
       {/* Modals */}

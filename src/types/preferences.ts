@@ -16,6 +16,14 @@ export interface UserPreferences {
   tasksSortDirection: TasksSortDirection
   activeProjectId?: string
   activeBoardId?: string
+  showWeight: boolean
+  showBody: boolean
+  showHydration: boolean
+  showNutrition: boolean
+  showActivity: boolean
+  showSleep: boolean
+  showGoals: boolean
+  showAchievements: boolean
   createdAt: string
   updatedAt: string
 }
@@ -30,4 +38,12 @@ export interface UserPreferencesInput {
   tasksSortDirection?: TasksSortDirection
   activeProjectId?: string
   activeBoardId?: string
+  showWeight?: boolean
+  showBody?: boolean
+  showHydration?: boolean
+  showNutrition?: boolean
+  showActivity?: boolean
+  showSleep?: boolean
+  showGoals?: boolean
+  showAchievements?: boolean
 }

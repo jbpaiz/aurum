@@ -9,6 +9,8 @@ import { useHealth } from '@/contexts/health-context'
 import { addDays, format } from 'date-fns'
 import { toast } from 'sonner'
 import type { ActivityLevel, UserSex } from '@/types/health'
+import { Switch } from '@/components/ui/switch'
+import { useUserPreferences } from '@/hooks/use-user-preferences'
 
 export function HealthProfileSettings() {
   const {
@@ -32,6 +34,29 @@ export function HealthProfileSettings() {
   const [activityLevel, setActivityLevel] = useState('')
   const [bodyFat, setBodyFat] = useState('')
   const [savingProfile, setSavingProfile] = useState(false)
+
+  const { preferences, updatePreferences, loading: preferencesLoading } = useUserPreferences()
+  const [showWeight, setShowWeight] = useState(true)
+  const [showBody, setShowBody] = useState(true)
+  const [showHydration, setShowHydration] = useState(true)
+  const [showNutrition, setShowNutrition] = useState(true)
+  const [showActivity, setShowActivity] = useState(true)
+  const [showSleep, setShowSleep] = useState(true)
+  const [showGoals, setShowGoals] = useState(true)
+  const [showAchievements, setShowAchievements] = useState(true)
+
+  useEffect(() => {
+    if (!preferencesLoading && preferences) {
+      setShowWeight(preferences.showWeight ?? true)
+      setShowBody(preferences.showBody ?? true)
+      setShowHydration(preferences.showHydration ?? true)
+      setShowNutrition(preferences.showNutrition ?? true)
+      setShowActivity(preferences.showActivity ?? true)
+      setShowSleep(preferences.showSleep ?? true)
+      setShowGoals(preferences.showGoals ?? true)
+      setShowAchievements(preferences.showAchievements ?? true)
+    }
+  }, [preferences, preferencesLoading])
 
   useEffect(() => {
     if (weightGoal) {
@@ -364,6 +389,80 @@ export function HealthProfileSettings() {
               <Button size="sm" onClick={handleSaveGoal} disabled={savingGoal}>
                 {savingGoal ? 'Salvando...' : 'Salvar meta'}
               </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Seções visíveis</CardTitle>
+            <CardDescription>Escolha quais seções do Painel de Saúde serão exibidas.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 gap-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Peso</p>
+                  <p className="text-xs text-muted-foreground">Mostrar dados de peso e histórico</p>
+                </div>
+                <Switch checked={showWeight} onCheckedChange={async (v: boolean) => { setShowWeight(v); if (preferences) { try { await updatePreferences({ showWeight: v }); toast.success('Preferência salva') } catch { toast.error('Erro ao salvar preferência') } } }} />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Medidas</p>
+                  <p className="text-xs text-muted-foreground">Mostrar medidas corporais e gráficos</p>
+                </div>
+                <Switch checked={showBody} onCheckedChange={async (v: boolean) => { setShowBody(v); if (preferences) { try { await updatePreferences({ showBody: v }); toast.success('Preferência salva') } catch { toast.error('Erro ao salvar preferência') } } }} />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Hidratação</p>
+                  <p className="text-xs text-muted-foreground">Mostrar metas e logs de hidratação</p>
+                </div>
+                <Switch checked={showHydration} onCheckedChange={async (v: boolean) => { setShowHydration(v); if (preferences) { try { await updatePreferences({ showHydration: v }); toast.success('Preferência salva') } catch { toast.error('Erro ao salvar preferência') } } }} />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Nutrição</p>
+                  <p className="text-xs text-muted-foreground">Mostrar dados de nutrição e refeições</p>
+                </div>
+                <Switch checked={showNutrition} onCheckedChange={async (v: boolean) => { setShowNutrition(v); if (preferences) { try { await updatePreferences({ showNutrition: v }); toast.success('Preferência salva') } catch { toast.error('Erro ao salvar preferência') } } }} />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Atividades</p>
+                  <p className="text-xs text-muted-foreground">Mostrar registros e gráficos de atividades</p>
+                </div>
+                <Switch checked={showActivity} onCheckedChange={async (v: boolean) => { setShowActivity(v); if (preferences) { try { await updatePreferences({ showActivity: v }); toast.success('Preferência salva') } catch { toast.error('Erro ao salvar preferência') } } }} />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Sono</p>
+                  <p className="text-xs text-muted-foreground">Mostrar logs e análises de sono</p>
+                </div>
+                <Switch checked={showSleep} onCheckedChange={async (v: boolean) => { setShowSleep(v); if (preferences) { try { await updatePreferences({ showSleep: v }); toast.success('Preferência salva') } catch { toast.error('Erro ao salvar preferência') } } }} />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Metas</p>
+                  <p className="text-xs text-muted-foreground">Mostrar cartão de metas no painel</p>
+                </div>
+                <Switch checked={showGoals} onCheckedChange={async (v: boolean) => { setShowGoals(v); if (preferences) { try { await updatePreferences({ showGoals: v }); toast.success('Preferência salva') } catch { toast.error('Erro ao salvar preferência') } } }} />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Conquistas</p>
+                  <p className="text-xs text-muted-foreground">Mostrar conquistas e pontos</p>
+                </div>
+                <Switch checked={showAchievements} onCheckedChange={async (v: boolean) => { setShowAchievements(v); if (preferences) { try { await updatePreferences({ showAchievements: v }); toast.success('Preferência salva') } catch { toast.error('Erro ao salvar preferência') } } }} />
+              </div>
             </div>
           </CardContent>
         </Card>
