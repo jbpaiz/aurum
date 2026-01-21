@@ -77,6 +77,72 @@ export function HealthProfileSettings() {
     return { label: 'Obesidade III', color: 'bg-red-300 text-red-900 border-red-500' }
   }, [bmi])
 
+  const parsedHeightM = useMemo(() => {
+    const cm = parseFloat(heightCm)
+    if (Number.isNaN(cm) || cm <= 0) return null
+    return cm / 100
+  }, [heightCm])
+
+  const parsedHeightCm = useMemo(() => {
+    const cm = parseFloat(heightCm)
+    if (Number.isNaN(cm) || cm <= 0) return null
+    return cm
+  }, [heightCm])
+
+  const age = useMemo(() => {
+    if (!birthDate) return null
+    const parsed = new Date(birthDate)
+    if (Number.isNaN(parsed.getTime())) return null
+    const diff = Date.now() - parsed.getTime()
+    return Math.floor(diff / (365.25 * 24 * 60 * 60 * 1000))
+  }, [birthDate])
+
+  const bodyFatValue = useMemo(() => {
+    if (!bodyFat) return null
+    const parsed = parseFloat(bodyFat)
+    if (Number.isNaN(parsed) || parsed <= 0) return null
+    return parsed
+  }, [bodyFat])
+
+  const activityFactor = useMemo(() => {
+    if (!activityLevel) return null
+    const map: Record<string, number> = {
+      sedentary: 1.2,
+      light: 1.375,
+      moderate: 1.55,
+      active: 1.725,
+      athlete: 1.9
+    }
+    return map[activityLevel] ?? null
+  }, [activityLevel])
+
+  const bmrInfo = useMemo(() => {
+    if (!weightStats?.current) return null
+
+    const hasMifflinInputs = parsedHeightCm && age !== null
+    const mifflin = hasMifflinInputs
+      ? 10 * weightStats.current + 6.25 * (parsedHeightCm as number) - 5 * (age as number) + (sex === 'male' ? 5 : sex === 'female' ? -161 : -78)
+      : null
+
+    const katch = bodyFatValue !== null
+      ? 370 + 21.6 * (weightStats.current * (1 - bodyFatValue / 100))
+      : null
+
+    const value = katch ?? mifflin
+    if (!value) return null
+
+    let label = 'Moderado'
+    if (value < 1500) label = 'Baixo'
+    else if (value > 2400) label = 'Alto'
+    return { value: Math.round(value), label, formula: katch ? 'katch' : 'mifflin' }
+  }, [age, bodyFatValue, parsedHeightCm, sex, weightStats?.current])
+
+  const tdeeInfo = useMemo(() => {
+    if (!bmrInfo || !activityFactor) return null
+    const value = Math.round(bmrInfo.value * activityFactor)
+    return { value, factor: activityFactor }
+  }, [activityFactor, bmrInfo])
+
   const handleSaveGoal = async () => {
     const parsed = parseFloat(goalValue)
     if (Number.isNaN(parsed)) {
@@ -149,7 +215,47 @@ export function HealthProfileSettings() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6">
+        {/* BMR e TDEE */}
+        {bmrInfo && (
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Taxa metabólica basal (BMR)</CardTitle>
+                <CardDescription>{bmrInfo.formula === 'katch' ? 'Fórmula Katch-McArdle (com % gordura)' : 'Fórmula Mifflin-St Jeor'}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-3xl font-bold">{bmrInfo.value} kcal/dia</p>
+                    <p className="text-sm text-muted-foreground">Gasto em repouso completo</p>
+                  </div>
+                  <div className="rounded-full border px-3 py-1 text-xs font-semibold">
+                    {bmrInfo.label}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            {tdeeInfo && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Calorias de manutenção (TDEE)</CardTitle>
+                  <CardDescription>BMR × Fator de atividade ({tdeeInfo.factor.toFixed(2)})</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-3xl font-bold">{tdeeInfo.value} kcal/dia</p>
+                      <p className="text-sm text-muted-foreground">Gasto total diário estimado</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
+
+        <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Perfil corporal</CardTitle>
@@ -261,6 +367,7 @@ export function HealthProfileSettings() {
             </div>
           </CardContent>
         </Card>
+      </div>
       </div>
     </div>
   )
