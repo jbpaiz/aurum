@@ -391,7 +391,7 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
                     <TrendingDown className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                     <p className="text-xs text-emerald-700 dark:text-emerald-300 font-medium">Perdido</p>
                   </div>
-                  <p className="text-lg font-bold text-emerald-900 dark:text-emerald-100">{(weightStats.max - weightStats.current).toFixed(1)} kg</p>
+                  <p className="text-lg font-bold text-emerald-900 dark:text-emerald-100">{((weightStats.max ?? 0) - (weightStats.current ?? 0)).toFixed(1)} kg</p>
                   <p className="text-[10px] text-emerald-600 dark:text-emerald-400">Do peso máximo</p>
                 </div>
               </div>
