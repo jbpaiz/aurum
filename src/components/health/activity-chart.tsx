@@ -14,6 +14,18 @@ export function ActivityChart() {
   const { activities } = useHealth()
   const [period, setPeriod] = useState<Period>('month')
 
+  const safeDate = (iso: string) => {
+    if (!iso) return new Date('')
+    // Accepts 'yyyy-MM-dd' or 'yyyy-MM' formats
+    const parts = iso.split('-').map(Number)
+    if (parts.length === 3) {
+      const [y, m, d] = parts
+      return new Date(y, m - 1, d)
+    }
+    const [y, m] = parts
+    return new Date(y, m - 1, 1)
+  }
+
   const chartData = useMemo(() => {
     if (activities.length === 0) return []
 
@@ -24,17 +36,17 @@ export function ActivityChart() {
     switch (period) {
       case 'week':
         filteredActivities = activities.filter(a => 
-          new Date(a.activityDate) >= subDays(now, 7)
+          safeDate(a.activityDate) >= subDays(now, 7)
         )
         break
       case 'month':
         filteredActivities = activities.filter(a => 
-          new Date(a.activityDate) >= subMonths(now, 1)
+          safeDate(a.activityDate) >= subMonths(now, 1)
         )
         break
       case 'year':
         filteredActivities = activities.filter(a => 
-          new Date(a.activityDate) >= subYears(now, 1)
+          safeDate(a.activityDate) >= subYears(now, 1)
         )
         break
       case 'all':
@@ -45,11 +57,11 @@ export function ActivityChart() {
     // Agrupar dados conforme período
     if (period === 'week') {
       // Por dia
-      const dayGroups = new Map<string, { duration: number, calories: number }>()
+      const dayGroups = new Map<string, { duration: number, calories: number, ts: number }>()
       filteredActivities.forEach(a => {
-        const day = format(new Date(a.activityDate), 'yyyy-MM-dd')
+        const day = format(safeDate(a.activityDate), 'yyyy-MM-dd')
         if (!dayGroups.has(day)) {
-          dayGroups.set(day, { duration: 0, calories: 0 })
+          dayGroups.set(day, { duration: 0, calories: 0, ts: safeDate(day).getTime() })
         }
         const group = dayGroups.get(day)!
         group.duration += a.durationMinutes
@@ -58,19 +70,20 @@ export function ActivityChart() {
 
       return Array.from(dayGroups.entries())
         .map(([day, data]) => ({
-          date: format(new Date(day), 'dd/MM', { locale: ptBR }),
-          fullDate: format(new Date(day), "dd 'de' MMMM", { locale: ptBR }),
+          date: format(safeDate(day), 'dd/MM', { locale: ptBR }),
+          fullDate: format(safeDate(day), "dd 'de' MMMM", { locale: ptBR }),
           duration: data.duration,
-          calories: data.calories
+          calories: data.calories,
+          ts: data.ts
         }))
-        .sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime())
+        .sort((a, b) => a.ts - b.ts)
     } else if (period === 'month') {
       // Por dia
-      const dayGroups = new Map<string, { duration: number, calories: number }>()
+      const dayGroups = new Map<string, { duration: number, calories: number, ts: number }>()
       filteredActivities.forEach(a => {
-        const day = format(new Date(a.activityDate), 'yyyy-MM-dd')
+        const day = format(safeDate(a.activityDate), 'yyyy-MM-dd')
         if (!dayGroups.has(day)) {
-          dayGroups.set(day, { duration: 0, calories: 0 })
+          dayGroups.set(day, { duration: 0, calories: 0, ts: safeDate(day).getTime() })
         }
         const group = dayGroups.get(day)!
         group.duration += a.durationMinutes
@@ -79,20 +92,21 @@ export function ActivityChart() {
 
       return Array.from(dayGroups.entries())
         .map(([day, data]) => ({
-          date: format(new Date(day), 'dd/MM', { locale: ptBR }),
-          fullDate: format(new Date(day), "dd 'de' MMMM", { locale: ptBR }),
+          date: format(safeDate(day), 'dd/MM', { locale: ptBR }),
+          fullDate: format(safeDate(day), "dd 'de' MMMM", { locale: ptBR }),
           duration: data.duration,
-          calories: data.calories
+          calories: data.calories,
+          ts: data.ts
         }))
-        .sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime())
+        .sort((a, b) => a.ts - b.ts)
     } else if (period === 'year') {
       // Por semana
-      const weekGroups = new Map<string, { duration: number, calories: number }>()
+      const weekGroups = new Map<string, { duration: number, calories: number, ts: number }>()
       filteredActivities.forEach(a => {
-        const weekStart = startOfWeek(new Date(a.activityDate), { locale: ptBR })
+        const weekStart = startOfWeek(safeDate(a.activityDate), { locale: ptBR })
         const weekKey = format(weekStart, 'yyyy-MM-dd')
         if (!weekGroups.has(weekKey)) {
-          weekGroups.set(weekKey, { duration: 0, calories: 0 })
+          weekGroups.set(weekKey, { duration: 0, calories: 0, ts: safeDate(weekKey).getTime() })
         }
         const group = weekGroups.get(weekKey)!
         group.duration += a.durationMinutes
@@ -101,20 +115,21 @@ export function ActivityChart() {
 
       return Array.from(weekGroups.entries())
         .map(([week, data]) => ({
-          date: format(new Date(week), 'dd/MM', { locale: ptBR }),
-          fullDate: format(new Date(week), "dd 'de' MMMM", { locale: ptBR }),
+          date: format(safeDate(week), 'dd/MM', { locale: ptBR }),
+          fullDate: format(safeDate(week), "dd 'de' MMMM", { locale: ptBR }),
           duration: data.duration,
-          calories: data.calories
+          calories: data.calories,
+          ts: data.ts
         }))
-        .sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime())
+        .sort((a, b) => a.ts - b.ts)
     } else {
       // Por mês
-      const monthGroups = new Map<string, { duration: number, calories: number }>()
+      const monthGroups = new Map<string, { duration: number, calories: number, ts: number }>()
       filteredActivities.forEach(a => {
-        const monthStart = startOfMonth(new Date(a.activityDate))
+        const monthStart = startOfMonth(safeDate(a.activityDate))
         const monthKey = format(monthStart, 'yyyy-MM')
         if (!monthGroups.has(monthKey)) {
-          monthGroups.set(monthKey, { duration: 0, calories: 0 })
+          monthGroups.set(monthKey, { duration: 0, calories: 0, ts: safeDate(monthKey + '-01').getTime() })
         }
         const group = monthGroups.get(monthKey)!
         group.duration += a.durationMinutes
@@ -123,12 +138,13 @@ export function ActivityChart() {
 
       return Array.from(monthGroups.entries())
         .map(([month, data]) => ({
-          date: format(new Date(month + '-01'), 'MMM/yy', { locale: ptBR }),
-          fullDate: format(new Date(month + '-01'), "MMMM 'de' yyyy", { locale: ptBR }),
+          date: format(safeDate(month + '-01'), 'MMM/yy', { locale: ptBR }),
+          fullDate: format(safeDate(month + '-01'), "MMMM 'de' yyyy", { locale: ptBR }),
           duration: data.duration,
-          calories: data.calories
+          calories: data.calories,
+          ts: data.ts
         }))
-        .sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime())
+        .sort((a, b) => a.ts - b.ts)
     }
   }, [activities, period])
 

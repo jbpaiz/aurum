@@ -20,6 +20,12 @@ interface ActivityCardProps {
 export function ActivityCard({ detailed = false, onAddClick, onEditClick }: ActivityCardProps) {
   const { activities, activityStats, deleteActivity } = useHealth()
 
+  const safeDate = (iso: string) => {
+    if (!iso) return new Date('')
+    const [year, month, day] = iso.split('-').map(Number)
+    return new Date(year, month - 1, day)
+  }
+
   const handleDelete = async (id: string) => {
     if (!confirm('Deseja realmente excluir esta atividade?')) return
     
@@ -131,7 +137,7 @@ export function ActivityCard({ detailed = false, onAddClick, onEditClick }: Acti
                         {ACTIVITY_LABELS[activity.activityType]}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        {format(new Date(activity.activityDate), "dd 'de' MMM", { locale: ptBR })}
+                        {format(safeDate(activity.activityDate), "dd 'de' MMM", { locale: ptBR })}
                       </span>
                     </div>
                   </div>
