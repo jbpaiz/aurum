@@ -33,28 +33,34 @@ export function StatsSummary() {
     const lastMonthStart = startOfMonth(subMonths(now, 1))
     const lastMonthEnd = endOfMonth(subMonths(now, 1))
 
-    // Filtrar apenas o último registro de cada dia
+    // Helper: normaliza para meia-noite local (evita UTC shift)
+    const toLocalDay = (input: string | Date) => {
+      const d = typeof input === 'string' ? new Date(input) : input
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate())
+    }
+
+    // Filtrar apenas o último registro de cada dia (usando data local)
     const logsByDay: Record<string, typeof weightLogs[0]> = {}
     weightLogs.forEach(log => {
-      const day = new Date(log.recordedAt).toISOString().slice(0, 10)
+      const day = format(toLocalDay(log.recordedAt), 'yyyy-MM-dd')
       if (!logsByDay[day] || new Date(log.recordedAt) > new Date(logsByDay[day].recordedAt)) {
         logsByDay[day] = log
       }
     })
     const dailyLogs = Object.values(logsByDay)
-    // Considerar apenas os últimos 14 dias
-    const last14Days = subDays(now, 14)
-    const recentLogs = dailyLogs.filter(l => new Date(l.recordedAt) >= last14Days)
+    // Considerar apenas os últimos 14 dias (comparando por dia local)
+    const last14Local = toLocalDay(subDays(now, 14))
+    const recentLogs = dailyLogs.filter(l => toLocalDay(l.recordedAt) >= last14Local)
     // Se não houver pelo menos 3 registros, usar todos
     const trendLogs = recentLogs.length >= 3 ? recentLogs : dailyLogs
     
     // Peso - Semana
     const thisWeekWeights = trendLogs.filter(w => {
-      const date = new Date(w.recordedAt)
+      const date = toLocalDay(w.recordedAt)
       return date >= thisWeekStart && date <= thisWeekEnd
     })
     const lastWeekWeights = trendLogs.filter(w => {
-      const date = new Date(w.recordedAt)
+      const date = toLocalDay(w.recordedAt)
       return date >= lastWeekStart && date <= lastWeekEnd
     })
     
@@ -123,11 +129,11 @@ export function StatsSummary() {
 
     // Mês
     const thisMonthWeights = weightLogs.filter(w => {
-      const date = new Date(w.recordedAt)
+      const date = toLocalDay(w.recordedAt)
       return date >= thisMonthStart && date <= thisMonthEnd
     })
     const lastMonthWeights = weightLogs.filter(w => {
-      const date = new Date(w.recordedAt)
+      const date = toLocalDay(w.recordedAt)
       return date >= lastMonthStart && date <= lastMonthEnd
     })
     
@@ -149,9 +155,9 @@ export function StatsSummary() {
     let weightStreak = 0
     let lastDate: Date | null = null
     for (const log of sortedWeights) {
-      const logDate = new Date(log.recordedAt)
+      const logDate = toLocalDay(log.recordedAt)
       if (!lastDate) {
-        if (differenceInDays(now, logDate) <= 1) {
+        if (differenceInDays(toLocalDay(now), logDate) <= 1) {
           weightStreak = 1
           lastDate = logDate
         } else {
@@ -173,9 +179,10 @@ export function StatsSummary() {
     let activityStreak = 0
     lastDate = null
     for (const activity of sortedActivities) {
-      const actDate = new Date(activity.activityDate)
+      const [y, m, d] = activity.activityDate.split('-').map(Number)
+      const actDate = new Date(y, m - 1, d)
       if (!lastDate) {
-        if (differenceInDays(now, actDate) <= 1) {
+        if (differenceInDays(toLocalDay(now), actDate) <= 1) {
           activityStreak = 1
           lastDate = actDate
         } else {
@@ -197,9 +204,10 @@ export function StatsSummary() {
     let sleepStreak = 0
     lastDate = null
     for (const log of sortedSleep) {
-      const logDate = new Date(log.sleepDate)
+      const [y, m, d] = log.sleepDate.split('-').map(Number)
+      const logDate = new Date(y, m - 1, d)
       if (!lastDate) {
-        if (differenceInDays(now, logDate) <= 1) {
+        if (differenceInDays(toLocalDay(now), logDate) <= 1) {
           sleepStreak = 1
           lastDate = logDate
         } else {
