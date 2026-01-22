@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { Flame, Edit2, Trash2 } from 'lucide-react'
+import { Flame, Edit2, Trash2, Target, Clock, AlertCircle, MapPin, CheckCircle2 } from 'lucide-react'
 import { useHealth } from '@/contexts/health-context'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -46,13 +46,15 @@ export function ActivityCard({ detailed = false, onAddClick, onEditClick }: Acti
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+          <CardTitle className="flex items-start justify-between gap-3">
             <span>Atividades</span>
-            {onAddClick && (
-              <Button size="sm" variant="outline" onClick={onAddClick}>
-                Adicionar
-              </Button>
-            )}
+            <div className="flex flex-wrap gap-2 justify-end">
+              {onAddClick && (
+                <Button size="sm" variant="outline" onClick={onAddClick}>
+                  Adicionar
+                </Button>
+              )}
+            </div>
           </CardTitle>
           <CardDescription>Nenhuma atividade registrada</CardDescription>
         </CardHeader>
@@ -60,53 +62,109 @@ export function ActivityCard({ detailed = false, onAddClick, onEditClick }: Acti
     )
   }
 
+  const goalReached = activityStats.weeklyProgress >= 100
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
+        <CardTitle className="flex items-start justify-between gap-3">
           <span>Atividades</span>
-          {onAddClick && (
-            <Button size="sm" variant="outline" onClick={onAddClick}>
-              Adicionar
-            </Button>
-          )}
+          <div className="flex flex-wrap gap-2 justify-end">
+            {onAddClick && (
+              <Button size="sm" variant="outline" onClick={onAddClick}>
+                Adicionar
+              </Button>
+            )}
+          </div>
         </CardTitle>
         <CardDescription>Última semana</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Weekly Progress */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Meta semanal</span>
-            <span className="font-medium">
-              {activityStats.totalDuration}/{activityStats.weeklyGoal} min
-            </span>
+        {/* Current Total */}
+        <div className="space-y-1">
+          <div className="flex items-end gap-2">
+            <span className="text-4xl font-bold">{activityStats.totalDuration}</span>
+            <span className="text-xl text-muted-foreground mb-1">min</span>
           </div>
-          <Progress value={activityStats.weeklyProgress} />
-          <p className="text-xs text-muted-foreground">
-            {activityStats.weeklyProgress >= 100 
-              ? '🎯 Meta atingida!' 
-              : `${(100 - activityStats.weeklyProgress).toFixed(0)}% restante`
-            }
+          <p className={`text-sm ${goalReached ? 'text-emerald-600' : 'text-muted-foreground'}`}>
+            {goalReached ? '🎯 Meta semanal atingida!' : `${(100 - activityStats.weeklyProgress).toFixed(0)}% restante`}
           </p>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-3 gap-2 text-center">
-          <div className="space-y-1 p-2 bg-muted/50 rounded-lg">
-            <p className="text-xs text-muted-foreground">Atividades</p>
-            <p className="text-2xl font-bold">{activityStats.activitiesCount}</p>
+        {/* Progress */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Meta semanal</span>
+            <span className="font-medium">{activityStats.totalDuration}/{activityStats.weeklyGoal} min</span>
           </div>
-          <div className="space-y-1 p-2 bg-muted/50 rounded-lg">
-            <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
-              <Flame className="h-3 w-3" />
-              Calorias
-            </p>
-            <p className="text-2xl font-bold">{activityStats.totalCalories}</p>
-          </div>
-          <div className="space-y-1 p-2 bg-muted/50 rounded-lg">
-            <p className="text-xs text-muted-foreground">Distância (últ. 7d)</p>
-            <p className="text-2xl font-bold">{activityStats.totalDistanceKm ? `${activityStats.totalDistanceKm} km` : '—'}</p>
+          <Progress value={activityStats.weeklyProgress} />
+        </div>
+
+        {/* Stats Grid styled like Weight card */}
+        <div className="rounded-md border p-3 space-y-3">
+          <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-md border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/30 p-3 space-y-1">
+              <div className="flex items-center gap-2">
+                <Target className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">Meta</p>
+              </div>
+              <p className="text-lg font-bold text-blue-900 dark:text-blue-100">{activityStats.weeklyGoal} min</p>
+              <p className="text-[10px] text-blue-600 dark:text-blue-400">Meta semanal</p>
+            </div>
+
+            <div className={`rounded-md border p-3 space-y-1 ${
+              goalReached ? 'border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30' : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30'
+            }`}>
+              <div className="flex items-center gap-2">
+                <Clock className={`h-4 w-4 ${
+                  goalReached ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-600 dark:text-gray-400'
+                }`} />
+                <p className={`text-xs font-medium ${
+                  goalReached ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-700 dark:text-gray-300'
+                }`}>Atual</p>
+              </div>
+              <p className={`text-lg font-bold ${
+                goalReached ? 'text-emerald-900 dark:text-emerald-100' : 'text-gray-900 dark:text-gray-100'
+              }`}>{activityStats.totalDuration} min</p>
+              <div className="flex items-center gap-1">
+                {goalReached && <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />}
+                <p className={`text-[10px] ${
+                  goalReached ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-600 dark:text-gray-400'
+                }`}>{goalReached ? 'Meta atingida' : 'Meta em andamento'}</p>
+              </div>
+            </div>
+
+            <div className={`rounded-md border p-3 space-y-1 ${
+              activityStats.totalDuration !== null && activityStats.weeklyGoal !== null && activityStats.totalDuration >= activityStats.weeklyGoal ? 'border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30' : 'border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/30'
+            }`}>
+              <div className="flex items-center gap-2">
+                <AlertCircle className={`h-4 w-4 ${
+                  activityStats.totalDuration !== null && activityStats.weeklyGoal !== null && activityStats.totalDuration >= activityStats.weeklyGoal ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
+                }`} />
+                <p className={`text-xs font-medium ${
+                  activityStats.totalDuration !== null && activityStats.weeklyGoal !== null && activityStats.totalDuration >= activityStats.weeklyGoal ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'
+                }`}>Restam</p>
+              </div>
+              <p className={`text-lg font-bold ${
+                activityStats.totalDuration !== null && activityStats.weeklyGoal !== null && activityStats.totalDuration >= activityStats.weeklyGoal ? 'text-emerald-900 dark:text-emerald-100' : 'text-amber-900 dark:text-amber-100'
+              }`}>
+                {activityStats.totalDuration !== null && activityStats.weeklyGoal !== null
+                  ? `${Math.max(0, (activityStats.weeklyGoal - activityStats.totalDuration)).toFixed(0)} min`
+                  : '—'}
+              </p>
+              <p className={`text-[10px] ${
+                activityStats.totalDuration !== null && activityStats.weeklyGoal !== null && activityStats.totalDuration >= activityStats.weeklyGoal ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
+              }`}>Para atingir a meta</p>
+            </div>
+
+            <div className="rounded-md border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30 p-3 space-y-1">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                <p className="text-xs text-emerald-700 dark:text-emerald-300 font-medium">Distância</p>
+              </div>
+              <p className="text-lg font-bold text-emerald-900 dark:text-emerald-100">{activityStats.totalDistanceKm ? `${activityStats.totalDistanceKm} km` : '—'}</p>
+              <p className="text-[10px] text-emerald-600 dark:text-emerald-400">Últimos 7 dias</p>
+            </div>
           </div>
         </div>
 
