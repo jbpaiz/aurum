@@ -25,6 +25,7 @@ export function ActivityModal({ open, onOpenChange, editingActivity }: ActivityM
   const [duration, setDuration] = useState('')
   const [intensity, setIntensity] = useState<ActivityIntensity>('medium')
   const [calories, setCalories] = useState('')
+  const [distance, setDistance] = useState('')
   const [activityDate, setActivityDate] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [notes, setNotes] = useState('')
 
@@ -32,6 +33,7 @@ export function ActivityModal({ open, onOpenChange, editingActivity }: ActivityM
     if (editingActivity) {
       setActivityType(editingActivity.activityType)
       setDuration(editingActivity.durationMinutes.toString())
+      setDistance(editingActivity.distanceKm?.toString() || '')
       setIntensity(editingActivity.intensity || 'medium')
       setCalories(editingActivity.caloriesBurned?.toString() || '')
       setActivityDate(editingActivity.activityDate)
@@ -39,6 +41,7 @@ export function ActivityModal({ open, onOpenChange, editingActivity }: ActivityM
     } else {
       setActivityType('walking')
       setDuration('')
+      setDistance('')
       setIntensity('medium')
       setCalories('')
       setActivityDate(format(new Date(), 'yyyy-MM-dd'))
@@ -55,6 +58,12 @@ export function ActivityModal({ open, onOpenChange, editingActivity }: ActivityM
       return
     }
 
+    const distanceNum = distance ? parseFloat(distance) : null
+    if (distance && (isNaN(distanceNum as number) || (distanceNum as number) < 0)) {
+      toast.error('Digite uma distância válida (km)')
+      return
+    }
+
     try {
       setLoading(true)
       
@@ -62,6 +71,7 @@ export function ActivityModal({ open, onOpenChange, editingActivity }: ActivityM
         await updateActivity(editingActivity.id, {
           activityType,
           durationMinutes: durationNum,
+          distanceKm: distanceNum ?? undefined,
           intensity,
           caloriesBurned: calories ? parseInt(calories) : undefined,
           activityDate,
@@ -72,6 +82,7 @@ export function ActivityModal({ open, onOpenChange, editingActivity }: ActivityM
         await createActivity({
           activityType,
           durationMinutes: durationNum,
+          distanceKm: distanceNum ?? undefined,
           intensity,
           caloriesBurned: calories ? parseInt(calories) : undefined,
           activityDate,
@@ -170,6 +181,18 @@ export function ActivityModal({ open, onOpenChange, editingActivity }: ActivityM
               placeholder="200"
               value={calories}
               onChange={(e) => setCalories(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="distance">Distância (km) (opcional)</Label>
+            <Input
+              id="distance"
+              type="number"
+              step="0.01"
+              placeholder="2.5"
+              value={distance}
+              onChange={(e) => setDistance(e.target.value)}
             />
           </div>
 

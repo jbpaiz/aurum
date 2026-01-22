@@ -342,6 +342,7 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
         user_id: user.id,
         activity_type: input.activityType,
         duration_minutes: input.durationMinutes,
+        distance_km: input.distanceKm || null,
         intensity: input.intensity || null,
         calories_burned: input.caloriesBurned || null,
         activity_date: input.activityDate || format(new Date(), 'yyyy-MM-dd'),
@@ -362,6 +363,7 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
       .update({
         activity_type: input.activityType,
         duration_minutes: input.durationMinutes,
+        distance_km: input.distanceKm ?? null,
         intensity: input.intensity,
         calories_burned: input.caloriesBurned,
         activity_date: input.activityDate,
@@ -957,6 +959,7 @@ function mapActivity(data: any): Activity {
     userId: data.user_id,
     activityType: data.activity_type,
     durationMinutes: data.duration_minutes,
+    distanceKm: data.distance_km ? Number(data.distance_km) : null,
     intensity: data.intensity,
     caloriesBurned: data.calories_burned,
     activityDate: data.activity_date,
@@ -1245,6 +1248,7 @@ function calculateActivityStats(activities: Activity[], goals: HealthGoal[]): Ac
   
   const totalDuration = weekActivities.reduce((sum, a) => sum + a.durationMinutes, 0)
   const totalCalories = weekActivities.reduce((sum, a) => sum + (a.caloriesBurned || 0), 0)
+  const totalDistanceKm = weekActivities.reduce((sum, a) => sum + (a.distanceKm || 0), 0)
   
   const activityGoal = goals.find(g => g.goalType === 'activity')
   const weeklyGoal = activityGoal?.targetValue || 150 // WHO recommendation
@@ -1260,6 +1264,7 @@ function calculateActivityStats(activities: Activity[], goals: HealthGoal[]): Ac
   return {
     totalDuration,
     totalCalories,
+    totalDistanceKm: Number(totalDistanceKm.toFixed(2)),
     activitiesCount: weekActivities.length,
     weeklyGoal,
     weeklyProgress: Math.min(weeklyProgress, 100),

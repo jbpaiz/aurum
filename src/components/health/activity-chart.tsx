@@ -57,15 +57,16 @@ export function ActivityChart() {
     // Agrupar dados conforme período
     if (period === 'week') {
       // Por dia
-      const dayGroups = new Map<string, { duration: number, calories: number, ts: number }>()
+      const dayGroups = new Map<string, { duration: number, calories: number, distance: number, ts: number }>()
       filteredActivities.forEach(a => {
         const day = format(safeDate(a.activityDate), 'yyyy-MM-dd')
         if (!dayGroups.has(day)) {
-          dayGroups.set(day, { duration: 0, calories: 0, ts: safeDate(day).getTime() })
+          dayGroups.set(day, { duration: 0, calories: 0, distance: 0, ts: safeDate(day).getTime() })
         }
         const group = dayGroups.get(day)!
         group.duration += a.durationMinutes
         group.calories += a.caloriesBurned || 0
+        group.distance += a.distanceKm || 0
       })
 
       return Array.from(dayGroups.entries())
@@ -74,20 +75,22 @@ export function ActivityChart() {
           fullDate: format(safeDate(day), "dd 'de' MMMM", { locale: ptBR }),
           duration: data.duration,
           calories: data.calories,
+          distance: Number(data.distance.toFixed(2)),
           ts: data.ts
         }))
         .sort((a, b) => a.ts - b.ts)
     } else if (period === 'month') {
       // Por dia
-      const dayGroups = new Map<string, { duration: number, calories: number, ts: number }>()
+      const dayGroups = new Map<string, { duration: number, calories: number, distance: number, ts: number }>()
       filteredActivities.forEach(a => {
         const day = format(safeDate(a.activityDate), 'yyyy-MM-dd')
         if (!dayGroups.has(day)) {
-          dayGroups.set(day, { duration: 0, calories: 0, ts: safeDate(day).getTime() })
+          dayGroups.set(day, { duration: 0, calories: 0, distance: 0, ts: safeDate(day).getTime() })
         }
         const group = dayGroups.get(day)!
         group.duration += a.durationMinutes
         group.calories += a.caloriesBurned || 0
+        group.distance += a.distanceKm || 0
       })
 
       return Array.from(dayGroups.entries())
@@ -96,21 +99,23 @@ export function ActivityChart() {
           fullDate: format(safeDate(day), "dd 'de' MMMM", { locale: ptBR }),
           duration: data.duration,
           calories: data.calories,
+          distance: Number(data.distance.toFixed(2)),
           ts: data.ts
         }))
         .sort((a, b) => a.ts - b.ts)
     } else if (period === 'year') {
       // Por semana
-      const weekGroups = new Map<string, { duration: number, calories: number, ts: number }>()
+      const weekGroups = new Map<string, { duration: number, calories: number, distance: number, ts: number }>()
       filteredActivities.forEach(a => {
         const weekStart = startOfWeek(safeDate(a.activityDate), { locale: ptBR })
         const weekKey = format(weekStart, 'yyyy-MM-dd')
         if (!weekGroups.has(weekKey)) {
-          weekGroups.set(weekKey, { duration: 0, calories: 0, ts: safeDate(weekKey).getTime() })
+          weekGroups.set(weekKey, { duration: 0, calories: 0, distance: 0, ts: safeDate(weekKey).getTime() })
         }
         const group = weekGroups.get(weekKey)!
         group.duration += a.durationMinutes
         group.calories += a.caloriesBurned || 0
+        group.distance += a.distanceKm || 0
       })
 
       return Array.from(weekGroups.entries())
@@ -119,6 +124,7 @@ export function ActivityChart() {
           fullDate: format(safeDate(week), "dd 'de' MMMM", { locale: ptBR }),
           duration: data.duration,
           calories: data.calories,
+          distance: Number(data.distance.toFixed(2)),
           ts: data.ts
         }))
         .sort((a, b) => a.ts - b.ts)
@@ -235,8 +241,8 @@ export function ActivityChart() {
                 }}
                 labelStyle={{ color: 'hsl(var(--foreground))' }}
                 formatter={(value: number, name: string) => [
-                  name === 'duration' ? `${value} min` : `${value} kcal`,
-                  name === 'duration' ? 'Duração' : 'Calorias'
+                  name === 'duration' ? `${value} min` : name === 'distance' ? `${value} km` : `${value} kcal`,
+                  name === 'duration' ? 'Duração' : name === 'distance' ? 'Distância' : 'Calorias'
                 ]}
                 labelFormatter={(label: string) => {
                   const data = chartData.find(d => d.date === label)
@@ -244,7 +250,7 @@ export function ActivityChart() {
                 }}
               />
               <Legend 
-                formatter={(value) => value === 'duration' ? 'Duração' : 'Calorias'}
+                formatter={(value) => value === 'duration' ? 'Duração' : value === 'distance' ? 'Distância (km)' : 'Calorias'}
               />
               <Bar 
                 yAxisId="left"
@@ -256,6 +262,12 @@ export function ActivityChart() {
                 yAxisId="right"
                 dataKey="calories" 
                 fill="hsl(var(--chart-2))" 
+                radius={[4, 4, 0, 0]}
+              />
+              <Bar 
+                yAxisId="right"
+                dataKey="distance" 
+                fill="hsl(var(--chart-3))" 
                 radius={[4, 4, 0, 0]}
               />
             </BarChart>

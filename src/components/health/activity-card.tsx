@@ -92,7 +92,7 @@ export function ActivityCard({ detailed = false, onAddClick, onEditClick }: Acti
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-2 text-center">
+        <div className="grid grid-cols-3 gap-2 text-center">
           <div className="space-y-1 p-2 bg-muted/50 rounded-lg">
             <p className="text-xs text-muted-foreground">Atividades</p>
             <p className="text-2xl font-bold">{activityStats.activitiesCount}</p>
@@ -103,6 +103,10 @@ export function ActivityCard({ detailed = false, onAddClick, onEditClick }: Acti
               Calorias
             </p>
             <p className="text-2xl font-bold">{activityStats.totalCalories}</p>
+          </div>
+          <div className="space-y-1 p-2 bg-muted/50 rounded-lg">
+            <p className="text-xs text-muted-foreground">Distância (últ. 7d)</p>
+            <p className="text-2xl font-bold">{activityStats.totalDistanceKm ? `${activityStats.totalDistanceKm} km` : '—'}</p>
           </div>
         </div>
 
@@ -143,6 +147,11 @@ export function ActivityCard({ detailed = false, onAddClick, onEditClick }: Acti
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium">{activity.durationMinutes} min</p>
+                    {activity.distanceKm !== null && activity.distanceKm !== undefined && (
+                      <p className="text-xs text-muted-foreground">
+                        {activity.distanceKm} km
+                      </p>
+                    )}
                     {activity.caloriesBurned && (
                       <p className="text-xs text-muted-foreground">
                         {activity.caloriesBurned} cal

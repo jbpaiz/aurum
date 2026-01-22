@@ -38,6 +38,7 @@ export interface Activity {
   userId: string
   activityType: ActivityType
   durationMinutes: number
+  distanceKm?: number | null // distância em quilômetros
   intensity?: ActivityIntensity | null
   caloriesBurned?: number | null
   activityDate: string // ISO date
@@ -49,6 +50,7 @@ export interface Activity {
 export interface CreateActivityInput {
   activityType: ActivityType
   durationMinutes: number
+  distanceKm?: number
   intensity?: ActivityIntensity
   caloriesBurned?: number
   activityDate?: string // opcional, padrão TODAY
@@ -58,6 +60,7 @@ export interface CreateActivityInput {
 export interface UpdateActivityInput {
   activityType?: ActivityType
   durationMinutes?: number
+  distanceKm?: number
   intensity?: ActivityIntensity
   caloriesBurned?: number
   activityDate?: string
@@ -144,6 +147,7 @@ export interface WeightStats {
 export interface ActivityStats {
   totalDuration: number // minutos
   totalCalories: number
+  totalDistanceKm?: number // km
   activitiesCount: number
   weeklyGoal: number // minutos
   weeklyProgress: number // porcentagem
