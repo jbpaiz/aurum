@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import { format } from 'date-fns'
 import type { TaskBoard, TaskProject, TaskPriority } from '@/types/tasks'
 import { TASK_PRIORITY_LABELS } from '@/types/tasks'
@@ -192,28 +193,34 @@ export function ExportTasksModal({ open, onClose, projects, activeProjectId, act
               </div>
 
               <div>
-                <Label className="text-[11px]">Assignee (user id)</Label>
-                <Input placeholder="user-id" value={assignee} onChange={(e) => setAssignee(e.target.value)} className="mt-2" />
+                <Label className="text-[11px]">Responsável (ID do usuário)</Label>
+                <Input placeholder="ID do usuário" value={assignee} onChange={(e) => setAssignee(e.target.value)} className="mt-2" />
               </div>
 
               <div>
-                <Label className="text-[11px]">Start date (&gt;=)</Label>
+                <Label className="text-[11px]">Data início (&gt;=)</Label>
                 <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="mt-2" />
               </div>
 
               <div>
-                <Label className="text-[11px]">Due date (&lt;=)</Label>
+                <Label className="text-[11px]">Data término (&lt;=)</Label>
                 <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="mt-2" />
               </div>
 
-              <div className="flex items-center gap-2">
-                <input id="comments" type="checkbox" checked={includeComments} onChange={(e) => setIncludeComments(e.target.checked)} />
-                <Label className="text-[11px]" htmlFor="comments">Incluir comentários</Label>
+              <div className="flex items-center justify-between rounded-md border p-3">
+                <div>
+                  <p className="text-sm font-medium">Incluir comentários</p>
+                  <p className="text-xs text-muted-foreground">Inclui autor e corpo das mensagens</p>
+                </div>
+                <Switch checked={includeComments} onCheckedChange={setIncludeComments} />
               </div>
 
-              <div className="flex items-center gap-2">
-                <input id="checklist" type="checkbox" checked={includeChecklist} onChange={(e) => setIncludeChecklist(e.target.checked)} />
-                <Label className="text-[11px]" htmlFor="checklist">Incluir checklist</Label>
+              <div className="flex items-center justify-between rounded-md border p-3">
+                <div>
+                  <p className="text-sm font-medium">Incluir checklist</p>
+                  <p className="text-xs text-muted-foreground">Inclui itens e status (feito/não feito)</p>
+                </div>
+                <Switch checked={includeChecklist} onCheckedChange={setIncludeChecklist} />
               </div>
             </div>
           </div>
