@@ -1,5 +1,5 @@
 export type Theme = 'light' | 'dark' | 'system'
-export type HubId = 'finance' | 'tasks' | 'health' | 'vehicles'
+export type HubId = 'finance' | 'tasks' | 'health' | 'vehicles' | 'flow'
 export type TasksViewMode = 'kanban' | 'list' | 'metrics'
 export type TasksSortKey = 'key' | 'title' | 'labels' | 'startDate' | 'endDate' | 'columnName' | 'priority'
 export type TasksSortDirection = 'asc' | 'desc'

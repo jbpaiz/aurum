@@ -133,6 +133,16 @@ const hubNavigation = {
     ...HUB_META.health,
     menu: healthMenuItems
   },
+  flow: {
+    ...HUB_META.flow,
+    menu: [
+      {
+        title: 'Diagram Studio',
+        icon: LayoutDashboard,
+        href: '/flow'
+      }
+    ]
+  },
   vehicles: {
     ...HUB_META.vehicles,
     menu: vehiclesMenuItems

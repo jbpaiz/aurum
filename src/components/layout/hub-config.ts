@@ -1,7 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
-import { DollarSign, Kanban, Activity, Car } from 'lucide-react'
+import { DollarSign, Kanban, Activity, Car, GitBranch } from 'lucide-react'
 
-export type HubId = 'finance' | 'tasks' | 'health' | 'vehicles'
+export type HubId = 'finance' | 'tasks' | 'health' | 'vehicles' | 'flow'
 
 export interface HubMeta {
   id: HubId
@@ -41,6 +41,15 @@ export const HUB_META: Record<HubId, HubMeta> = {
     icon: Activity,
     entryHref: '/health'
   },
+  flow: {
+    id: 'flow',
+    name: 'Flow',
+    description: 'Diagramas e fluxos',
+    tagline: 'Crie e organize processos e ideias',
+    accent: 'from-indigo-600 to-blue-600',
+    icon: GitBranch,
+    entryHref: '/flow'
+  },
   vehicles: {
     id: 'vehicles',
     name: 'Veículos',
@@ -57,7 +66,7 @@ export const resolveHubId = (pathname: string | null | undefined): HubId => {
     // Tentar recuperar o último hub acessado do localStorage
     if (typeof window !== 'undefined') {
       const lastHub = localStorage.getItem('aurum.lastActiveHub') as HubId | null
-      if (lastHub === 'finance' || lastHub === 'tasks' || lastHub === 'health' || lastHub === 'vehicles') {
+      if (lastHub === 'finance' || lastHub === 'tasks' || lastHub === 'health' || lastHub === 'vehicles' || lastHub === 'flow') {
         return lastHub
       }
     }
@@ -65,6 +74,7 @@ export const resolveHubId = (pathname: string | null | undefined): HubId => {
   }
   if (pathname.startsWith('/tasks')) return 'tasks'
   if (pathname.startsWith('/health')) return 'health'
+  if (pathname.startsWith('/flow')) return 'flow'
   if (pathname.startsWith('/vehicles')) return 'vehicles'
   return 'finance'
-}
+} 

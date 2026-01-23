@@ -1,0 +1,170 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  font-family: Inter, system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e6e6e6;
+  background: #fafafa;
+}
+
+.titleInput {
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #e6e6e6;
+  margin-right: 8px;
+}
+
+.actionButtons {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.modeButtons button {
+  margin-right: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: #fff;
+  cursor: pointer;
+}
+
+.modeButtons .active {
+  background: #273849;
+  color: white;
+}
+
+.actions button {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  background: #fff;
+  cursor: pointer;
+}
+
+.main {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0; /* For proper flexbox scrolling */
+}
+
+.sidebar {
+  width: 180px;
+  padding: 12px;
+  border-right: 1px solid #eee;
+  background: #fcfcfc;
+}
+
+.sidebarTitle {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.draggable {
+  background: #fff;
+  border: 1px dashed #ccc;
+  padding: 8px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  cursor: grab;
+}
+
+.sidebarBody {
+  padding: 6px 2px;
+}
+
+.hint {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #666;
+}
+
+.canvas {
+  flex: 1;
+  height: calc(100vh - 64px);
+  position: relative;
+}
+
+.openListOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 48px;
+}
+
+.openList {
+  background: white;
+  border-radius: 8px;
+  padding: 12px;
+  width: 360px;
+  box-shadow: 0 10px 30px rgba(2,6,23,0.3);
+}
+
+.openItem {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 6px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.openItem:hover { background: #f3f4f6 }
+
+/* Node styles */
+.processNode {
+  display: inline-block;
+}
+
+.mindNode {
+  display: inline-flex;
+  align-items: center;
+  background: white;
+  border-radius: 999px;
+  padding: 6px 12px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 2px 10px rgba(2,6,23,0.04);
+  font-weight: 500;
+}
+
+.mindLabel {
+  margin-right: 8px;
+  font-size: 13px;
+  color: #0f172a;
+}
+
+.mindInput {
+  border: 1px solid rgba(15,23,42,0.06);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+}
+
+.addChildBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(180deg,#0b6cff,#0058c5);
+  color: white;
+  cursor: pointer;
+}
+
+.addChildBtn:hover {
+  filter: brightness(0.95);
+}
