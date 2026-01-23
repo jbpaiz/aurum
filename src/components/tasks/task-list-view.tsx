@@ -4,6 +4,7 @@ import { useMemo, useState, useCallback, useEffect, type ReactNode } from 'react
 import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
+import { Badge } from '@/components/ui/badge'
 import type { TaskCard, TaskColumn, TaskPriority, TaskCustomField } from '@/types/tasks'
 import { TASK_PRIORITY_COLORS, TASK_PRIORITY_LABELS } from '@/types/tasks'
 import { format } from 'date-fns'
@@ -239,9 +240,20 @@ function TaskListRow({ task, onSelectTask, onChangeTaskColumn, renderDate, colum
       </td>
       <td className="px-6 py-4 text-gray-600 dark:text-gray-400 whitespace-nowrap">
         {task.labels.length ? (
-          <span className="block max-w-[220px] truncate" title={task.labels.join(', ')}>
-            {task.labels.join(', ')}
-          </span>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 max-w-[220px] truncate">
+              {task.labels.slice(0, 3).map((label) => (
+                <Badge key={label} variant="outline" className="border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 text-xs px-2 py-0">
+                  <span className="truncate block max-w-[80px]">{label}</span>
+                </Badge>
+              ))}
+              {task.labels.length > 3 && (
+                <Badge variant="secondary" className="text-xs px-2 py-0">
+                  +{task.labels.length - 3}
+                </Badge>
+              )}
+            </div>
+          </div>
         ) : (
           <span className="text-xs text-gray-400 dark:text-gray-500">Sem etiquetas</span>
         )}
