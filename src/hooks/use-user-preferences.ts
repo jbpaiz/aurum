@@ -185,6 +185,15 @@ export function useUserPreferences() {
     [user]
   )
 
+  // Mutate preferences locally (optimistic updates)
+  const mutatePreferences = useCallback((partial: Partial<UserPreferences>) => {
+    setPreferences((prev) => {
+      if (!prev) return prev
+      return { ...prev, ...partial }
+    })
+  }, [])
+
+
   // Carregar preferências quando o usuário fizer login
   useEffect(() => {
     loadPreferences()
@@ -194,6 +203,7 @@ export function useUserPreferences() {
     preferences,
     loading,
     updatePreferences,
+    mutatePreferences,
     reloadPreferences: loadPreferences,
   }
 }
