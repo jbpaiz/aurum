@@ -9,6 +9,7 @@ export interface UserPreferences {
   userId: string
   theme: Theme
   lastActiveHub: HubId
+  enabledHubs: HubId[]
   tasksViewMode: TasksViewMode
   tasksAdaptiveWidth: boolean
   tasksAdaptiveWidthList: boolean
@@ -31,6 +32,7 @@ export interface UserPreferences {
 export interface UserPreferencesInput {
   theme?: Theme
   lastActiveHub?: HubId
+  enabledHubs?: HubId[]
   tasksViewMode?: TasksViewMode
   tasksAdaptiveWidth?: boolean
   tasksAdaptiveWidthList?: boolean
