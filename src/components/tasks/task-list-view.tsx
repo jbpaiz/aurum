@@ -238,20 +238,15 @@ function TaskListRow({ task, onSelectTask, onChangeTaskColumn, renderDate, colum
           </p>
         ) : null}
       </td>
-      <td className="px-6 py-4 text-gray-600 dark:text-gray-400 whitespace-nowrap">
+      <td className="px-6 py-4 text-gray-600 dark:text-gray-400">
         {task.labels.length ? (
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 max-w-[220px] truncate">
-              {task.labels.slice(0, 3).map((label) => (
-                <Badge key={label} variant="outline" className="border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 text-xs px-2 py-0">
-                  <span className="truncate block max-w-[80px]">{label}</span>
+            <div className="flex flex-wrap items-center gap-2 max-w-[420px]">
+              {task.labels.map((label) => (
+                <Badge key={label} variant="outline" className="border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 text-xs px-2 py-0 whitespace-normal break-words max-w-[160px]">
+                  <span className="block">{label}</span>
                 </Badge>
               ))}
-              {task.labels.length > 3 && (
-                <Badge variant="secondary" className="text-xs px-2 py-0">
-                  +{task.labels.length - 3}
-                </Badge>
-              )}
             </div>
           </div>
         ) : (
