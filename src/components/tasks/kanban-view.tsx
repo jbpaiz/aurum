@@ -19,6 +19,7 @@ import { KanbanMetrics } from '@/components/tasks/kanban-metrics'
 import { BoardManagementView } from '@/components/tasks/board-management-view'
 import { FiltersModal } from '@/components/tasks/filters-modal'
 import { CloneTaskModal } from '@/components/tasks/clone-task-modal'
+import { ExportTasksModal } from '@/components/tasks/export-tasks-modal'
 import type { CreateTaskInput, TaskCard, TaskColumn, TaskPriority } from '@/types/tasks'
 import { TASK_PRIORITY_COLORS, TASK_PRIORITY_LABELS } from '@/types/tasks'
 import { useUserPreferences } from '@/hooks/use-user-preferences'
@@ -26,6 +27,7 @@ import { useUserPreferences } from '@/hooks/use-user-preferences'
 export function KanbanView() {
   const {
     loading,
+    projects,
     activeProject,
     activeBoard,
     priorityField,
@@ -54,6 +56,7 @@ export function KanbanView() {
   const [taskToClone, setTaskToClone] = useState<TaskCard | null>(null)
   const [columnIdForModal, setColumnIdForModal] = useState<string | undefined>()
   const [preferencesLoaded, setPreferencesLoaded] = useState(false)
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false)
   
   // Inicializar estados com preferências do banco ou localStorage
   const [viewMode, setViewMode] = useState<'kanban' | 'list' | 'metrics'>('kanban')
@@ -311,6 +314,14 @@ export function KanbanView() {
                     >
                       Gerenciar quadros
                     </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onSelect={(event) => {
+                        event.preventDefault()
+                        setIsExportModalOpen(true)
+                      }}
+                    >
+                      Exportar para Excel
+                    </DropdownMenuItem>
                     {viewMode === 'kanban' && (
                       <DropdownMenuItem
                         onSelect={(event) => {
@@ -476,6 +487,14 @@ export function KanbanView() {
         priorityField={priorityField}
         labelFilter={labelFilter}
         onLabelChange={setLabelFilter}
+      />
+
+      <ExportTasksModal
+        open={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        projects={projects}
+        activeProjectId={activeProject?.id}
+        activeBoardId={activeBoard?.id}
       />
 
       {taskToClone && (
