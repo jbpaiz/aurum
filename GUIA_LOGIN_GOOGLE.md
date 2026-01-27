@@ -32,7 +32,7 @@
    
 5. **Origens JavaScript autorizadas** (Authorized JavaScript origins) - Adicione:
    ```
-   https://aurum-eight.vercel.app
+   https://aur1.vercel.app
    http://localhost:3000
    ```
 
@@ -70,7 +70,7 @@
 ### Passo 5: Testar no seu App
 1. Acesse: http://localhost:3000 (desenvolvimento)
    OU
-   Acesse: https://aurum-eight.vercel.app (produção)
+   Acesse: https://aur1.vercel.app (produção)
 
 2. Clique no botão **"Entrar com Google"**
 
@@ -86,7 +86,7 @@
 
 **No Google Cloud Console:**
 - ✅ JavaScript origins: 
-  - `https://aurum-eight.vercel.app`
+  - `https://aur1.vercel.app`
   - `http://localhost:3000`
   
 - ✅ Redirect URIs:
@@ -94,9 +94,9 @@
   - `http://localhost:54321/auth/v1/callback` (se usar local)
 
 **No Supabase:**
-- ✅ Site URL: `https://aurum-eight.vercel.app`
+- ✅ Site URL: `https://aur1.vercel.app`
 - ✅ Redirect URLs: 
-  - `https://aurum-eight.vercel.app/**`
+  - `https://aur1.vercel.app/**`
   - `http://localhost:3000/**`
 - ✅ Google Provider habilitado com Client ID e Secret
 
@@ -123,7 +123,7 @@
 2. É redirecionado para `accounts.google.com` (login Google)
 3. Autoriza o app Aurum
 4. Google redireciona para: `https://difntzsqjzhswyubprsc.supabase.co/auth/v1/callback`
-5. Supabase processa e redireciona para: `https://aurum-eight.vercel.app/auth/callback`
+5. Supabase processa e redireciona para: `https://aur1.vercel.app/auth/callback`
 6. Seu app processa o callback e autentica o usuário ✅
 
 ---
