@@ -1182,6 +1182,7 @@ function calculateWeightStats(logs: WeightLog[], goals: HealthGoal[]): WeightSta
   }
 
   let goalExpectedToday: number | null = null
+  let goalExpectedTomorrow: number | null = null
   let goalDeltaFromExpected: number | null = null
   if (goalTarget !== null && goalDate) {
     const startWeight = ascLogs[0].weight
@@ -1193,6 +1194,13 @@ function calculateWeightStats(logs: WeightLog[], goals: HealthGoal[]): WeightSta
       const clampedNow = Math.min(Math.max(nowTime, startTime), goalTime)
       const progressTime = clampedNow - startTime
       goalExpectedToday = startWeight + (goalTarget - startWeight) * (progressTime / span)
+
+      // Calcular expectativa para amanhã (clamped entre início e meta)
+      const tomorrowMillis = 24 * 60 * 60 * 1000
+      const clampedTomorrow = Math.min(Math.max(nowTime + tomorrowMillis, startTime), goalTime)
+      const progressTomorrow = clampedTomorrow - startTime
+      goalExpectedTomorrow = startWeight + (goalTarget - startWeight) * (progressTomorrow / span)
+
       goalDeltaFromExpected = current - goalExpectedToday
     }
   }
@@ -1236,6 +1244,7 @@ function calculateWeightStats(logs: WeightLog[], goals: HealthGoal[]): WeightSta
     goalDate,
     goalProgress,
     goalExpectedToday,
+    goalExpectedTomorrow,
     goalDeltaFromExpected,
     bestWeekChange,
     worstWeekChange

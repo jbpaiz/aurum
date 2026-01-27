@@ -1,5 +1,5 @@
 export type Theme = 'light' | 'dark' | 'system'
-export type HubId = 'finance' | 'tasks' | 'health' | 'vehicles'
+export type HubId = 'finance' | 'tasks' | 'health' | 'vehicles' | 'flow'
 export type TasksViewMode = 'kanban' | 'list' | 'metrics'
 export type TasksSortKey = 'key' | 'title' | 'labels' | 'startDate' | 'endDate' | 'columnName' | 'priority'
 export type TasksSortDirection = 'asc' | 'desc'
@@ -9,6 +9,7 @@ export interface UserPreferences {
   userId: string
   theme: Theme
   lastActiveHub: HubId
+  enabledHubs: HubId[]
   tasksViewMode: TasksViewMode
   tasksAdaptiveWidth: boolean
   tasksAdaptiveWidthList: boolean
@@ -31,6 +32,7 @@ export interface UserPreferences {
 export interface UserPreferencesInput {
   theme?: Theme
   lastActiveHub?: HubId
+  enabledHubs?: HubId[]
   tasksViewMode?: TasksViewMode
   tasksAdaptiveWidth?: boolean
   tasksAdaptiveWidthList?: boolean

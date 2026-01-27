@@ -133,6 +133,16 @@ const hubNavigation = {
     ...HUB_META.health,
     menu: healthMenuItems
   },
+  flow: {
+    ...HUB_META.flow,
+    menu: [
+      {
+        title: 'Diagram Studio',
+        icon: LayoutDashboard,
+        href: '/flow'
+      }
+    ]
+  },
   vehicles: {
     ...HUB_META.vehicles,
     menu: vehiclesMenuItems
@@ -148,10 +158,16 @@ export function Sidebar({ children }: SidebarProps) {
   const isManualNavigation = useRef(false)
   const currentHub: HubId = resolveHubId(pathname)
   const activeHub = hubNavigation[currentHub]
-  const hubEntries = Object.values(hubNavigation)
+  const { preferences, updatePreferences } = useUserPreferences()
+
+  // Only show hubs enabled in user preferences
+  const hubEntries = Object.values(hubNavigation).filter((h) => {
+    if (!preferences || !preferences.enabledHubs) return true
+    return preferences.enabledHubs.includes(h.id)
+  })
+
   const currentMenuItems = activeHub.menu
   const HubIcon = activeHub.icon
-  const { preferences, updatePreferences } = useUserPreferences()
 
   // Salvar último hub acessado no banco com debounce
   useEffect(() => {

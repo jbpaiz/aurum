@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useMemo, useState, type MouseEvent, type TouchEvent } from 'react'
-import { TrendingUp, TrendingDown, Minus, Edit2, Trash2, Plus, Minus as MinusIcon, Target, Scale, Trophy, Clock, CheckCircle2, AlertCircle } from 'lucide-react'
+import { TrendingUp, TrendingDown, Minus, Edit2, Trash2, Plus, Minus as MinusIcon, Target, Scale, Trophy, Clock, CheckCircle2, AlertCircle, Info } from 'lucide-react'
+import Tooltip from '@/components/ui/tooltip'
 import { useHealth } from '@/contexts/health-context'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -420,6 +421,29 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
                     </div>
                     <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{weightStats.goalExpectedToday.toFixed(1)} kg</p>
                     <p className="text-[10px] text-gray-600 dark:text-gray-400">Peso esperado hoje</p>
+                    {(weightStats.goalExpectedTomorrow !== null && weightStats.goalExpectedTomorrow !== undefined) || (weightStats.trendKgPerWeek !== null && weightStats.trendKgPerWeek !== undefined && weightStats.current !== null) ? (
+                      <div className="flex flex-col gap-1">
+
+                        {weightStats.trendKgPerWeek !== null && weightStats.trendKgPerWeek !== undefined && weightStats.current !== null && (
+                          <div className={`text-[11px] font-medium ${getTrendColor()} flex items-center gap-2 flex-wrap min-w-0`}> 
+           
+                            <span className="whitespace-nowrap flex-shrink-0">Amanhã:</span>
+
+                            <span className="font-bold min-w-0 truncate">{(weightStats.current + weightStats.trendKgPerWeek / 7).toFixed(1)} kg</span>
+
+                            {/* Delta em kg */}
+                            <span className="text-[11px] opacity-90 min-w-0 truncate">({weightStats.trendKgPerWeek >= 0 ? '+' : ''}{(weightStats.trendKgPerWeek / 7).toFixed(1)} kg)</span>
+                 {weightStats.trendKgPerWeek > 0 ? (
+                              <TrendingUp className="h-3 w-3 flex-shrink-0" />
+                            ) : weightStats.trendKgPerWeek < 0 ? (
+                              <TrendingDown className="h-3 w-3 flex-shrink-0" />
+                            ) : (
+                              <Minus className="h-3 w-3 flex-shrink-0" />
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ) : null}
                   </div>
                 )}
                 {weightStats.goalDeltaFromExpected !== null && weightStats.goalDeltaFromExpected !== undefined && (

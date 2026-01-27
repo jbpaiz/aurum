@@ -12,6 +12,7 @@ function mapDbToPreferences(data: any): UserPreferences {
     userId: data.user_id,
     theme: data.theme,
     lastActiveHub: data.last_active_hub,
+    enabledHubs: data.enabled_hubs || ['finance','tasks','health','vehicles'],
     tasksViewMode: data.tasks_view_mode,
     tasksAdaptiveWidth: data.tasks_adaptive_width,
     tasksAdaptiveWidthList: data.tasks_adaptive_width_list,
@@ -38,6 +39,7 @@ function mapPreferencesToDb(preferences: UserPreferencesInput): Record<string, a
   
   if (preferences.theme !== undefined) mapped.theme = preferences.theme
   if (preferences.lastActiveHub !== undefined) mapped.last_active_hub = preferences.lastActiveHub
+  if (preferences.enabledHubs !== undefined) mapped.enabled_hubs = preferences.enabledHubs
   if (preferences.tasksViewMode !== undefined) mapped.tasks_view_mode = preferences.tasksViewMode
   if (preferences.tasksAdaptiveWidth !== undefined) mapped.tasks_adaptive_width = preferences.tasksAdaptiveWidth
   if (preferences.tasksAdaptiveWidthList !== undefined) mapped.tasks_adaptive_width_list = preferences.tasksAdaptiveWidthList
@@ -183,6 +185,15 @@ export function useUserPreferences() {
     [user]
   )
 
+  // Mutate preferences locally (optimistic updates)
+  const mutatePreferences = useCallback((partial: Partial<UserPreferences>) => {
+    setPreferences((prev) => {
+      if (!prev) return prev
+      return { ...prev, ...partial }
+    })
+  }, [])
+
+
   // Carregar preferências quando o usuário fizer login
   useEffect(() => {
     loadPreferences()
@@ -192,6 +203,7 @@ export function useUserPreferences() {
     preferences,
     loading,
     updatePreferences,
+    mutatePreferences,
     reloadPreferences: loadPreferences,
   }
 }
