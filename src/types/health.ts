@@ -139,6 +139,7 @@ export interface WeightStats {
   goalDate?: string | null
   goalProgress?: number | null
   goalExpectedToday?: number | null
+  goalExpectedTomorrow?: number | null
   goalDeltaFromExpected?: number | null
   bestWeekChange?: number | null
   worstWeekChange?: number | null
