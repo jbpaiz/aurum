@@ -1,4 +1,4 @@
-# 🚀 Guia de Deploy - Aurum Financial
+# 🚀 Guia de Deploy - Aurum Solutions
 
 ## 📋 Pré-requisitos
 - [x] Projeto no GitHub (✅ já está pronto)

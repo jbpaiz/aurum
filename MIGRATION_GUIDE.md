@@ -146,4 +146,4 @@ Se encontrar problemas:
 
 **Data de Criação**: 16/01/2026
 **Versão do Módulo**: 1.0.0
-**Autor**: Sistema Aurum Financial
+**Autor**: Sistema Aurum Solutions

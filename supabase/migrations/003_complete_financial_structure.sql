@@ -1,5 +1,5 @@
 -- ================================================
--- AURUM FINANCIAL CONTROL DATABASE STRUCTURE
+-- AURUM SOLUTIONS CONTROL DATABASE STRUCTURE
 -- ================================================
 
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";

@@ -1,7 +1,7 @@
 # 🔍 RELATÓRIO DE VERIFICAÇÃO DA ESTRUTURA DO BANCO DE DADOS
 
 **Data da verificação:** 15 de agosto de 2025  
-**Projeto:** Aurum Financial Control  
+**Projeto:** Aurum Solutions Control  
 **Ambiente:** Produção (Supabase)
 
 ## 📊 Status Geral

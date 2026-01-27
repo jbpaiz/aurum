@@ -10,7 +10,7 @@ import { Toaster } from '@/components/ui/toaster'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Aurum Financial',
+  title: 'Aurum Solutions',
   description: 'Sistema completo de controle financeiro pessoal',
   manifest: '/manifest.json',
   appleWebApp: {

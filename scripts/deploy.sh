@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# 🚀 Script de Deploy Automático - Aurum Financial
+# 🚀 Script de Deploy Automático - Aurum Solutions
 # Execute: chmod +x deploy.sh && ./deploy.sh
 
-echo "🚀 Iniciando deploy do Aurum Financial..."
+echo "🚀 Iniciando deploy do Aurum Solutions..."
 
 # Verificar se está na branch main
 BRANCH=$(git branch --show-current)

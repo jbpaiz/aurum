@@ -255,4 +255,4 @@ SELECT * FROM pg_policies WHERE tablename = 'task_custom_fields';
 
 ## 📄 Licença
 
-Este sistema faz parte do projeto Aurum Financial Control.
+Este sistema faz parte do projeto Aurum Solutions Control.
