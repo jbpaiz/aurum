@@ -587,7 +587,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
       const field: TaskCustomField = {
         id: fieldData.id,
         projectId: fieldData.project_id,
-        userId: fieldData.user_id,
+        userId: (fieldData as any).user_id ?? user.id,
         fieldType: fieldData.field_type as 'priority',
         fieldName: fieldData.field_name,
         isActive: fieldData.is_active,
@@ -727,7 +727,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
     if (input.subtitle !== undefined) (payload as any).subtitle = input.subtitle
     if (input.description !== undefined) payload.description = input.description
     if (input.key !== undefined) payload.key = input.key?.trim()
-    if (input.priority !== undefined) payload.priority = input.priority
+    if (input.priority !== undefined) (payload as any).priority = input.priority
     if (input.type !== undefined) payload.type = input.type
     if (input.startDate !== undefined) payload.start_date = input.startDate
     if (input.endDate !== undefined) payload.due_date = input.endDate
@@ -845,7 +845,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
         title: input.title,
         description: input.description ?? null,
         type: input.type ?? 'task',
-        priority: input.priority ?? 'medium',
+        priority: (input.priority ?? 'medium') as any,
         reporter_id: user.id,
         start_date:
           input.startDate ?? (fallbackColumn?.category === 'in_progress' ? nowDate : null),
