@@ -32,6 +32,15 @@ const AVAILABLE_COLORS = [
   '#EC4899', // Rosa
 ]
 
+const getNextOptionValue = (list: TaskCustomFieldOption[]) => {
+  const maxIndex = list.reduce((acc, opt) => {
+    const match = opt.optionValue.match(/option_(\d+)/)
+    const num = match ? Number(match[1]) : NaN
+    return Number.isFinite(num) ? Math.max(acc, num) : acc
+  }, 0)
+  return `option_${String(maxIndex + 1).padStart(2, '0')}`
+}
+
 interface SortableOptionItemProps {
   option: TaskCustomFieldOption
   onEdit: (option: TaskCustomFieldOption) => void
@@ -90,7 +99,6 @@ export function CustomFieldConfigModal({ open, onClose }: CustomFieldConfigModal
   const [options, setOptions] = useState<TaskCustomFieldOption[]>([])
   const [editingOption, setEditingOption] = useState<TaskCustomFieldOption | null>(null)
   const [newOptionLabel, setNewOptionLabel] = useState('')
-  const [newOptionValue, setNewOptionValue] = useState('')
   const [newOptionColor, setNewOptionColor] = useState(AVAILABLE_COLORS[0])
   const [isSaving, setIsSaving] = useState(false)
 
@@ -125,23 +133,22 @@ export function CustomFieldConfigModal({ open, onClose }: CustomFieldConfigModal
   }
 
   const handleAddOption = async () => {
-    if (!priorityField || !newOptionLabel.trim() || !newOptionValue.trim()) return
+    if (!priorityField || !newOptionLabel.trim()) return
 
     const trimmedLabel = newOptionLabel.trim().slice(0, 20)
-    const trimmedValue = newOptionValue.trim().toLowerCase().replace(/\s+/g, '_')
+    const optionValue = getNextOptionValue(options)
 
     setIsSaving(true)
     try {
       await createFieldOption({
         customFieldId: priorityField.id,
-        optionValue: trimmedValue,
+        optionValue,
         optionLabel: trimmedLabel,
         color: newOptionColor,
         position: options.length + 1,
       })
       await refresh()
       setNewOptionLabel('')
-      setNewOptionValue('')
       setNewOptionColor(AVAILABLE_COLORS[0])
     } catch (error) {
       console.error('Erro ao adicionar opção:', error)
@@ -176,9 +183,22 @@ export function CustomFieldConfigModal({ open, onClose }: CustomFieldConfigModal
   const handleDeleteOption = async (optionId: string) => {
     if (!confirm('Deseja realmente remover esta opção?')) return
 
+    // Atualiza a lista local para refletir imediatamente a remoção e manter a ordem exibida
+    const nextOptions = options.filter((opt) => opt.id !== optionId)
+    setOptions(nextOptions)
+
     setIsSaving(true)
     try {
       await deleteFieldOption(optionId)
+      // Regravar a ordem atual exibida após a remoção
+      await Promise.all(
+        nextOptions.map((opt, index) =>
+          updateFieldOption({
+            id: opt.id,
+            position: index + 1,
+          })
+        )
+      )
       await refresh()
     } catch (error) {
       console.error('Erro ao deletar opção:', error)
@@ -228,7 +248,6 @@ export function CustomFieldConfigModal({ open, onClose }: CustomFieldConfigModal
   const cancelEdit = () => {
     setEditingOption(null)
     setNewOptionLabel('')
-    setNewOptionValue('')
     setNewOptionColor(AVAILABLE_COLORS[0])
   }
 
@@ -299,35 +318,23 @@ export function CustomFieldConfigModal({ open, onClose }: CustomFieldConfigModal
             </h4>
             
             <div className="space-y-3">
-              {!editingOption && (
-                <div>
-                  <Label htmlFor="option-value" className="text-xs">
-                    Valor Técnico (usado no código)
-                  </Label>
-                  <Input
-                    id="option-value"
-                    value={newOptionValue}
-                    onChange={(e) => setNewOptionValue(e.target.value)}
-                    placeholder="Ex: low, high, sprint_1"
-                    className="mt-1"
-                  />
-                </div>
-              )}
-              
               <div>
                 <Label htmlFor="option-label" className="text-xs">
-                  Label (máx. 20 caracteres)
+                  Descrição (máx. 20 caracteres)
                 </Label>
                 <Input
                   id="option-label"
                   value={newOptionLabel}
                   onChange={(e) => setNewOptionLabel(e.target.value.slice(0, 20))}
-                  placeholder="Ex: Baixa, Alta, Sprint 1"
+                  placeholder="Ex: Sprint 01, Sprint 02"
                   maxLength={20}
                   className="mt-1"
                 />
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   {newOptionLabel.length}/20 caracteres
+                </p>
+                <p className="text-[11px] text-gray-500 dark:text-gray-500 mt-1">
+                  O valor interno é gerado automaticamente (opção_01, opção_02...).
                 </p>
               </div>
 
@@ -367,7 +374,7 @@ export function CustomFieldConfigModal({ open, onClose }: CustomFieldConfigModal
                 ) : (
                   <Button
                     onClick={handleAddOption}
-                    disabled={isSaving || !newOptionLabel.trim() || !newOptionValue.trim()}
+                    disabled={isSaving || !newOptionLabel.trim()}
                     className="flex-1"
                   >
                     <Plus className="h-4 w-4 mr-1" />

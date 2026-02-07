@@ -103,6 +103,15 @@ export function TaskModal({ open, onClose, columns, defaultColumnId, task, onSav
   const resolvedColumnId = columnId || task?.columnId || defaultColumnId || availableColumns[0]?.id || ''
   const selectedColumn = availableColumns.find((column) => column.id === resolvedColumnId)
 
+  // Se houver campo customizável, usar a primeira opção como padrão para novas tarefas
+  useEffect(() => {
+    if (!open || task || !priorityField?.options?.length) return
+    const exists = priorityField.options.some((opt) => opt.optionValue === priority)
+    if (!exists) {
+      setPriority(priorityField.options[0].optionValue as TaskPriority)
+    }
+  }, [open, task, priorityField, priority])
+
   // Garantir que columnId seja setado corretamente quando a tarefa muda
   useEffect(() => {
     if (open && task && !columnId) {

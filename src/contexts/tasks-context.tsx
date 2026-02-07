@@ -108,7 +108,9 @@ const normalizePriority = (value?: string | null): TaskPriority => {
   if (PRIORITY_VALUES.includes(normalized as TaskPriority)) {
     return normalized as TaskPriority
   }
-  return PRIORITY_ALIASES[normalized] ?? 'medium'
+  const alias = PRIORITY_ALIASES[normalized]
+  if (alias) return alias
+  return normalized as TaskPriority
 }
 
 const TYPE_VALUES: TaskType[] = ['task', 'bug', 'story', 'epic']
@@ -560,6 +562,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
         .from('task_custom_fields')
         .select('*')
         .eq('project_id', activeProjectId)
+        .eq('user_id', user.id)
         .eq('field_type', 'priority')
         .eq('is_active', true)
         .single()
@@ -584,6 +587,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
       const field: TaskCustomField = {
         id: fieldData.id,
         projectId: fieldData.project_id,
+        userId: fieldData.user_id,
         fieldType: fieldData.field_type as 'priority',
         fieldName: fieldData.field_name,
         isActive: fieldData.is_active,

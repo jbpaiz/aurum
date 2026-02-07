@@ -16,6 +16,14 @@ interface KanbanCardProps {
   onToggleChecklistItem?: (taskId: string, checklistItemId: string, done: boolean) => Promise<void> | void
 }
 
+const normalizeOptionValue = (value: string) =>
+  value.toLowerCase().trim().replace(/^opcao_/, 'option_')
+
+const getOptionIndex = (value: string) => {
+  const match = normalizeOptionValue(value).match(/option_(\d+)/)
+  return match ? Number(match[1]) : null
+}
+
 export function KanbanCard({ task, onSelect, onToggleChecklistItem }: KanbanCardProps) {
   const { priorityField } = useTasks()
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -48,10 +56,15 @@ export function KanbanCard({ task, onSelect, onToggleChecklistItem }: KanbanCard
   const startLabel = formatShortDate(task.startDate)
   const endLabel = formatShortDate(task.endDate)
 
-  // Buscar opção customizável ou usar padrão
-  const priorityOption = priorityField?.options.find((opt) => opt.optionValue === task.priority)
-  const priorityColor = priorityOption?.color || TASK_PRIORITY_COLORS[task.priority]
-  const priorityLabel = priorityOption?.optionLabel || TASK_PRIORITY_LABELS[task.priority]
+  const priorityOption = priorityField?.options.find(
+    (opt) => normalizeOptionValue(opt.optionValue) === normalizeOptionValue(task.priority)
+  ) ?? priorityField?.options.find(
+    (opt) => getOptionIndex(opt.optionValue) !== null && getOptionIndex(opt.optionValue) === getOptionIndex(task.priority)
+  )
+  const priorityColor =
+    priorityOption?.color || TASK_PRIORITY_COLORS[task.priority as keyof typeof TASK_PRIORITY_COLORS] || '#94A3B8'
+  const priorityLabel =
+    priorityOption?.optionLabel || TASK_PRIORITY_LABELS[task.priority as keyof typeof TASK_PRIORITY_LABELS]
 
   return (
     <div

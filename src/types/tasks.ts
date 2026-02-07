@@ -1,4 +1,4 @@
-export type TaskPriority = 'lowest' | 'low' | 'medium' | 'high' | 'highest'
+export type TaskPriority = 'lowest' | 'low' | 'medium' | 'high' | 'highest' | (string & {})
 export type TaskType = 'task' | 'bug' | 'story' | 'epic'
 export type TaskColumnCategory = 'backlog' | 'todo' | 'in_progress' | 'waiting' | 'review' | 'done'
 export type TaskSprintStatus = 'planned' | 'active' | 'completed'
@@ -155,6 +155,7 @@ export interface MoveTaskPayload {
 export interface TaskCustomField {
   id: string
   projectId: string
+  userId: string
   fieldType: 'priority' // Extensível para outros tipos no futuro
   fieldName: string // Nome customizável (max 20 chars)
   isActive: boolean

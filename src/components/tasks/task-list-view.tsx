@@ -18,6 +18,21 @@ type SortConfig = { key: SortKey; direction: SortDirection }
 
 const PRIORITY_SEQUENCE: TaskPriority[] = ['lowest', 'low', 'medium', 'high', 'highest']
 
+const normalizeOptionValue = (value: string) =>
+  value.toLowerCase().trim().replace(/^opcao_/, 'option_')
+
+const getOptionIndex = (value: string) => {
+  const match = normalizeOptionValue(value).match(/option_(\d+)/)
+  return match ? Number(match[1]) : null
+}
+
+const findPriorityOption = (priorityField: TaskCustomField | undefined, priority: string) =>
+  priorityField?.options.find(
+    (opt) => normalizeOptionValue(opt.optionValue) === normalizeOptionValue(priority)
+  ) ?? priorityField?.options.find(
+    (opt) => getOptionIndex(opt.optionValue) !== null && getOptionIndex(opt.optionValue) === getOptionIndex(priority)
+  )
+
 interface TaskWithMeta extends TaskCard {
   columnName: string
   columnColor: string
@@ -128,8 +143,12 @@ export function TaskListView({ columns, referenceColumns, onSelectTask, onCreate
         }
         
         // Terciário: Prioridade (alfabético pelo label)
-        const priorityLabelA = priorityField?.options.find(opt => opt.optionValue === taskA.priority)?.optionLabel || TASK_PRIORITY_LABELS[taskA.priority]
-        const priorityLabelB = priorityField?.options.find(opt => opt.optionValue === taskB.priority)?.optionLabel || TASK_PRIORITY_LABELS[taskB.priority]
+        const priorityLabelA =
+          findPriorityOption(priorityField, taskA.priority)?.optionLabel ||
+          TASK_PRIORITY_LABELS[taskA.priority as keyof typeof TASK_PRIORITY_LABELS]
+        const priorityLabelB =
+          findPriorityOption(priorityField, taskB.priority)?.optionLabel ||
+          TASK_PRIORITY_LABELS[taskB.priority as keyof typeof TASK_PRIORITY_LABELS]
         
         return priorityLabelA.localeCompare(priorityLabelB, 'pt-BR', { sensitivity: 'base' })
       }
@@ -291,9 +310,15 @@ function TaskListRow({ task, onSelectTask, onChangeTaskColumn, renderDate, colum
       <td className="px-6 py-4 whitespace-nowrap">
         <span
           className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold text-white"
-          style={{ backgroundColor: priorityField?.options.find((opt) => opt.optionValue === task.priority)?.color || TASK_PRIORITY_COLORS[task.priority] }}
+          style={{
+            backgroundColor:
+              findPriorityOption(priorityField, task.priority)?.color ||
+              TASK_PRIORITY_COLORS[task.priority as keyof typeof TASK_PRIORITY_COLORS] ||
+              '#94A3B8'
+          }}
         >
-          {priorityField?.options.find((opt) => opt.optionValue === task.priority)?.optionLabel || TASK_PRIORITY_LABELS[task.priority]}
+          {findPriorityOption(priorityField, task.priority)?.optionLabel ||
+            TASK_PRIORITY_LABELS[task.priority as keyof typeof TASK_PRIORITY_LABELS]}
         </span>
       </td>
     </tr>
