@@ -254,23 +254,23 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
   return weightStats ? (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-start justify-between gap-3">
+        <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <span>Peso</span>
-          <div className="flex flex-wrap gap-2 justify-end">
+          <div className="grid gap-2 w-full mt-2 sm:flex sm:flex-wrap sm:justify-end sm:w-auto" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(96px, 1fr))' }}>
             {[-0.4, -0.3, -0.2, -0.1, 0.1, 0.2, 0.3, 0.4].map(delta => (
               <Button
                 key={delta}
                 size="sm"
                 variant="secondary"
                 onClick={() => handleQuickAdjust(delta)}
-                className="flex items-center gap-1"
+                className="flex items-center gap-1 w-full sm:w-auto justify-center"
               >
                 {delta < 0 ? <MinusIcon className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
                 {Math.abs(delta)} kg
               </Button>
             ))}
             {onAddClick && (
-              <Button size="sm" variant="outline" onClick={onAddClick}>
+              <Button size="sm" variant="outline" onClick={onAddClick} className="w-full sm:w-auto justify-center">
                 Adicionar
               </Button>
             )}
