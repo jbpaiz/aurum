@@ -425,14 +425,19 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
                       <div className="flex flex-col gap-1">
 
                         {weightStats.goalExpectedTomorrow !== null && weightStats.goalExpectedTomorrow !== undefined ? (
-                          <div className="flex flex-col gap-1 min-w-0">
-                            <div className="flex items-baseline gap-2 min-w-0">
-                              <span className="whitespace-nowrap text-xs text-emerald-500 dark:text-emerald-400">Amanhã:</span>
-                              <span className="font-medium text-sm text-emerald-900 dark:text-emerald-100 min-w-0 truncate">{weightStats.goalExpectedTomorrow.toFixed(1)} kg</span>
+                          <div className="min-w-0">
+                            <p className="text-xs text-emerald-600 dark:text-emerald-400">Amanhã</p>
+                            <div className="flex items-baseline gap-2">
+                              <p className="text-lg font-bold text-emerald-900 dark:text-emerald-100 min-w-0 truncate">{weightStats.goalExpectedTomorrow.toFixed(1)} kg</p>
                               {latestLog && typeof latestLog.weight === 'number' ? (
-                                <span className={`ml-1 text-sm ${Number(weightStats.goalExpectedTomorrow) - Number(latestLog.weight) < 0 ? 'text-red-500 dark:text-red-400' : (Number(weightStats.goalExpectedTomorrow) - Number(latestLog.weight) > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-muted-foreground')}`}>
-                                  ({Number(weightStats.goalExpectedTomorrow) - Number(latestLog.weight) > 0 ? '+' : ''}{(Number(weightStats.goalExpectedTomorrow) - Number(latestLog.weight)).toFixed(1)})
-                                </span>
+                                (() => {
+                                  const delta = Number(weightStats.goalExpectedTomorrow) - Number(latestLog.weight)
+                                  const sign = delta > 0 ? '+' : ''
+                                  const color = delta < 0 ? 'text-red-500 dark:text-red-400' : (delta > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-muted-foreground')
+                                  return (
+                                    <span className={`text-[11px] ${color}`}>({sign}{delta.toFixed(1)})</span>
+                                  )
+                                })()
                               ) : null}
                             </div>
                           </div>
