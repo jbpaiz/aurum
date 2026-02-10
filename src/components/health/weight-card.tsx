@@ -256,7 +256,7 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
       <CardHeader>
         <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <span>Peso</span>
-          <div className="grid gap-2 w-full mt-2 sm:flex sm:flex-wrap sm:justify-end sm:w-auto" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(96px, 1fr))' }}>
+          <div className="grid gap-2 w-full mt-2 sm:flex sm:flex-wrap sm:justify-end sm:w-auto" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))' }}>
             {[-0.4, -0.3, -0.2, -0.1, 0.1, 0.2, 0.3, 0.4].map(delta => (
               <Button
                 key={delta}
