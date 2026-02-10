@@ -424,7 +424,19 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
                     {(weightStats.goalExpectedTomorrow !== null && weightStats.goalExpectedTomorrow !== undefined) || (weightStats.trendKgPerWeek !== null && weightStats.trendKgPerWeek !== undefined && weightStats.current !== null) ? (
                       <div className="flex flex-col gap-1">
 
-                        {weightStats.trendKgPerWeek !== null && weightStats.trendKgPerWeek !== undefined && weightStats.current !== null && (
+                        {weightStats.goalExpectedTomorrow !== null && weightStats.goalExpectedTomorrow !== undefined ? (
+                          <div className="flex flex-col gap-1 min-w-0">
+                            <div className="flex items-baseline gap-2 min-w-0">
+                              <span className="whitespace-nowrap text-xs text-emerald-500 dark:text-emerald-400">Amanhã:</span>
+                              <span className="font-medium text-sm text-emerald-900 dark:text-emerald-100 min-w-0 truncate">{weightStats.goalExpectedTomorrow.toFixed(1)} kg</span>
+                              {latestLog && typeof latestLog.weight === 'number' ? (
+                                <span className={`ml-1 text-sm ${Number(weightStats.goalExpectedTomorrow) - Number(latestLog.weight) < 0 ? 'text-red-500 dark:text-red-400' : (Number(weightStats.goalExpectedTomorrow) - Number(latestLog.weight) > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-muted-foreground')}`}>
+                                  ({Number(weightStats.goalExpectedTomorrow) - Number(latestLog.weight) > 0 ? '+' : ''}{(Number(weightStats.goalExpectedTomorrow) - Number(latestLog.weight)).toFixed(1)})
+                                </span>
+                              ) : null}
+                            </div>
+                          </div>
+                        ) : weightStats.trendKgPerWeek !== null && weightStats.trendKgPerWeek !== undefined && weightStats.current !== null ? (
                           <div className={`text-[11px] font-medium ${getTrendColor()} flex items-center gap-2 flex-wrap min-w-0`}> 
            
                             <span className="whitespace-nowrap flex-shrink-0">Amanhã:</span>
@@ -441,7 +453,7 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
                               <Minus className="h-3 w-3 flex-shrink-0" />
                             )}
                           </div>
-                        )}
+                        ) : null}
                       </div>
                     ) : null}
                   </div>
