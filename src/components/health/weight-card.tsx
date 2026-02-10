@@ -221,7 +221,7 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
   }
 
   const recentLogs = useMemo(() => {
-    return weightLogs.slice(0, detailed ? 30 : 5)
+    return detailed ? weightLogs : weightLogs.slice(0, 5)
   }, [weightLogs, detailed])
 
   const latestLog = weightLogs[0]
@@ -566,12 +566,31 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
           <div className="space-y-2">
             <h4 className="text-sm font-medium">Histórico</h4>
             <div className="space-y-2 max-h-[400px] overflow-y-auto">
-              {recentLogs.map(log => (
+              {recentLogs.map((log, index) => {
+                const prevLog = recentLogs[index + 1]
+                const delta = prevLog ? log.weight - prevLog.weight : null
+                const deltaLabel = delta === null ? null : `${delta > 0 ? '+' : ''}${delta.toFixed(1)} kg`
+                const deltaClass = delta === null
+                  ? ''
+                  : delta > 0
+                    ? 'text-red-500'
+                    : delta < 0
+                      ? 'text-emerald-500'
+                      : 'text-muted-foreground'
+
+                return (
                 <div key={log.id} className="flex items-center justify-between text-sm border-b pb-2 last:border-0 gap-2">
                   <div className="flex flex-col flex-1">
-                    <span className="font-medium">{log.weight} kg</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{log.weight} kg</span>
+                      {delta !== null && (
+                        <span className={`text-xs ${deltaClass}`}>
+                          {deltaLabel}
+                        </span>
+                      )}
+                    </div>
                     <span className="text-xs text-muted-foreground">
-                      {format(new Date(log.recordedAt), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
+                      {format(new Date(log.recordedAt), "EEEE, dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
                     </span>
                     {log.note && (
                       <span className="text-xs text-muted-foreground mt-1">
@@ -600,7 +619,7 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
                     </Button>
                   </div>
                 </div>
-              ))}
+                )})}
             </div>
           </div>
         )}
