@@ -155,14 +155,12 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true)
       
-      // Buscar últimos 90 dias
-      const ninetyDaysAgo = subDays(new Date(), 90).toISOString()
+      // Buscar histórico completo
       
       const [weightRes, activitiesRes, sleepRes, goalsRes, measurementsRes, hydrationRes, hydrationGoalRes, mealsRes, nutritionGoalRes, badgesRes, userStatsRes, challengesRes] = await Promise.all([
         supabase
           .from('health_weight_logs')
           .select('*')
-          .gte('recorded_at', ninetyDaysAgo)
           .order('recorded_at', { ascending: false }),
         
         supabase

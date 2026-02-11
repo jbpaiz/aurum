@@ -435,7 +435,7 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
                                   const sign = delta > 0 ? '+' : ''
                                   const color = delta < 0 ? 'text-red-500 dark:text-red-400' : (delta > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-muted-foreground')
                                   return (
-                                    <span className={`text-[11px] ${color}`}>({sign}{delta.toFixed(1)} kg)</span>
+                                    <span className={`text-[11px] ${color}`}>{sign}{delta.toFixed(1)} kg</span>
                                   )
                                 })()
                               ) : null}
