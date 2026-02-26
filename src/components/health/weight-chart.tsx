@@ -135,8 +135,18 @@ export function WeightChart() {
     // Se temos meta definida, calcular as 3 linhas
     if (weightStats?.goalTarget && weightStats.goalDate && data.length > 0) {
       const sorted = [...data].sort((a, b) => a.timestamp - b.timestamp)
-      const startWeight = sorted[0].weight ?? 0
-      const startTime = sorted[0].timestamp
+      
+      // IMPORTANTE: Usar TODOS os logs para encontrar o peso inicial REAL da meta
+      // Isso garante que a linha de meta seja FIXA, independente do período selecionado
+      // A meta deveria ser uma "linha do tempo ideal" desde o começo do registro
+      const allSortedLogs = [...weightLogs]
+        .sort((a, b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime())
+      
+      const startWeight = allSortedLogs.length > 0 ? allSortedLogs[0].weight : (sorted[0].weight ?? 0)
+      const startTime = allSortedLogs.length > 0 
+        ? new Date(allSortedLogs[0].recordedAt).getTime() 
+        : sorted[0].timestamp
+        
       const goalTime = new Date(weightStats.goalDate).getTime()
       const goalWeight = weightStats.goalTarget
 
@@ -307,14 +317,14 @@ export function WeightChart() {
                     </p>
                     <p className="flex items-center gap-2">
                       <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#22c55e' }} />
-                      <strong>Meta:</strong> Linha verde tracejada conectando seu peso inicial até o peso da meta na data alvo
+                      <strong>Meta:</strong> Linha verde tracejada - traço ideal linear do seu primeiro peso registrado até o peso da meta na data alvo. Esta linha é <strong>fixa</strong> e não muda quando você troca o período.
                     </p>
                     <p className="flex items-center gap-2">
                       <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#f97316' }} />
                       <strong>Tendência:</strong> Linha laranja tracejada mostrando a projeção futura baseada na sua evolução atual (regressão linear)
                     </p>
                     <p className="text-xs mt-4 text-foreground">
-                      💡 <strong>Dica:</strong> Compare a linha de tendência (laranja) com a linha da meta (verde) para saber se você está no caminho certo!
+                      💡 <strong>Dica:</strong> Se seu peso (azul) está acima da meta (verde), você está comendo mais do que deveria. Se está abaixo quando deveria estar acima, você está no caminho certo! Compare a linha de tendência (laranja) com a linha da meta (verde) para saber se você vai atingir a meta no prazo.
                     </p>
                   </div>
                 </DialogContent>
