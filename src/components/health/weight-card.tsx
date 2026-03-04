@@ -226,7 +226,7 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
       ? format(new Date(closestLog.recordedAt), "EEEE, dd/MM/yyyy", { locale: ptBR })
       : undefined
     
-    setGoalProgressTooltip({ percent, weight: weight.toFixed(1), date })
+    setGoalProgressTooltip({ percent, weight, date })
   }
 
   const clearGoalProgressTooltip = () => {
@@ -374,7 +374,7 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
                     className="pointer-events-none absolute bottom-full z-10 rounded-md border bg-background/95 p-2 text-xs shadow-lg whitespace-nowrap mb-2"
                     style={{ left: `${goalProgressTooltip.percent}%`, transform: 'translateX(-50%)' }}
                   >
-                    <p className="font-semibold">{goalProgressTooltip.weight} kg</p>
+                    <p className="font-semibold">{goalProgressTooltip.weight.toFixed(1)} kg</p>
                     {goalProgressTooltip.date && (
                       <p className="text-muted-foreground">{goalProgressTooltip.date}</p>
                     )}
