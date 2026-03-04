@@ -30,6 +30,7 @@ export function KanbanView() {
     projects,
     activeProject,
     activeBoard,
+    isActiveBoardOwner,
     priorityField,
     setActiveBoardId,
     createTask,
@@ -306,14 +307,16 @@ export function KanbanView() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem
-                      onSelect={(event) => {
-                        event.preventDefault()
-                        updateManagerVisibility(true)
-                      }}
-                    >
-                      Gerenciar quadros
-                    </DropdownMenuItem>
+                    {isActiveBoardOwner && (
+                      <DropdownMenuItem
+                        onSelect={(event) => {
+                          event.preventDefault()
+                          updateManagerVisibility(true)
+                        }}
+                      >
+                        Gerenciar quadros
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem
                       onSelect={(event) => {
                         event.preventDefault()

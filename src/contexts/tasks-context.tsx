@@ -27,6 +27,7 @@ import type {
   UpdateFieldOptionInput
 } from '@/types/tasks'
 import { TASK_COLUMN_COLOR_PALETTE } from '@/types/tasks'
+import type { TaskBoardMember } from '@/types/tasks'
 
 type ProjectRow = Database['public']['Tables']['task_projects']['Row']
 type BoardRow = Database['public']['Tables']['task_boards']['Row']
@@ -51,6 +52,8 @@ interface TasksContextValue {
   projects: TaskProject[]
   activeProject?: TaskProject
   activeBoard?: TaskBoard
+  isActiveBoardOwner: boolean
+  boardMembers: TaskBoardMember[]
   priorityField?: TaskCustomField // Campo de prioridade configurável
   setActiveProjectId: (projectId: string) => void
   setActiveBoardId: (boardId: string) => void
@@ -73,6 +76,9 @@ interface TasksContextValue {
   createFieldOption: (input: CreateFieldOptionInput) => Promise<void>
   updateFieldOption: (input: UpdateFieldOptionInput) => Promise<void>
   deleteFieldOption: (optionId: string) => Promise<void>
+  inviteBoardMember: (email: string) => Promise<void>
+  removeBoardMember: (userId: string) => Promise<void>
+  refreshBoardMembers: () => Promise<void>
   refresh: () => Promise<void>
 }
 
@@ -324,6 +330,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null)
   const [activeBoardId, setActiveBoardId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [boardMembers, setBoardMembers] = useState<TaskBoardMember[]>([])
   const [priorityField, setPriorityField] = useState<TaskCustomField | undefined>(undefined)
   const creatingDefaultRef = useRef(false)
   const [preferencesInitialized, setPreferencesInitialized] = useState(false)
@@ -466,7 +473,6 @@ export function TasksProvider({ children }: TasksProviderProps) {
               )
             )
           `)
-          .eq('user_id', user.id)
           .order('sort_order', { ascending: true })
           .order('sort_order', { ascending: true, referencedTable: 'task_boards' })
           .order('position', { ascending: true, referencedTable: 'task_boards.task_columns' })
@@ -544,15 +550,87 @@ export function TasksProvider({ children }: TasksProviderProps) {
     return activeProject.boards.find((board) => board.id === activeBoardId) ?? activeProject.boards[0]
   }, [activeProject, activeBoardId])
 
+  const isActiveBoardOwner = useMemo(() => {
+    if (!user || !activeProject) return false
+    return activeProject.userId === user.id
+  }, [user, activeProject])
+
   const refresh = useCallback(async () => {
     await fetchWorkspace()
   }, [fetchWorkspace])
+
+  const fetchBoardMembers = useCallback(async () => {
+    if (!activeBoard || !isActiveBoardOwner) {
+      setBoardMembers([])
+      return
+    }
+
+    const { data, error } = await supabase.rpc('list_task_board_members', {
+      p_board_id: activeBoard.id
+    })
+
+    if (error) {
+      console.error('Erro ao carregar membros do quadro:', error.message)
+      setBoardMembers([])
+      return
+    }
+
+    const members = (data ?? []).map((row: any) => ({
+      userId: String(row.user_id),
+      email: String(row.email ?? ''),
+      invitedBy: String(row.invited_by),
+      createdAt: String(row.created_at)
+    }))
+
+    setBoardMembers(members)
+  }, [activeBoard, isActiveBoardOwner])
+
+  useEffect(() => {
+    void fetchBoardMembers()
+  }, [fetchBoardMembers])
+
+  const inviteBoardMember = useCallback(async (email: string) => {
+    if (!activeBoard || !isActiveBoardOwner) return
+    const normalizedEmail = email.trim().toLowerCase()
+    if (!normalizedEmail) return
+
+    const { error } = await supabase.rpc('invite_task_board_member', {
+      p_board_id: activeBoard.id,
+      p_email: normalizedEmail
+    })
+
+    if (error) {
+      console.error('Erro ao convidar usuário para o quadro:', error.message)
+      throw error
+    }
+
+    await fetchBoardMembers()
+    await fetchWorkspace({ silent: true })
+  }, [activeBoard, isActiveBoardOwner, fetchBoardMembers, fetchWorkspace])
+
+  const removeBoardMember = useCallback(async (memberUserId: string) => {
+    if (!activeBoard || !isActiveBoardOwner) return
+
+    const { error } = await supabase
+      .from('task_board_members' as any)
+      .delete()
+      .eq('board_id', activeBoard.id)
+      .eq('user_id', memberUserId)
+
+    if (error) {
+      console.error('Erro ao remover acesso do usuário ao quadro:', error.message)
+      throw error
+    }
+
+    await fetchBoardMembers()
+    await fetchWorkspace({ silent: true })
+  }, [activeBoard, isActiveBoardOwner, fetchBoardMembers, fetchWorkspace])
 
   // ============================================
   // CARREGAR CAMPO CUSTOMIZÁVEL DE PRIORIDADE
   // ============================================
   const fetchPriorityField = useCallback(async () => {
-    if (!user || !activeProjectId) {
+    if (!activeProjectId || !activeProject) {
       setPriorityField(undefined)
       return
     }
@@ -562,7 +640,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
         .from('task_custom_fields')
         .select('*')
         .eq('project_id', activeProjectId)
-        .eq('user_id', user.id)
+        .eq('user_id', activeProject.userId)
         .eq('field_type', 'priority')
         .eq('is_active', true)
         .single()
@@ -587,7 +665,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
       const field: TaskCustomField = {
         id: fieldData.id,
         projectId: fieldData.project_id,
-        userId: (fieldData as any).user_id ?? user.id,
+        userId: (fieldData as any).user_id ?? activeProject.userId,
         fieldType: fieldData.field_type as 'priority',
         fieldName: fieldData.field_name,
         isActive: fieldData.is_active,
@@ -611,7 +689,7 @@ export function TasksProvider({ children }: TasksProviderProps) {
       console.error('Erro ao carregar campo de prioridade:', err)
       setPriorityField(undefined)
     }
-  }, [user, activeProjectId])
+    }, [activeProjectId, activeProject])
 
   // Carregar campo quando mudar o projeto ativo
   useEffect(() => {
@@ -794,54 +872,12 @@ export function TasksProvider({ children }: TasksProviderProps) {
         : 0
       const nextSortOrder = highestSortOrder + 1000
 
-      // Buscar todas as tasks existentes DESTE USUÁRIO para encontrar o maior número de key
-      const { data: existingTasks } = await supabase
-        .from('tasks')
-        .select('key')
-        .eq('project_id', activeProject.id)
-        .eq('user_id', user.id)
-        .like('key', `${activeProject.code}-%`)
-        .order('created_at', { ascending: false })
-        .limit(100)
-
-      let maxNumber = activeProject.issueCounter || 0
-      
-      // Extrair números das keys existentes para encontrar o maior
-      if (existingTasks && existingTasks.length > 0) {
-        existingTasks.forEach(task => {
-          const match = task.key?.match(new RegExp(`^${activeProject.code}-(\\d+)$`))
-          if (match && match[1]) {
-            const num = parseInt(match[1], 10)
-            if (num > maxNumber) {
-              maxNumber = num
-            }
-          }
-        })
-      }
-
-      const nextIssueNumber = maxNumber + 1
-      const taskKey = input.key?.trim() || `${activeProject.code}-${nextIssueNumber}`
-
-      console.log('🔑 Key Debug:', {
-        'input.key': input.key,
-        'input.key?.trim()': input.key?.trim(),
-        'taskKey final': taskKey,
-        'nextIssueNumber': nextIssueNumber
-      })
-
-      // Atualizar o contador do projeto (para referência, mas cada usuário tem sua própria sequência)
-      await supabase
-        .from('task_projects')
-        .update({ issue_counter: nextIssueNumber })
-        .eq('id', activeProject.id)
-        .eq('user_id', user.id)
-
       const payload: Database['public']['Tables']['tasks']['Insert'] = {
         project_id: activeProject.id,
         board_id: input.boardId ?? activeBoard.id,
         column_id: fallbackColumnId,
         user_id: user.id,
-        key: taskKey,
+        key: input.key?.trim() || 'AUTO',
         title: input.title,
         description: input.description ?? null,
         type: input.type ?? 'task',
@@ -1440,6 +1476,8 @@ export function TasksProvider({ children }: TasksProviderProps) {
     projects,
     activeProject,
     activeBoard,
+    isActiveBoardOwner,
+    boardMembers,
     priorityField,
     setActiveProjectId: (projectId: string) => setActiveProjectId(projectId),
     setActiveBoardId: (boardId: string) => setActiveBoardId(boardId),
@@ -1461,6 +1499,9 @@ export function TasksProvider({ children }: TasksProviderProps) {
     createFieldOption,
     updateFieldOption,
     deleteFieldOption,
+    inviteBoardMember,
+    removeBoardMember,
+    refreshBoardMembers: fetchBoardMembers,
     refresh
   }
 

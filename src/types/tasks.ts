@@ -99,6 +99,13 @@ export interface TaskBoard {
   sprints: TaskSprint[]
 }
 
+export interface TaskBoardMember {
+  userId: string
+  email: string
+  invitedBy: string
+  createdAt: string
+}
+
 export interface TaskProject {
   id: string
   userId: string

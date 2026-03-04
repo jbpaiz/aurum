@@ -26,6 +26,8 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
   const {
     activeProject,
     activeBoard,
+    isActiveBoardOwner,
+    boardMembers,
     setActiveBoardId,
     createBoard,
     renameBoard,
@@ -34,7 +36,9 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
     createColumn,
     renameColumn,
     updateColumnColor,
-    reorderColumns
+    reorderColumns,
+    inviteBoardMember,
+    removeBoardMember
   } = useTasks()
 
   const boards = useMemo(() => activeProject?.boards ?? [], [activeProject])
@@ -54,6 +58,9 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
   const [columnCards, setColumnCards] = useState<TaskColumn[]>(columns)
   const [isSavingOrder, setIsSavingOrder] = useState(false)
   const [showCustomFieldModal, setShowCustomFieldModal] = useState(false)
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [isInvitingMember, setIsInvitingMember] = useState(false)
+  const [removingMemberId, setRemovingMemberId] = useState<string | null>(null)
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean
     title: string
@@ -309,6 +316,54 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
     )
   }
 
+  if (!isActiveBoardOwner) {
+    return (
+      <div className="space-y-4">
+        <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-8 text-center text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+          Apenas o dono do quadro pode gerenciar colunas, situação e compartilhamento.
+        </div>
+        {onBack && (
+          <div className="flex justify-center">
+            <Button variant="outline" className="gap-2" onClick={onBack}>
+              <CornerUpLeft className="h-4 w-4" />
+              Voltar para o quadro
+            </Button>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  const handleInviteMember = async (event: React.FormEvent) => {
+    event.preventDefault()
+    const email = inviteEmail.trim()
+    if (!email) return
+    setIsInvitingMember(true)
+    try {
+      await inviteBoardMember(email)
+      setInviteEmail('')
+    } finally {
+      setIsInvitingMember(false)
+    }
+  }
+
+  const handleRemoveMember = async (userId: string, email: string) => {
+    setConfirmDialog({
+      open: true,
+      title: 'Remover acesso do quadro',
+      description: `Remover o acesso de ${email} deste quadro?`,
+      onConfirm: async () => {
+        setRemovingMemberId(userId)
+        try {
+          await removeBoardMember(userId)
+        } finally {
+          setRemovingMemberId(null)
+        }
+      },
+      variant: 'danger'
+    })
+  }
+
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
@@ -476,6 +531,64 @@ export function BoardManagementView({ onBack }: BoardManagementViewProps) {
           )}
         </section>
       </div>
+
+      <section className="space-y-4 rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
+        <header className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Acesso do quadro</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Convide usuários do Aurum por e-mail. Apenas o dono pode convidar e remover acesso.
+            </p>
+          </div>
+          <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+            {boardMembers.length} membros
+          </Badge>
+        </header>
+
+        <form onSubmit={handleInviteMember} className="flex flex-col gap-2 rounded-2xl bg-gray-50/80 p-4 sm:flex-row dark:bg-gray-700/50">
+          <Input
+            type="email"
+            placeholder="email@usuario.com"
+            value={inviteEmail}
+            onChange={(event) => setInviteEmail(event.target.value)}
+            disabled={isInvitingMember || !activeBoard}
+          />
+          <Button type="submit" className="gap-2" disabled={isInvitingMember || !activeBoard}>
+            <Plus className="h-4 w-4" />
+            Convidar
+          </Button>
+        </form>
+
+        <div className="space-y-2">
+          {boardMembers.length === 0 ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Nenhum membro convidado para este quadro.</p>
+          ) : (
+            boardMembers.map((member) => (
+              <div
+                key={member.userId}
+                className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-900/40"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-gray-900 dark:text-white">{member.email}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Convidado em {new Date(member.createdAt).toLocaleDateString('pt-BR')}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-red-600"
+                  onClick={() => handleRemoveMember(member.userId, member.email)}
+                  disabled={removingMemberId === member.userId}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Remover
+                </Button>
+              </div>
+            ))
+          )}
+        </div>
+      </section>
 
       <ConfirmDialog
         open={confirmDialog.open}
