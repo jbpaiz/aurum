@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { WeightCard } from './weight-card'
 import { WeightChart } from './weight-chart'
+import { WeightHistoryCard } from './weight-history-card'
 import { WeeklyAnalysisCard } from './weekly-analysis-card'
 import { ActivityCard } from './activity-card'
 import { ActivityChart } from './activity-chart'
@@ -247,6 +248,9 @@ export function HealthDashboard() {
             onEditClick={handleEditWeight}
           />
           <WeeklyAnalysisCard />
+          <WeightHistoryCard 
+            onEditClick={handleEditWeight}
+          />
         </TabsContent>
 
         {/* Body Measurements Tab */}

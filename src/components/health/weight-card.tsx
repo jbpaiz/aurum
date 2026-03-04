@@ -32,6 +32,11 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
     note: string
     percent: number
   } | null>(null)
+  const [goalProgressTooltip, setGoalProgressTooltip] = useState<{
+    percent: number
+    weight: number
+    date?: string
+  } | null>(null)
 
   // Carregar perfil do usuário do contexto
   useEffect(() => {
@@ -192,6 +197,38 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
 
   const clearBarPoint = () => setBarInsight(null)
 
+  const handleGoalProgressHover = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!goalPlan || !weightStats?.goalTarget) return
+    
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const percent = Math.max(0, Math.min(100, (x / rect.width) * 100))
+    
+    // Calcular o peso naquele ponto baseado em interpolação linear
+    const progress = percent / 100
+    const weight = goalPlan.startWeight + (goalPlan.goalTarget - goalPlan.startWeight) * progress
+    
+    // Encontrar o log mais próximo daquele peso
+    let closestLog: WeightLog | undefined
+    let minDiff = Infinity
+    
+    for (const log of weightLogs) {
+      const diff = Math.abs(log.weight - weight)
+      if (diff < minDiff) {
+        minDiff = diff
+        closestLog = log
+      }
+    }
+    
+    const date = closestLog 
+      ? format(new Date(closestLog.recordedAt), "dd/MM/yyyy", { locale: ptBR })
+      : undefined
+    
+    setGoalProgressTooltip({ percent, weight: weight.toFixed(1), date })
+  }
+
+  const clearGoalProgressTooltip = () => setGoalProgressTooltip(null)
+
   const renderBarInsight = (kind: 'bmi' | 'bmr' | 'tdee') => {
     if (!barInsight || barInsight.kind !== kind) return null
     return (
@@ -325,7 +362,34 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
             </div>
 
             <div className="space-y-3">
-              <Progress value={Math.min(100, Math.max(0, (weightStats.goalProgress || 0) * 100))} />
+              {/* Barra de progresso com tooltip */}
+              <div className="relative pb-8">
+                {goalProgressTooltip && (
+                  <div
+                    className="pointer-events-none absolute bottom-8 z-10 rounded-md border bg-background/95 p-2 text-xs shadow-lg whitespace-nowrap"
+                    style={{ left: `${goalProgressTooltip.percent}%`, transform: 'translateX(-50%)' }}
+                  >
+                    <p className="font-semibold">{goalProgressTooltip.weight} kg</p>
+                    {goalProgressTooltip.date && (
+                      <p className="text-muted-foreground">{goalProgressTooltip.date}</p>
+                    )}
+                  </div>
+                )}
+                <div
+                  role="progressbar"
+                  tabIndex={0}
+                  onMouseMove={handleGoalProgressHover}
+                  onMouseLeave={clearGoalProgressTooltip}
+                  onTouchMove={(e) => handleGoalProgressHover(e as any)}
+                  onTouchEnd={clearGoalProgressTooltip}
+                  className="relative h-2 rounded-full overflow-hidden cursor-pointer outline-none bg-muted"
+                >
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-blue-500 to-emerald-500 transition-all"
+                    style={{ width: `${Math.min(100, Math.max(0, (weightStats.goalProgress || 0) * 100))}%` }}
+                  />
+                </div>
+              </div>
               
               {/* Primeira linha: Meta, Atual, Restam, Perdido */}
               <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
@@ -573,121 +637,6 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
             </Button>
           </div>
         </div>
-
-
-
-        {/* Recent Logs */}
-        {detailed && recentLogs.length > 0 && (
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium">Histórico</h4>
-            <div className="space-y-2 max-h-[400px] overflow-y-auto">
-              {recentLogs.map((log, index) => {
-                const prevLog = recentLogs[index + 1]
-                const delta = prevLog ? log.weight - prevLog.weight : null
-                const deltaLabel = delta === null ? null : `${delta > 0 ? '+' : ''}${delta.toFixed(1)} kg`
-                const deltaClass = delta === null
-                  ? ''
-                  : delta > 0
-                    ? 'text-red-500'
-                    : delta < 0
-                      ? 'text-emerald-500'
-                      : 'text-muted-foreground'
-
-                const goalComparison = goalPlan
-                  ? (() => {
-                    const logTime = new Date(log.recordedAt).getTime()
-                    const clamped = Math.min(Math.max(logTime, goalPlan.startTime), goalPlan.goalTime)
-                    const progress = (clamped - goalPlan.startTime) / (goalPlan.goalTime - goalPlan.startTime)
-                    const expected = goalPlan.startWeight + (goalPlan.goalTarget - goalPlan.startWeight) * progress
-                    const deltaFromExpected = log.weight - expected
-                    const needsToGain = goalPlan.goalTarget > goalPlan.startWeight
-                    const isAhead = needsToGain ? deltaFromExpected >= 0 : deltaFromExpected <= 0
-                    const minRange = Math.min(goalPlan.startWeight, goalPlan.goalTarget)
-                    const maxRange = Math.max(goalPlan.startWeight, goalPlan.goalTarget)
-                    const range = maxRange - minRange || 1
-                    const expectedPercent = Math.min(100, Math.max(0, ((expected - minRange) / range) * 100))
-                    const actualPercent = Math.min(100, Math.max(0, ((log.weight - minRange) / range) * 100))
-                    return {
-                      expected,
-                      deltaFromExpected,
-                      isAhead,
-                      expectedPercent,
-                      actualPercent,
-                      minRange,
-                      maxRange
-                    }
-                  })()
-                  : null
-
-                return (
-                <div key={log.id} className="flex items-center justify-between text-sm border-b border-muted/40 dark:border-muted/60 pb-2 last:border-0 gap-2">
-                  <div className="flex flex-col flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{log.weight} kg</span>
-                      {delta !== null && (
-                        <span className={`text-xs ${deltaClass}`}>
-                          {deltaLabel}
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {format(new Date(log.recordedAt), "EEEE, dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
-                    </span>
-                    {goalComparison && (
-                      <div className="mt-2 space-y-1">
-                        <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                          <span>Meta no dia: {goalComparison.expected.toFixed(1)} kg</span>
-                          <span className={goalComparison.isAhead ? 'text-emerald-600' : 'text-red-600'}>
-                            {goalComparison.deltaFromExpected > 0 ? '+' : ''}{goalComparison.deltaFromExpected.toFixed(1)} kg vs meta
-                          </span>
-                        </div>
-                        <div className="relative h-2 rounded-full bg-muted">
-                          <div
-                            className="absolute top-0 bottom-0 w-[2px] bg-muted-foreground/60"
-                            style={{ left: `${goalComparison.expectedPercent}%`, transform: 'translateX(-50%)' }}
-                          />
-                          <div
-                            className={`absolute top-0 bottom-0 w-[3px] ${goalComparison.isAhead ? 'bg-emerald-500' : 'bg-red-500'}`}
-                            style={{ left: `${goalComparison.actualPercent}%`, transform: 'translateX(-50%)' }}
-                          />
-                        </div>
-                        <div className="flex justify-between text-[10px] text-muted-foreground">
-                          <span>{goalComparison.minRange.toFixed(1)} kg</span>
-                          <span>{goalComparison.maxRange.toFixed(1)} kg</span>
-                        </div>
-                      </div>
-                    )}
-                    {log.note && (
-                      <span className="text-xs text-muted-foreground mt-1">
-                        {log.note}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex gap-1">
-                    {onEditClick && (
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8"
-                        onClick={() => onEditClick(log)}
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8 text-destructive hover:text-destructive"
-                      onClick={() => handleDelete(log.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-                )})}
-            </div>
-          </div>
-        )}
       </CardContent>
     </Card>
   ) : (
