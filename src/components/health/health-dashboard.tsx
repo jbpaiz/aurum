@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { WeightCard } from './weight-card'
 import { WeightChart } from './weight-chart'
+import { WeeklyAnalysisCard } from './weekly-analysis-card'
 import { ActivityCard } from './activity-card'
 import { ActivityChart } from './activity-chart'
 import { SleepCard } from './sleep-card'
@@ -245,6 +246,7 @@ export function HealthDashboard() {
             onAddClick={() => setWeightModalOpen(true)}
             onEditClick={handleEditWeight}
           />
+          <WeeklyAnalysisCard />
         </TabsContent>
 
         {/* Body Measurements Tab */}
