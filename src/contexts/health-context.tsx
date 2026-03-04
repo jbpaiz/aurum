@@ -161,19 +161,20 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
         supabase
           .from('health_weight_logs')
           .select('*')
-          .order('recorded_at', { ascending: false }),
+          .order('recorded_at', { ascending: false })
+          .limit(10000),
         
         supabase
           .from('health_activities')
           .select('*')
-          .gte('activity_date', format(subDays(new Date(), 90), 'yyyy-MM-dd'))
-          .order('activity_date', { ascending: false }),
+          .order('activity_date', { ascending: false })
+          .limit(10000),
         
         supabase
           .from('health_sleep_logs')
           .select('*')
-          .gte('sleep_date', format(subDays(new Date(), 90), 'yyyy-MM-dd'))
-          .order('sleep_date', { ascending: false }),
+          .order('sleep_date', { ascending: false })
+          .limit(10000),
         
         supabase
           .from('health_goals')
@@ -184,14 +185,14 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
         supabase
           .from('health_body_measurements')
           .select('*')
-          .gte('measurement_date', format(subDays(new Date(), 365), 'yyyy-MM-dd'))
-          .order('measurement_date', { ascending: false }),
+          .order('measurement_date', { ascending: false })
+          .limit(10000),
         
         supabase
           .from('health_hydration')
           .select('*')
-          .gte('log_date', format(subDays(new Date(), 30), 'yyyy-MM-dd'))
-          .order('logged_at', { ascending: false }),
+          .order('logged_at', { ascending: false })
+          .limit(10000),
         
         supabase
           .from('health_hydration_goals')
@@ -201,9 +202,9 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
         supabase
           .from('health_meals')
           .select('*')
-          .gte('meal_date', format(subDays(new Date(), 30), 'yyyy-MM-dd'))
           .order('meal_date', { ascending: false })
-          .order('meal_time', { ascending: false }),
+          .order('meal_time', { ascending: false })
+          .limit(10000),
         
         supabase
           .from('health_nutrition_goals')
