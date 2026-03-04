@@ -153,15 +153,39 @@ export function WeightChart() {
       // 1. LINHA DA META: do peso inicial até o peso da meta na data da meta
       const goalSpan = goalTime - startTime
       
-      // 2. REGRESSÃO LINEAR: calcular tendência baseada nos dados atuais
-      const weightsOnly = sorted.map(p => p.weight ?? 0)
-      const timestamps = sorted.map(p => p.timestamp)
+      // 2. REGRESSÃO LINEAR PROFISSIONAL: 
+      // Usar pesos mínimos semanais para eliminar flutuações de fim de semana
+      // (retém glicogênio, água, etc que normalizam na terça/quarta)
       
-      // Calcular média
+      // Agrupar logs por semana e pegar o peso MÍNIMO de cada semana
+      const weeklyMinWeights = new Map<number, { minWeight: number, timestamp: number }>()
+      
+      allSortedLogs.forEach(log => {
+        const logTime = new Date(log.recordedAt).getTime()
+        const weekStart = startOfWeek(new Date(log.recordedAt), { locale: ptBR }).getTime()
+        
+        if (!weeklyMinWeights.has(weekStart)) {
+          weeklyMinWeights.set(weekStart, { minWeight: log.weight, timestamp: logTime })
+        } else {
+          const current = weeklyMinWeights.get(weekStart)!
+          if (log.weight < current.minWeight) {
+            weeklyMinWeights.set(weekStart, { minWeight: log.weight, timestamp: logTime })
+          }
+        }
+      })
+      
+      // Usar os pesos mínimos semanais para calcular a tendência
+      const trendSource = Array.from(weeklyMinWeights.values())
+        .sort((a, b) => a.timestamp - b.timestamp)
+      
+      const weightsOnly = trendSource.map(p => p.minWeight)
+      const timestamps = trendSource.map(p => p.timestamp)
+      
+      // Calcular média dos mínimos semanais
       const xMean = timestamps.reduce((a, b) => a + b, 0) / timestamps.length
       const yMean = weightsOnly.reduce((a, b) => a + b, 0) / weightsOnly.length
       
-      // Calcular slope (inclinação) e intercept
+      // Calcular slope (inclinação) e intercept da reta de tendência
       let numerator = 0
       let denominator = 0
       for (let i = 0; i < timestamps.length; i++) {
@@ -171,14 +195,18 @@ export function WeightChart() {
       }
       const slope = denominator !== 0 ? numerator / denominator : 0
       const intercept = yMean - slope * xMean
+      
+      // Usar a regressão natural dos mínimos semanais (sem ajuste artificial)
+      // Isso representa a verdadeira tendência de peso após eliminar flutuações
+      const adjustedIntercept = intercept
 
       // Calcular data estimada de atingimento da meta
       const estimatedTimestamp = Math.abs(slope) > 0.000001 
-        ? (goalWeight - intercept) / slope 
+        ? (goalWeight - adjustedIntercept) / slope 
         : goalTime
       
       // Verificar se está indo na direção certa
-      const currentWeight = weightsOnly[weightsOnly.length - 1]
+      const currentWeight = allSortedLogs[allSortedLogs.length - 1]?.weight ?? startWeight
       const isGainingWeight = slope > 0
       const needsToGain = goalWeight > currentWeight
       const isWrongDirection = isGainingWeight !== needsToGain
@@ -196,7 +224,7 @@ export function WeightChart() {
         }
 
         // Linha de tendência (regressão linear)
-        const trendProjection = intercept + slope * point.timestamp
+  const trendProjection = adjustedIntercept + slope * point.timestamp
 
         return {
           ...point,
@@ -238,7 +266,7 @@ export function WeightChart() {
             }
             
             // Projeção de tendência (continua a regressão linear normalmente)
-            const trendProjection = intercept + slope * futureTime
+            const trendProjection = adjustedIntercept + slope * futureTime
             
             data.push({
               label: format(futureDate, 'dd/MM', { locale: ptBR }),
@@ -321,10 +349,10 @@ export function WeightChart() {
                     </p>
                     <p className="flex items-center gap-2">
                       <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#f97316' }} />
-                      <strong>Tendência:</strong> Linha laranja tracejada mostrando a projeção futura baseada na sua evolução atual (regressão linear)
+                      <strong>Tendência:</strong> Linha laranja tracejada calculada com os <strong>pesos mínimos de cada semana</strong> (eliminando flutuações de fim de semana). Mostra sua trajetória real de progresso e projeta onde você vai chegar.
                     </p>
                     <p className="text-xs mt-4 text-foreground">
-                      💡 <strong>Dica:</strong> Se seu peso (azul) está acima da meta (verde), você está comendo mais do que deveria. Se está abaixo quando deveria estar acima, você está no caminho certo! Compare a linha de tendência (laranja) com a linha da meta (verde) para saber se você vai atingir a meta no prazo.
+                      💡 <strong>Dica:</strong> A tendência ignora picos temporários (retenção de água, glicogênio) e foca no seu peso real semanal. Compare com a meta (verde) para saber se está no ritmo certo.
                     </p>
                   </div>
                 </DialogContent>
