@@ -37,6 +37,7 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
     weight: number
     date?: string
   } | null>(null)
+  const [isProgressBarHovered, setIsProgressBarHovered] = useState(false)
 
   // Carregar perfil do usuário do contexto
   useEffect(() => {
@@ -198,6 +199,7 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
   const clearBarPoint = () => setBarInsight(null)
 
   const handleGoalProgressHover = (e: React.MouseEvent<HTMLDivElement>) => {
+    setIsProgressBarHovered(true)
     if (!goalPlan || !weightStats?.goalTarget) return
     
     const rect = e.currentTarget.getBoundingClientRect()
@@ -221,13 +223,16 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
     }
     
     const date = closestLog 
-      ? format(new Date(closestLog.recordedAt), "dd/MM/yyyy", { locale: ptBR })
+      ? format(new Date(closestLog.recordedAt), "EEEE, dd/MM/yyyy", { locale: ptBR })
       : undefined
     
     setGoalProgressTooltip({ percent, weight: weight.toFixed(1), date })
   }
 
-  const clearGoalProgressTooltip = () => setGoalProgressTooltip(null)
+  const clearGoalProgressTooltip = () => {
+    setGoalProgressTooltip(null)
+    setIsProgressBarHovered(false)
+  }
 
   const renderBarInsight = (kind: 'bmi' | 'bmr' | 'tdee') => {
     if (!barInsight || barInsight.kind !== kind) return null
@@ -366,7 +371,7 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
               <div className="relative pb-8">
                 {goalProgressTooltip && (
                   <div
-                    className="pointer-events-none absolute bottom-8 z-10 rounded-md border bg-background/95 p-2 text-xs shadow-lg whitespace-nowrap"
+                    className="pointer-events-none absolute bottom-full z-10 rounded-md border bg-background/95 p-2 text-xs shadow-lg whitespace-nowrap mb-2"
                     style={{ left: `${goalProgressTooltip.percent}%`, transform: 'translateX(-50%)' }}
                   >
                     <p className="font-semibold">{goalProgressTooltip.weight} kg</p>
@@ -379,15 +384,25 @@ export function WeightCard({ detailed = false, onAddClick, onEditClick }: Weight
                   role="progressbar"
                   tabIndex={0}
                   onMouseMove={handleGoalProgressHover}
+                  onMouseEnter={() => setIsProgressBarHovered(true)}
                   onMouseLeave={clearGoalProgressTooltip}
                   onTouchMove={(e) => handleGoalProgressHover(e as any)}
                   onTouchEnd={clearGoalProgressTooltip}
-                  className="relative h-2 rounded-full overflow-hidden cursor-pointer outline-none bg-muted"
+                  className={`relative overflow-hidden rounded-full outline-none bg-muted transition-all ${
+                    isProgressBarHovered ? 'h-3 shadow-md shadow-primary/20' : 'h-2'
+                  } cursor-pointer`}
                 >
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-blue-500 to-emerald-500 transition-all"
                     style={{ width: `${Math.min(100, Math.max(0, (weightStats.goalProgress || 0) * 100))}%` }}
                   />
+                  {/* Indicador visual na posição do mouse */}
+                  {isProgressBarHovered && goalProgressTooltip && (
+                    <div
+                      className="pointer-events-none absolute top-0 h-full w-0.5 bg-white shadow-lg transition-all"
+                      style={{ left: `${goalProgressTooltip.percent}%`, transform: 'translateX(-50%)' }}
+                    />
+                  )}
                 </div>
               </div>
               
