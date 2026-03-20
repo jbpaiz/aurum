@@ -5,7 +5,7 @@ import { useHealth } from '@/contexts/health-context'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { TrendingDown, TrendingUp, Minus, CheckCircle2, AlertTriangle, Info } from 'lucide-react'
-import { startOfWeek, endOfWeek, format, subWeeks, isWithinInterval } from 'date-fns'
+import { startOfWeek, endOfWeek, format, subWeeks, isWithinInterval, differenceInCalendarWeeks } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 interface WeekAnalysis {
@@ -27,7 +27,11 @@ export function WeeklyAnalysisCard() {
     if (weightLogs.length === 0) return []
 
     const now = new Date()
-    const weeksToShow = 8 // Últimas 8 semanas
+    const oldestLogDate = weightLogs.reduce((oldest, log) => {
+      const logDate = new Date(log.recordedAt)
+      return logDate < oldest ? logDate : oldest
+    }, new Date(weightLogs[0].recordedAt))
+    const weeksToShow = differenceInCalendarWeeks(now, oldestLogDate, { locale: ptBR }) + 1
 
     const weeks: WeekAnalysis[] = []
 
@@ -85,7 +89,7 @@ export function WeeklyAnalysisCard() {
       })
     }
 
-    return weeks.reverse() // Mais antiga primeiro
+    return weeks // Mais recente primeiro (semana atual no topo)
   }, [weightLogs])
 
   if (weeklyData.length === 0) {
@@ -107,13 +111,13 @@ export function WeeklyAnalysisCard() {
       <CardHeader>
         <CardTitle>Análise Semanal Detalhada</CardTitle>
         <CardDescription>
-          Variação intra-semanal e taxa de progresso (últimas {weeklyData.length} semanas)
+          Variação intra-semanal e taxa de progresso ({weeklyData.length} semanas)
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
+        <div className="space-y-3 max-h-[26rem] overflow-y-auto pr-1">
           {weeklyData.map((week, index) => {
-            const isCurrentWeek = index === weeklyData.length - 1
+            const isCurrentWeek = index === 0
             
             return (
               <div 
